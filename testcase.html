@@ -1,0 +1,1910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA Execution Report & Rapid Functional Studio</title>
+  
+  <!-- Material Symbols Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { background-color: #f8fafc; color: #1e293b; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
+    
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+      display: inline-block;
+      line-height: 1;
+    }
+
+    /* Keyframe Animations */
+    @keyframes greenBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      30% { transform: translateY(-6px) scale(1.25); }
+      50% { transform: translateY(0) scale(0.95); }
+      70% { transform: translateY(-3px) scale(1.12); }
+    }
+    @keyframes spinIcon {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulsePending {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.55; transform: scale(0.92); }
+    }
+    @keyframes agentPulse {
+      0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.35); }
+      70% { box-shadow: 0 0 0 8px rgba(124, 58, 237, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+    }
+
+    /* Hover Tooltips */
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      z-index: 999999;
+    }
+    [data-tooltip]::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 3px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      border-width: 5px 5px 0 5px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      z-index: 999999;
+    }
+    [data-tooltip]:hover::after,
+    [data-tooltip]:hover::before {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .tooltip-bottom[data-tooltip]::after {
+      bottom: auto;
+      top: calc(100% + 8px);
+      transform: translateX(-50%) translateY(-4px);
+    }
+    .tooltip-bottom[data-tooltip]::before {
+      bottom: auto;
+      top: calc(100% + 3px);
+      border-width: 0 5px 5px 5px;
+      border-color: transparent transparent #0f172a transparent;
+      transform: translateX(-50%) translateY(-4px);
+    }
+    .tooltip-bottom[data-tooltip]:hover::after,
+    .tooltip-bottom[data-tooltip]:hover::before {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Header */
+    header { 
+      background: #ffffff; 
+      border-bottom: 1px solid #cbd5e1; 
+      position: sticky; 
+      top: 0; 
+      z-index: 50; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03); 
+      transform: translateZ(0);
+    }
+    .header-container { max-width: 1120px; margin: 0 auto; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    
+    .brand-wrap { display: flex; align-items: center; gap: 10px; }
+    .brand-avatar {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: #0d9488; color: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s ease;
+    }
+    .brand-avatar.studio-mode { background: #7c3aed; }
+    .brand-avatar .material-symbols-rounded { font-size: 22px; }
+    
+    .title-area h1 { font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
+    .title-area p { font-size: 0.72rem; color: #64748b; margin-top: 1px; }
+
+    /* =========================================================
+       CENTER MODE TOGGLE SWITCH (EXECUTION REPORT vs TEST STUDIO)
+       ========================================================= */
+    .mode-switch-pill {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      gap: 4px;
+    }
+    .mode-btn {
+      padding: 6px 14px;
+      border-radius: 7px;
+      border: none;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .mode-btn .material-symbols-rounded { font-size: 17px; }
+    .mode-btn.active-report {
+      background: #0d9488;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+    }
+    .mode-btn.active-studio {
+      background: #7c3aed;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+    }
+
+    /* Icon-Only Action Buttons */
+    .btn-group { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+    .btn-icon { 
+      width: 38px; height: 38px; border-radius: 9px; cursor: pointer; 
+      border: 1px solid transparent; transition: all 0.15s ease;
+      display: inline-flex; align-items: center; justify-content: center;
+      user-select: none; flex-shrink: 0;
+    }
+    .btn-icon .material-symbols-rounded { font-size: 20px; }
+    .btn-icon:hover { transform: translateY(-1px); }
+    .btn-icon:active { transform: translateY(0); }
+
+    .btn-slate { background: #ffffff; color: #334155; border-color: #cbd5e1; }
+    .btn-slate:hover { background: #f8fafc; border-color: #94a3b8; color: #0f172a; }
+    .btn-teal { background: #0d9488; color: #ffffff; }
+    .btn-teal:hover { background: #0f766e; }
+    .btn-blue { background: #2563eb; color: #ffffff; }
+    .btn-blue:hover { background: #1d4ed8; }
+    .btn-purple { background: #7c3aed; color: #ffffff; }
+    .btn-purple:hover { background: #6d28d9; }
+    .btn-emerald { background: #059669; color: #ffffff; }
+    .btn-emerald:hover { background: #047857; }
+    .btn-amber { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+    .btn-amber:hover { background: #fef3c7; }
+    .btn-danger { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+    .btn-danger:hover { background: #ffe4e6; }
+    
+    /* Dynamic Save Status Badge */
+    .status-badge { 
+      width: 38px; height: 38px; border-radius: 9px; 
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none; transition: all 0.25s ease;
+    }
+    .status-badge .material-symbols-rounded { font-size: 21px; }
+    .status-pending { background: #fffbeb; border: 1px solid #fde68a; }
+    .status-pending .material-symbols-rounded { color: #d97706; animation: pulsePending 1.4s infinite ease-in-out; }
+    .status-saving { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .status-saving .material-symbols-rounded { color: #2563eb; animation: spinIcon 0.9s infinite linear; }
+    .status-saved { background: #ecfdf5; border: 1px solid #a7f3d0; }
+    .status-saved .material-symbols-rounded { color: #059669; animation: greenBounce 0.75s cubic-bezier(0.28, 0.84, 0.42, 1); }
+
+    /* Layout */
+    .main-container { max-width: 1120px; margin: 22px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 20px; }
+    .view-section { display: none; flex-direction: column; gap: 20px; }
+    .view-section.active { display: flex; }
+
+    /* Cards */
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+    .card-title { 
+      font-size: 0.95rem; font-weight: 800; color: #0f172a; 
+      background: #f8fafc; border-left: 4px solid #0d9488; 
+      padding: 9px 12px; border-radius: 0 8px 8px 0; 
+      margin: -6px 0 18px 0; display: flex; justify-content: space-between; align-items: center; 
+    }
+    .card-title.purple-accent { border-left-color: #7c3aed; }
+    .card-title .heading-label { display: flex; align-items: center; gap: 8px; }
+    .card-title .heading-icon { color: #0d9488; font-size: 19px; }
+    .card-title.purple-accent .heading-icon { color: #7c3aed; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.76rem; font-weight: 700; color: #334155; }
+    
+    input[type="text"], input[type="password"], select, textarea {
+      width: 100%; padding: 9px 12px; font-size: 0.83rem; 
+      border: 1px solid #cbd5e1; border-radius: 8px; outline: none; 
+      background: #ffffff; color: #0f172a;
+    }
+    select {
+      appearance: none; -webkit-appearance: none;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="16"%20height="16"%20viewBox="0%200%2024%2024"%20fill="none"%20stroke="%23475569"%20stroke-width="2"%20stroke-linecap="round"%20stroke-linejoin="round"><polyline%20points="6%209%2012%2015%2018%209"></polyline></svg>');
+      background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; padding-right: 32px; cursor: pointer;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15); }
+    textarea { resize: vertical; line-height: 1.5; }
+    .input-action-row { display: flex; gap: 8px; align-items: center; }
+
+    /* Drop Zones */
+    .drop-zone {
+      border: 2px dashed #94a3b8; border-radius: 10px; padding: 20px 14px; 
+      text-align: center; background: #f8fafc; cursor: pointer; 
+      transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: #0d9488; background: #f0fdfa; }
+    .drop-zone.purple-zone:hover, .drop-zone.purple-zone.dragover { border-color: #7c3aed; background: #f5f3ff; }
+    .drop-zone .upload-icon { font-size: 30px; color: #0d9488; }
+    .drop-zone.purple-zone .upload-icon { color: #7c3aed; }
+    .drop-zone p { font-size: 0.81rem; color: #64748b; pointer-events: none; }
+    .drop-zone span { font-size: 0.81rem; color: #0d9488; font-weight: 700; pointer-events: none; }
+    .drop-zone.purple-zone span { color: #7c3aed; }
+    
+    .image-grid { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+    .image-preview { 
+      position: relative; width: 155px; height: 105px; border-radius: 8px; 
+      overflow: hidden; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; contain: content;
+    }
+    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview .order-badge {
+      position: absolute; top: 4px; left: 4px; background: rgba(15, 23, 42, 0.85);
+      color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; z-index: 2;
+    }
+    .image-preview button { 
+      position: absolute; top: 4px; right: 4px; background: rgba(225, 29, 72, 0.9); 
+      color: white; border: none; border-radius: 50%; width: 22px; height: 22px; 
+      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2;
+    }
+    .image-preview button .material-symbols-rounded { font-size: 14px; }
+
+    /* =========================================================
+       3-AGENT MANUAL QA PIPELINE UI (NO AUTOMATION)
+       ========================================================= */
+    .agent-pipeline {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px;
+    }
+    .agent-node {
+      border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 10px; padding: 13px;
+      display: flex; align-items: center; gap: 12px; transition: all 0.25s ease;
+    }
+    .agent-node.active { border-color: #7c3aed; background: #f5f3ff; animation: agentPulse 1.5s infinite; }
+    .agent-node.done { border-color: #10b981; background: #ecfdf5; }
+    .agent-avatar {
+      width: 40px; height: 40px; border-radius: 10px; background: #e2e8f0; color: #475569;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .agent-node.active .agent-avatar { background: #7c3aed; color: #ffffff; }
+    .agent-node.done .agent-avatar { background: #059669; color: #ffffff; }
+    .agent-info h4 { font-size: 0.8rem; font-weight: 800; color: #0f172a; }
+    .agent-info p { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+    .agent-tabs {
+      display: flex; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 15px; border-radius: 8px; font-size: 0.77rem; font-weight: 700;
+      cursor: pointer; border: 1px solid #cbd5e1; background: #ffffff; color: #475569;
+      display: flex; align-items: center; gap: 6px; transition: all 0.15s ease;
+    }
+    .tab-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Tables & Badges */
+    table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+    th { background: #f8fafc; color: #334155; font-weight: 700; text-align: left; padding: 10px; border: 1px solid #cbd5e1; }
+    td { padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
+    .delete-btn { color: #e11d48; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; }
+
+    .badge-type { padding: 3px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; display: inline-block; }
+    .type-func { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .type-retest { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .type-neg { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .type-expl { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .type-reg { background: #f3e8ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+
+    /* Interactive Checklist Cards for Agent 3 */
+    .guard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; }
+    .guard-box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; background: #f8fafc; }
+    .guard-box h4 { font-size: 0.82rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px;
+      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px;
+      font-size: 0.77rem; color: #1e293b; cursor: pointer; transition: all 0.15s;
+    }
+    .check-item:hover { border-color: #94a3b8; }
+    .check-item input[type="checkbox"] { margin-top: 2px; cursor: pointer; accent-color: #059669; width: 15px; height: 15px; }
+    .check-item.checked span { text-decoration: line-through; color: #64748b; }
+
+    .bottom-bar {
+      display: flex; justify-content: center; gap: 14px; margin-top: 8px;
+      padding: 16px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0;
+    }
+
+    /* Modals */
+    .modal-overlay { 
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); 
+      z-index: 99999; align-items: center; justify-content: center; contain: strict;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; }
+    
+    .preview-modal-card {
+      background: #ffffff; width: 95%; max-width: 980px; max-height: 94vh;
+      border-radius: 14px; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.25); overflow: hidden;
+    }
+    .preview-header { padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #ffffff; flex-shrink: 0; }
+    .preview-body { padding: 30px 20px; overflow-y: auto; background: #e2e8f0; display: flex; justify-content: center; }
+
+    /* Document Sheet */
+    .doc-page {
+      background: #ffffff; width: 100%; max-width: 850px; padding: 44px 48px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-radius: 4px;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; color: #000000;
+      font-size: 11pt; line-height: 1.5; box-sizing: border-box;
+    }
+    .doc-page .doc-main-title { font-size: 17pt; font-weight: 700; color: #000000; text-align: center; margin-bottom: 22px; }
+    .doc-page .doc-header-field { margin-bottom: 4px; font-size: 11pt; color: #000000; }
+    .doc-page .doc-section-heading { font-weight: 700; color: #000000; margin-top: 20px; margin-bottom: 6px; font-size: 11pt; }
+    .doc-page .doc-text { color: #000000; white-space: pre-wrap; margin-bottom: 14px; font-size: 11pt; line-height: 1.5; }
+    .doc-page .doc-img-item {
+      margin-top: 10px; margin-bottom: 20px; width: 100%; box-sizing: border-box;
+      overflow: hidden; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; page-break-inside: avoid;
+    }
+    .doc-page .doc-img-item img { width: 100%; height: auto; display: block; object-fit: contain; }
+
+    .zoom-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.94);
+      z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out;
+    }
+    .zoom-overlay.active { display: flex; }
+    .zoom-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 6px; }
+
+    @page { size: A4 portrait; margin: 12mm; }
+    @media print {
+      html, body { background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
+      body * { visibility: hidden; }
+      #printableDocArea, #printableDocArea * { visibility: visible; }
+      #printableDocArea { position: absolute; left: 0; top: 0; width: 100% !important; display: block !important; }
+      .doc-page { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
+      .doc-img-item { page-break-inside: avoid !important; border: 1px solid #000000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="printableDocArea" style="display:none;"></div>
+
+  <!-- Unified Sticky Header with Mode Switcher & Icon-Only Actions -->
+  <header>
+    <div class="header-container">
+      <div class="brand-wrap">
+        <div class="brand-avatar" id="brandAvatar">
+          <span class="material-symbols-rounded" id="brandIcon">verified</span>
+        </div>
+        <div class="title-area">
+          <h1 id="appMainTitle">Test Execution Report Generator</h1>
+          <p id="appSubTitle">Standard QA Verification & MantisBT Documentation</p>
+        </div>
+      </div>
+
+      <!-- MODE TOGGLE SWITCH -->
+      <div class="mode-switch-pill">
+        <button type="button" id="btnModeReport" class="mode-btn active-report" onclick="switchWorkspaceMode('report')">
+          <span class="material-symbols-rounded">assignment_turned_in</span> Execution Report
+        </button>
+        <button type="button" id="btnModeStudio" class="mode-btn" onclick="switchWorkspaceMode('studio')">
+          <span class="material-symbols-rounded">psychology</span> Rapid Test Case Studio
+        </button>
+      </div>
+      
+      <!-- Right Action Icons -->
+      <div class="btn-group">
+        <!-- 30s Auto-Save Status Icon -->
+        <span id="saveStatus" class="status-badge status-saved tooltip-bottom" onclick="performSaveNow()" data-tooltip="Auto-saved (Click to save now)">
+          <span class="material-symbols-rounded">check_circle</span>
+        </span>
+
+        <!-- Studio-Specific Action Icons (Visible in Studio Mode) -->
+        <button type="button" id="btnRunAgentsTop" style="display:none;" onclick="runFunctionalAgents()" class="btn-icon btn-purple tooltip-bottom" data-tooltip="Generate Functional, Regression & Exploratory Cases">
+          <span class="material-symbols-rounded">auto_awesome</span>
+        </button>
+        <button type="button" id="btnExcelTop" style="display:none;" onclick="exportStudioToExcel()" class="btn-icon btn-emerald tooltip-bottom" data-tooltip="Download Test Cases Excel (.csv)">
+          <span class="material-symbols-rounded">table_view</span>
+        </button>
+        <button type="button" id="btnSyncToReportTop" style="display:none;" onclick="pushStudioToExecutionReport()" class="btn-icon btn-amber tooltip-bottom" data-tooltip="Push Verified Steps to Execution Report">
+          <span class="material-symbols-rounded">drive_file_move</span>
+        </button>
+
+        <!-- Shared Export & Utility Icons -->
+        <button type="button" onclick="copyMantisSummary()" class="btn-icon btn-slate tooltip-bottom" data-tooltip="Copy MantisBT Summary">
+          <span class="material-symbols-rounded">content_copy</span>
+        </button>
+        <button type="button" onclick="openPreviewModal()" class="btn-icon btn-purple tooltip-bottom" data-tooltip="Preview Current Document">
+          <span class="material-symbols-rounded">visibility</span>
+        </button>
+        <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word (.doc)">
+          <span class="material-symbols-rounded">description</span>
+        </button>
+        <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-slate tooltip-bottom" data-tooltip="Print / Save as PDF">
+          <span class="material-symbols-rounded">picture_as_pdf</span>
+        </button>
+        <button type="button" onclick="downloadActiveHtml()" class="btn-icon btn-teal tooltip-bottom" data-tooltip="Export HTML File">
+          <span class="material-symbols-rounded">html</span>
+        </button>
+        <button type="button" onclick="resetToDocDefaults()" class="btn-icon btn-danger tooltip-bottom" data-tooltip="Reset Current Workspace">
+          <span class="material-symbols-rounded">restart_alt</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- SHARED CARD 1: APPLICATION & BUILD DETAILS (SYNCED ACROSS BOTH MODES) -->
+    <div class="card">
+      <div class="card-title" id="sharedCardHeader">
+        <span class="heading-label">
+          <span class="material-symbols-rounded heading-icon">layers</span>
+          1. Application & Ticket Context (Shared)
+        </span>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Project Name / Application Name *</label>
+          <div class="input-action-row">
+            <select id="projectSelect" onchange="onProjectChange()"></select>
+            <button type="button" onclick="triggerAddProject()" class="btn-icon btn-slate" data-tooltip="Add New Project">
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tested Module / Feature Names *</label>
+          <div class="input-action-row">
+            <select id="moduleSelect" onchange="markUnsaved()"></select>
+            <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module / Feature">
+              <span class="material-symbols-rounded">add</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>MantisBT Issue ID / Ticket *</label>
+          <input type="text" id="mantisId" placeholder="e.g. #001248">
+        </div>
+
+        <div class="form-group">
+          <label>Build Version *</label>
+          <input type="text" id="buildVersion" value="Release-52">
+        </div>
+
+        <div class="form-group">
+          <label>Test URL</label>
+          <input type="text" id="testUrl" value="jnbnivas.dev.nidhi.apcfss.in">
+        </div>
+
+        <div class="form-group">
+          <label>Login Reference</label>
+          <input type="text" id="loginRef" value="52.">
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         MODE 1 VIEW: TEST EXECUTION REPORT GENERATOR
+         ========================================================= -->
+    <div id="viewReport" class="view-section active">
+
+      <!-- Card 2: Scope & Execution Steps -->
+      <div class="card">
+        <div class="card-title">
+          <span class="heading-label">
+            <span class="material-symbols-rounded heading-icon">fact_check</span>
+            2. Scope & Execution Details
+          </span>
+        </div>
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>Detailed Description about Features/Services Tested</label>
+          <textarea id="featureDesc" rows="3">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label>Actual Result</label>
+          <input type="text" id="actualResult" value="Functioning as Expected." style="color: #000000; font-weight: 500;">
+        </div>
+
+        <div class="form-group">
+          <label>Execution Steps</label>
+          <textarea id="execSteps" rows="3">1. Navigate to the URL: JNB - Nivas  Web Application
+2. Login as mentioned user , navigate to “Staff Management Staff Attendance Confirmation” , verify the presence of the "Principal" designation , check the record , select values and click “Confirm”.</textarea>
+        </div>
+      </div>
+
+      <!-- Card 3: Screenshot References & Test Evidence -->
+      <div class="card">
+        <div class="card-title">
+          <span class="heading-label">
+            <span class="material-symbols-rounded heading-icon">image</span>
+            3. Screenshot References & Test Evidence
+          </span>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label>Production Screenshot Reference (Appears below Detailed Description in Report)</label>
+          <div class="drop-zone" id="prodDropZone">
+            <span class="material-symbols-rounded upload-icon">cloud_upload</span>
+            <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Production Screenshot</p>
+            <input type="file" id="prodFileInput" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="image-grid" id="prodImageGrid"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Test Execution Screenshots / Evidence (Appears below Execution Steps in Report)</label>
+          <div class="drop-zone" id="execDropZone">
+            <span class="material-symbols-rounded upload-icon">cloud_upload</span>
+            <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Execution Evidence</p>
+            <input type="file" id="execFileInput" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="image-grid" id="execImageGrid"></div>
+        </div>
+      </div>
+
+      <!-- Card 4: MantisBT Defects Logged -->
+      <div class="card">
+        <div class="card-title">
+          <span class="heading-label">
+            <span class="material-symbols-rounded heading-icon">bug_report</span>
+            4. MantisBT Defects Logged
+          </span>
+          <button type="button" onclick="addDefectRow()" class="btn-icon btn-slate" data-tooltip="Add Mantis Bug">
+            <span class="material-symbols-rounded">add_circle</span>
+          </button>
+        </div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 120px;">Bug ID</th>
+                <th style="width: 100px;">Severity</th>
+                <th style="width: 100px;">Priority</th>
+                <th>Description</th>
+                <th style="width: 110px;">Status</th>
+                <th style="width: 40px; text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="defectTableBody"></tbody>
+          </table>
+        </div>
+        <p id="noDefectsNotice" style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 10px;">No defects logged for this ticket.</p>
+      </div>
+
+    </div>
+
+    <!-- =========================================================
+         MODE 2 VIEW: RAPID FUNCTIONAL TEST CASE STUDIO (NO AUTOMATION)
+         ========================================================= -->
+    <div id="viewStudio" class="view-section">
+
+      <!-- Studio Card 2: Quick Change Input & Screenshots -->
+      <div class="card">
+        <div class="card-title purple-accent">
+          <span class="heading-label">
+            <span class="material-symbols-rounded heading-icon">bolt</span>
+            2. Quick Change Explanation & UI Screenshots
+          </span>
+          <div style="display:flex; gap:8px;">
+            <button type="button" onclick="openApiModal()" class="btn-icon btn-amber" data-tooltip="Optional Gemini Vision AI Key">
+              <span class="material-symbols-rounded">key</span>
+            </button>
+            <button type="button" onclick="runFunctionalAgents()" class="btn-icon btn-purple" data-tooltip="Generate All Functional, Retest & Regression Cases">
+              <span class="material-symbols-rounded">auto_awesome</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 14px;">
+          <div class="form-group">
+            <label>Changed UI Components / Fields (Comma separated)</label>
+            <input type="text" id="studioUiElements" value="Principal Designation Row, Checkbox, Attendance Dropdown, Reason Input, Confirm Button">
+          </div>
+          <div class="form-group">
+            <label>Impacted Existing Areas (For Regression Check)</label>
+            <input type="text" id="studioImpactedAreas" value="Existing Staff Designations, Attendance Summary Report, Biometric Sync">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label>Explain the Change / Ticket Requirement (Paste ticket notes or explain briefly) *</label>
+          <textarea id="studioChangeSummary" rows="3" placeholder="Explain what was changed or fixed in this ticket...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Added the "Principal" designation in the Employee (Type & Designation) column, allowed selecting attendance status (On Duty / Present / Absent), entering Reason for On Duty, and confirming attendance via the Confirm button.</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Upload / Paste Feature Screenshots (For Visual Requirement Verification)</label>
+          <div class="drop-zone purple-zone" id="studioDropZone">
+            <span class="material-symbols-rounded upload-icon">add_photo_alternate</span>
+            <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Change Screenshots</p>
+            <input type="file" id="studioFileInput" accept="image/*" multiple style="display:none">
+          </div>
+          <div class="image-grid" id="studioImageGrid"></div>
+        </div>
+      </div>
+
+      <!-- Studio Card 3: 3-Agent Manual QA Output (Planner • Functional Generator • Regression & Exploratory Guard) -->
+      <div class="card">
+        <div class="card-title purple-accent">
+          <span class="heading-label">
+            <span class="material-symbols-rounded heading-icon">psychology</span>
+            3. Rapid QA Coverage (Functional • Retesting • Regression • Exploratory)
+          </span>
+          <div style="display:flex; gap:8px;">
+            <button type="button" onclick="addCustomStudioTestCase()" class="btn-icon btn-slate" data-tooltip="Add Custom Test Case Row">
+              <span class="material-symbols-rounded">post_add</span>
+            </button>
+            <button type="button" onclick="exportStudioToExcel()" class="btn-icon btn-emerald" data-tooltip="Export Test Cases to Excel (.csv)">
+              <span class="material-symbols-rounded">table_view</span>
+            </button>
+            <button type="button" onclick="pushStudioToExecutionReport()" class="btn-icon btn-amber" data-tooltip="Push Verified Steps & Screenshots to Execution Report">
+              <span class="material-symbols-rounded">drive_file_move</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Manual QA Agents Status Bar -->
+        <div class="agent-pipeline">
+          <div class="agent-node done" id="nodePlanner">
+            <div class="agent-avatar"><span class="material-symbols-rounded">psychology</span></div>
+            <div class="agent-info">
+              <h4>1. Scenario Planner</h4>
+              <p id="statusPlanner">Positive, Negative & Role Matrix</p>
+            </div>
+          </div>
+          <div class="agent-node done" id="nodeGenerator">
+            <div class="agent-avatar"><span class="material-symbols-rounded">fact_check</span></div>
+            <div class="agent-info">
+              <h4>2. Functional & Retest Generator</h4>
+              <p id="statusGenerator">Step-by-Step Verification Cases</p>
+            </div>
+          </div>
+          <div class="agent-node done" id="nodeGuard">
+            <div class="agent-avatar"><span class="material-symbols-rounded">shield_locked</span></div>
+            <div class="agent-info">
+              <h4>3. Regression & Exploratory Guard</h4>
+              <p id="statusGuard">Requirement Match & Edge Checklist</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Studio Output Tabs -->
+        <div class="agent-tabs">
+          <button type="button" class="tab-btn active" onclick="switchStudioTab('tabFunctionalCases', this)">
+            <span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Functional & Retesting Cases (<span id="tcCount">0</span>)
+          </button>
+          <button type="button" class="tab-btn" onclick="switchStudioTab('tabScenarios', this)">
+            <span class="material-symbols-rounded" style="font-size:16px;">list_alt</span> Test Scenarios (<span id="scenarioCount">0</span>)
+          </button>
+          <button type="button" class="tab-btn" onclick="switchStudioTab('tabGuardChecklist', this)">
+            <span class="material-symbols-rounded" style="font-size:16px;">verified_user</span> Requirement Match, Regression & Exploratory Guard
+          </button>
+        </div>
+
+        <!-- TAB 1: FUNCTIONAL, RETESTING & NEGATIVE TEST CASES -->
+        <div id="tabFunctionalCases" class="tab-panel active">
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:80px;">TC ID</th>
+                  <th style="width:105px;">Testing Type</th>
+                  <th style="width:185px;">Scenario / Objective</th>
+                  <th>Execution Steps</th>
+                  <th style="width:190px;">Expected Result</th>
+                  <th style="width:85px;">Status</th>
+                  <th style="width:40px; text-align:center;">Del</th>
+                </tr>
+              </thead>
+              <tbody id="studioTestCaseBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: HIGH-LEVEL SCENARIOS -->
+        <div id="tabScenarios" class="tab-panel">
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:95px;">Scenario ID</th>
+                  <th style="width:120px;">Test Category</th>
+                  <th>Scenario Description (Click to Edit)</th>
+                  <th style="width:90px;">Priority</th>
+                </tr>
+              </thead>
+              <tbody id="studioScenarioBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: AGENT 3 - REQUIREMENT MATCH, EXPLORATORY & REGRESSION CHECKLIST -->
+        <div id="tabGuardChecklist" class="tab-panel">
+          <div class="guard-grid">
+            <div class="guard-box">
+              <h4><span class="material-symbols-rounded" style="color:#059669;">task_alt</span> Requirement Match Verification</h4>
+              <div id="reqMatchChecklist"></div>
+            </div>
+            <div class="guard-box">
+              <h4><span class="material-symbols-rounded" style="color:#d97706;">explore</span> Rapid Exploratory & Edge Probing</h4>
+              <div id="exploratoryChecklist"></div>
+            </div>
+            <div class="guard-box">
+              <h4><span class="material-symbols-rounded" style="color:#7c3aed;">history</span> Regression & Impact Checklist</h4>
+              <div id="regressionChecklist"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Bottom Icon-Only Bar -->
+    <div class="bottom-bar">
+      <button type="button" onclick="openPreviewModal()" class="btn-icon btn-purple" style="width:44px; height:44px;" data-tooltip="Preview Final Document">
+        <span class="material-symbols-rounded" style="font-size:22px;">visibility</span>
+      </button>
+      <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue" style="width:44px; height:44px;" data-tooltip="Download Word (.doc)">
+        <span class="material-symbols-rounded" style="font-size:22px;">description</span>
+      </button>
+      <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-slate" style="width:44px; height:44px;" data-tooltip="Print / Save as PDF">
+        <span class="material-symbols-rounded" style="font-size:22px;">picture_as_pdf</span>
+      </button>
+      <button type="button" onclick="downloadActiveHtml()" class="btn-icon btn-teal" style="width:44px; height:44px;" data-tooltip="Export HTML Report">
+        <span class="material-symbols-rounded" style="font-size:22px;">html</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Add Project Modal -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal-card">
+      <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+        <span class="material-symbols-rounded" style="color:#0d9488;">create_new_folder</span> Add New Project
+      </h3>
+      <div class="form-group">
+        <label>Project / Application Name *</label>
+        <input type="text" id="newProjectInput" placeholder="e.g. JNB-Hostel Application" onkeydown="if(event.key==='Enter') saveNewProject();">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+        <button type="button" onclick="closeProjectModal()" class="btn-icon btn-slate" data-tooltip="Cancel">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <button type="button" onclick="saveNewProject()" class="btn-icon btn-teal" data-tooltip="Save Project">
+          <span class="material-symbols-rounded">check</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Module Modal -->
+  <div class="modal-overlay" id="moduleModal">
+    <div class="modal-card">
+      <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+        <span class="material-symbols-rounded" style="color:#0d9488;">post_add</span> Add New Module / Feature
+      </h3>
+      <div class="form-group" style="margin-bottom: 10px;">
+        <label>For Project:</label>
+        <input type="text" id="moduleModalProjectName" disabled style="background:#f1f5f9; color:#475569; font-weight:600;">
+      </div>
+      <div class="form-group">
+        <label>Module / Feature Name *</label>
+        <input type="text" id="newModuleInput" placeholder="e.g. Staff Management  Staff Attendance Confirmation." onkeydown="if(event.key==='Enter') saveNewModule();">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+        <button type="button" onclick="closeModuleModal()" class="btn-icon btn-slate" data-tooltip="Cancel">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+        <button type="button" onclick="saveNewModule()" class="btn-icon btn-teal" data-tooltip="Save Module">
+          <span class="material-symbols-rounded">check</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional Gemini Vision Key Modal -->
+  <div class="modal-overlay" id="apiModal">
+    <div class="modal-card">
+      <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+        <span class="material-symbols-rounded" style="color:#d97706;">key</span> Gemini Vision AI Key (Optional)
+      </h3>
+      <p style="font-size: 0.74rem; color:#64748b; margin-bottom: 12px;">
+        Built-in QA Heuristic Agents work offline immediately. Add a Gemini API key if you want AI to read uploaded screenshot labels directly.
+      </p>
+      <div class="form-group">
+        <label>Gemini API Key</label>
+        <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy...">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+        <button type="button" onclick="document.getElementById('apiModal').classList.remove('active')" class="btn-icon btn-slate" data-tooltip="Close"><span class="material-symbols-rounded">close</span></button>
+        <button type="button" onclick="saveApiKey()" class="btn-icon btn-teal" data-tooltip="Save Key"><span class="material-symbols-rounded">check</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="preview-modal-card">
+      <div class="preview-header">
+        <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-rounded" style="color:#7c3aed;">description</span> Verify Document Preview
+        </h3>
+        <div style="display:flex; gap:8px;">
+          <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word (.doc)">
+            <span class="material-symbols-rounded">description</span>
+          </button>
+          <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-slate tooltip-bottom" data-tooltip="Print / Save as PDF">
+            <span class="material-symbols-rounded">picture_as_pdf</span>
+          </button>
+          <button type="button" onclick="downloadActiveHtml()" class="btn-icon btn-teal tooltip-bottom" data-tooltip="Export HTML Report">
+            <span class="material-symbols-rounded">html</span>
+          </button>
+          <button type="button" onclick="closePreviewModal()" class="btn-icon btn-danger tooltip-bottom" data-tooltip="Close Preview">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+      </div>
+      <div class="preview-body" id="previewModalContent"></div>
+    </div>
+  </div>
+
+  <!-- Lightbox Zoom -->
+  <div class="zoom-overlay" id="zoomOverlay" onclick="this.classList.remove('active')">
+    <img id="zoomOverlayImg" src="" alt="Zoomed Screenshot">
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'jnb_unified_qa_suite_v1';
+    const PROJECTS_KEY = 'qa_projects_list_v7';
+    const MODULES_MAP_KEY = 'qa_project_modules_map_v3';
+    const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
+
+    const defaultProjects = [
+      "JNB-Nivas Web Application.",
+      "JNB-Hostel Application",
+      "APCFSS Portal"
+    ];
+
+    const defaultModulesMap = {
+      "JNB-Nivas Web Application.": [
+        "Staff Management  Staff Attendance Confirmation.",
+        "Reports New --> Item Wise Purchase report"
+      ],
+      "JNB-Hostel Application": [
+        "Student Registration & Allocation",
+        "Biometric Attendance Tracking"
+      ],
+      "APCFSS Portal": [
+        "User Access Management",
+        "Role Based Service Allocation"
+      ]
+    };
+
+    let currentMode = 'report'; // 'report' or 'studio'
+    let prodImages = [];
+    let execImages = [];
+    let studioImages = [];
+    let activeDropTarget = 'exec';
+
+    // Studio Data Structures
+    let studioScenarios = [];
+    let studioTestCases = [];
+    let guardChecklists = { reqMatch: [], exploratory: [], regression: [] };
+
+    let isDirty = false;
+    let autoSaveTimer = null;
+
+    // =========================================================
+    // 1. WORKSPACE MODE TOGGLE SWITCH (REPORT <-> STUDIO)
+    // =========================================================
+    function switchWorkspaceMode(mode) {
+      currentMode = mode;
+      const viewReport = document.getElementById('viewReport');
+      const viewStudio = document.getElementById('viewStudio');
+      const btnReport = document.getElementById('btnModeReport');
+      const btnStudio = document.getElementById('btnModeStudio');
+      const avatar = document.getElementById('brandAvatar');
+      const icon = document.getElementById('brandIcon');
+      const mainTitle = document.getElementById('appMainTitle');
+      const subTitle = document.getElementById('appSubTitle');
+      const sharedHeader = document.getElementById('sharedCardHeader');
+
+      // Studio Top Bar Buttons
+      const studioBtns = ['btnRunAgentsTop', 'btnExcelTop', 'btnSyncToReportTop'];
+
+      if (mode === 'studio') {
+        viewReport.classList.remove('active');
+        viewStudio.classList.add('active');
+        btnReport.className = 'mode-btn';
+        btnStudio.className = 'mode-btn active-studio';
+        avatar.classList.add('studio-mode');
+        icon.textContent = 'psychology';
+        mainTitle.textContent = 'Rapid Functional Test Case Studio';
+        subTitle.textContent = 'Functional • Retesting • Regression • Exploratory • Requirement Match';
+        sharedHeader.classList.add('purple-accent');
+        studioBtns.forEach(id => document.getElementById(id).style.display = 'inline-flex');
+        activeDropTarget = 'studio';
+      } else {
+        viewStudio.classList.remove('active');
+        viewReport.classList.add('active');
+        btnStudio.className = 'mode-btn';
+        btnReport.className = 'mode-btn active-report';
+        avatar.classList.remove('studio-mode');
+        icon.textContent = 'verified';
+        mainTitle.textContent = 'Test Execution Report Generator';
+        subTitle.textContent = 'Standard QA Verification & MantisBT Documentation';
+        sharedHeader.classList.remove('purple-accent');
+        studioBtns.forEach(id => document.getElementById(id).style.display = 'none');
+        activeDropTarget = 'exec';
+      }
+    }
+
+    // =========================================================
+    // 2. 30-SECOND AUTO-SAVE & GREEN BOUNCE BADGE
+    // =========================================================
+    function setBadgeState(state) {
+      const badge = document.getElementById('saveStatus');
+      badge.className = 'status-badge tooltip-bottom';
+
+      if (state === 'pending') {
+        badge.classList.add('status-pending');
+        badge.setAttribute('data-tooltip', 'Unsaved changes (Auto-saves in 30s or click now)');
+        badge.innerHTML = '<span class="material-symbols-rounded">pending</span>';
+      } else if (state === 'saving') {
+        badge.classList.add('status-saving');
+        badge.setAttribute('data-tooltip', 'Saving changes...');
+        badge.innerHTML = '<span class="material-symbols-rounded">sync</span>';
+      } else if (state === 'saved') {
+        void badge.offsetWidth;
+        badge.classList.add('status-saved');
+        badge.setAttribute('data-tooltip', 'Auto-saved (Click to save now)');
+        badge.innerHTML = '<span class="material-symbols-rounded">check_circle</span>';
+      }
+    }
+
+    function markUnsaved() {
+      isDirty = true;
+      setBadgeState('pending');
+      if (!autoSaveTimer) {
+        autoSaveTimer = setTimeout(performSaveNow, 30000);
+      }
+    }
+
+    function performSaveNow() {
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+
+      setBadgeState('saving');
+
+      setTimeout(() => {
+        syncStudioTableEditsFromDOM();
+
+        const defectRows = [];
+        document.querySelectorAll('#defectTableBody tr').forEach(tr => {
+          defectRows.push({
+            id: tr.querySelector('.d-id')?.value || '',
+            sev: tr.querySelector('.d-sev')?.value || 'minor',
+            pri: tr.querySelector('.d-pri')?.value || 'normal',
+            desc: tr.querySelector('.d-desc')?.value || '',
+            status: tr.querySelector('.d-status')?.value || 'resolved'
+          });
+        });
+
+        const data = {
+          project: document.getElementById('projectSelect').value,
+          module: document.getElementById('moduleSelect').value,
+          mantisId: document.getElementById('mantisId').value,
+          build: document.getElementById('buildVersion').value,
+          url: document.getElementById('testUrl').value,
+          login: document.getElementById('loginRef').value,
+          desc: document.getElementById('featureDesc').value,
+          steps: document.getElementById('execSteps').value,
+          res: document.getElementById('actualResult').value,
+          defects: defectRows,
+          studioUiElements: document.getElementById('studioUiElements').value,
+          studioImpactedAreas: document.getElementById('studioImpactedAreas').value,
+          studioChangeSummary: document.getElementById('studioChangeSummary').value,
+          studioScenarios,
+          studioTestCases,
+          guardChecklists
+        };
+
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          isDirty = false;
+          setBadgeState('saved');
+        } catch (e) {}
+      }, 240);
+    }
+
+    setInterval(() => { if (isDirty) performSaveNow(); }, 30000);
+
+    // =========================================================
+    // 3. PROJECT & MODULE MAPPING
+    // =========================================================
+    function getStoredProjects() {
+      try {
+        const s = JSON.parse(localStorage.getItem(PROJECTS_KEY));
+        if (Array.isArray(s) && s.length) return s;
+      } catch (e) {}
+      return [...defaultProjects];
+    }
+
+    function getStoredModulesMap() {
+      try {
+        const s = JSON.parse(localStorage.getItem(MODULES_MAP_KEY));
+        if (s && typeof s === 'object') return s;
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(defaultModulesMap));
+    }
+
+    function populateProjectDropdown(selected = null) {
+      const projects = getStoredProjects();
+      const select = document.getElementById('projectSelect');
+      const cur = selected || select.value || projects[0];
+      select.innerHTML = '';
+      projects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p; opt.textContent = p;
+        select.appendChild(opt);
+      });
+      select.value = projects.includes(cur) ? cur : projects[0];
+    }
+
+    function populateModuleDropdown(selected = null) {
+      const currentProject = document.getElementById('projectSelect').value;
+      const modulesMap = getStoredModulesMap();
+      const modules = modulesMap[currentProject] || [];
+      const select = document.getElementById('moduleSelect');
+      select.innerHTML = '';
+      if (!modules.length) {
+        const opt = document.createElement('option');
+        opt.value = ''; opt.textContent = '-- No modules added (Click + Icon) --';
+        select.appendChild(opt);
+      } else {
+        modules.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m; opt.textContent = m;
+          select.appendChild(opt);
+        });
+        select.value = (selected && modules.includes(selected)) ? selected : modules[0];
+      }
+    }
+
+    function onProjectChange() { populateModuleDropdown(); markUnsaved(); }
+    function triggerAddProject() { document.getElementById('projectModal').classList.add('active'); setTimeout(() => document.getElementById('newProjectInput').focus(), 60); }
+    function closeProjectModal() { document.getElementById('projectModal').classList.remove('active'); document.getElementById('newProjectInput').value = ''; }
+
+    function saveNewProject() {
+      const val = document.getElementById('newProjectInput').value.trim();
+      if (!val) return;
+      const projects = getStoredProjects();
+      if (!projects.includes(val)) { projects.push(val); localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects)); }
+      const map = getStoredModulesMap();
+      if (!map[val]) { map[val] = []; localStorage.setItem(MODULES_MAP_KEY, JSON.stringify(map)); }
+      closeProjectModal(); populateProjectDropdown(val); populateModuleDropdown(); performSaveNow();
+    }
+
+    function triggerAddModule() {
+      document.getElementById('moduleModalProjectName').value = document.getElementById('projectSelect').value;
+      document.getElementById('moduleModal').classList.add('active');
+      setTimeout(() => document.getElementById('newModuleInput').focus(), 60);
+    }
+    function closeModuleModal() { document.getElementById('moduleModal').classList.remove('active'); document.getElementById('newModuleInput').value = ''; }
+
+    function saveNewModule() {
+      const proj = document.getElementById('projectSelect').value;
+      const val = document.getElementById('newModuleInput').value.trim();
+      if (!val) return;
+      const map = getStoredModulesMap();
+      if (!map[proj]) map[proj] = [];
+      if (!map[proj].includes(val)) { map[proj].push(val); localStorage.setItem(MODULES_MAP_KEY, JSON.stringify(map)); }
+      closeModuleModal(); populateModuleDropdown(val); performSaveNow();
+    }
+
+    // =========================================================
+    // 4. UNIFIED SCREENSHOT HANDLERS (PROD, EXEC & STUDIO)
+    // =========================================================
+    function readFileAsDataURL(file) {
+      return new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = (e) => res(e.target.result);
+        reader.onerror = () => res(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function processFiles(files, targetType) {
+      if (!files || !files.length) return;
+      const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      for (const file of validFiles) {
+        const dataUrl = await readFileAsDataURL(file);
+        if (dataUrl) {
+          if (targetType === 'prod') prodImages.push(dataUrl);
+          else if (targetType === 'studio') studioImages.push(dataUrl);
+          else execImages.push(dataUrl);
+        }
+      }
+      requestAnimationFrame(() => {
+        renderImages('prod');
+        renderImages('exec');
+        renderImages('studio');
+      });
+    }
+
+    function bindDropZone(zoneId, inputId, type) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+
+      zone.addEventListener('click', () => { activeDropTarget = type; input.click(); });
+      input.addEventListener('change', (e) => { processFiles(e.target.files, type); input.value = ''; });
+      zone.addEventListener('dragenter', (e) => { e.preventDefault(); zone.classList.add('dragover'); activeDropTarget = type; });
+      zone.addEventListener('dragover', (e) => e.preventDefault());
+      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault(); zone.classList.remove('dragover'); activeDropTarget = type;
+        if (e.dataTransfer?.files) processFiles(e.dataTransfer.files, type);
+      });
+    }
+
+    bindDropZone('prodDropZone', 'prodFileInput', 'prod');
+    bindDropZone('execDropZone', 'execFileInput', 'exec');
+    bindDropZone('studioDropZone', 'studioFileInput', 'studio');
+
+    window.addEventListener('paste', (e) => {
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      if (tag === 'textarea' || (tag === 'input' && document.activeElement.type === 'text')) return;
+      if (document.activeElement?.isContentEditable) return;
+
+      const items = (e.clipboardData || window.clipboardData)?.items || [];
+      const files = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const f = items[i].getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length) {
+        e.preventDefault();
+        const target = currentMode === 'studio' ? 'studio' : activeDropTarget;
+        processFiles(files, target);
+      }
+    });
+
+    function renderImages(type) {
+      const gridId = type === 'prod' ? 'prodImageGrid' : (type === 'studio' ? 'studioImageGrid' : 'execImageGrid');
+      const list = type === 'prod' ? prodImages : (type === 'studio' ? studioImages : execImages);
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = '';
+      list.forEach((src, idx) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview';
+        div.innerHTML = `
+          <span class="order-badge">#${idx + 1}</span>
+          <img src="${src}" onclick="openZoom('${src}')" loading="lazy">
+          <button type="button" data-tooltip="Remove Screenshot" onclick="removeImage('${type}', ${idx}, event)">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function removeImage(type, idx, event) {
+      if (event) event.stopPropagation();
+      if (type === 'prod') prodImages.splice(idx, 1);
+      else if (type === 'studio') studioImages.splice(idx, 1);
+      else execImages.splice(idx, 1);
+      renderImages(type);
+    }
+
+    function openZoom(src) {
+      document.getElementById('zoomOverlayImg').src = src;
+      document.getElementById('zoomOverlay').classList.add('active');
+    }
+
+    // =========================================================
+    // 5. RAPID MANUAL QA 3-AGENT ENGINE (NO AUTOMATION OVERHEAD)
+    // =========================================================
+    async function runFunctionalAgents() {
+      const proj = document.getElementById('projectSelect').value;
+      const mod = document.getElementById('moduleSelect').value;
+      const url = document.getElementById('testUrl').value;
+      const login = document.getElementById('loginRef').value;
+      const uiEls = document.getElementById('studioUiElements').value;
+      const impacted = document.getElementById('studioImpactedAreas').value;
+      const summary = document.getElementById('studioChangeSummary').value.trim();
+
+      if (!summary) {
+        alert('Please explain the change or ticket requirement first.');
+        return;
+      }
+
+      ['nodePlanner', 'nodeGenerator', 'nodeGuard'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('done');
+        el.classList.add('active');
+      });
+
+      const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+      if (apiKey && studioImages.length > 0) {
+        const ok = await tryGeminiFunctionalAgents(apiKey, proj, mod, url, login, uiEls, impacted, summary);
+        if (ok) {
+          finishStudioAgents();
+          return;
+        }
+      }
+
+      setTimeout(() => {
+        generateManualQaSuite(proj, mod, url, login, uiEls, impacted, summary);
+        finishStudioAgents();
+      }, 380);
+    }
+
+    function finishStudioAgents() {
+      ['nodePlanner', 'nodeGenerator', 'nodeGuard'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('active');
+        el.classList.add('done');
+      });
+      document.getElementById('statusPlanner').textContent = `${studioScenarios.length} Scenarios Mapped`;
+      document.getElementById('statusGenerator').textContent = `${studioTestCases.length} Functional & Retest Cases`;
+      document.getElementById('statusGuard').textContent = `Requirement, Exploratory & Regression Ready`;
+
+      renderStudioOutputs();
+      performSaveNow();
+    }
+
+    function generateManualQaSuite(proj, mod, url, login, uiEls, impacted, summary) {
+      const quoted = [...summary.matchAll(/["“”']([^"“”']+)["“”']/g)].map(m => m[1]);
+      const primaryItem = quoted[0] || 'Updated Feature / Designation';
+      const actionBtn = quoted[1] || 'Confirm';
+      const compList = uiEls.split(',').map(s => s.trim()).filter(Boolean);
+      const impactList = impacted.split(',').map(s => s.trim()).filter(Boolean);
+
+      // AGENT 1: SCENARIO PLANNER
+      studioScenarios = [
+        { id: 'TS_01', cat: 'Retesting', pri: 'High', desc: `Verify defect fix / CR implementation: "${primaryItem}" is present and visible in ${mod}.` },
+        { id: 'TS_02', cat: 'Functional', pri: 'High', desc: `Verify end-to-end positive workflow: selecting "${primaryItem}", choosing dropdown values, and clicking "${actionBtn}".` },
+        { id: 'TS_03', cat: 'Negative', pri: 'High', desc: `Verify mandatory field validation when clicking "${actionBtn}" without selecting checkbox or status.` },
+        { id: 'TS_04', cat: 'Negative', pri: 'Medium', desc: `Verify conditional field validation (e.g. selecting "On Duty" without entering Reason remarks).` },
+        { id: 'TS_05', cat: 'Exploratory', pri: 'Medium', desc: `Verify data persistence on page refresh (F5), rapid double-click on "${actionBtn}", and browser back navigation.` },
+        { id: 'TS_06', cat: 'Regression', pri: 'High', desc: `Verify existing records and linked services (${impactList.slice(0,2).join(', ') || 'Other Designations'}) work without breakage.` }
+      ];
+
+      // AGENT 2: FUNCTIONAL, RETESTING, NEGATIVE & REGRESSION CASES
+      studioTestCases = [
+        {
+          id: 'TC_001',
+          type: 'Retesting',
+          scenario: `Verify "${primaryItem}" availability as per ticket requirement`,
+          steps: `1. Navigate to ${url}\n2. Login with reference credentials (${login})\n3. Navigate to "${mod}"\n4. Verify presence of "${primaryItem}" on screen`,
+          expected: `"${primaryItem}" should be clearly visible and aligned properly with existing records.`,
+          status: 'Pass'
+        },
+        {
+          id: 'TC_002',
+          type: 'Functional',
+          scenario: `Verify positive confirmation workflow for "${primaryItem}"`,
+          steps: `1. In "${mod}", locate "${primaryItem}"\n2. Check the record selection checkbox\n3. Select valid status (Present / On Duty / Absent) and enter remarks\n4. Click "${actionBtn}"`,
+          expected: `Confirmation success message should appear and selected values should save accurately.`,
+          status: 'Pass'
+        },
+        {
+          id: 'TC_003',
+          type: 'Negative',
+          scenario: `Verify validation on submitting without selection`,
+          steps: `1. Navigate to "${mod}"\n2. Without selecting checkbox or status dropdown, click "${actionBtn}"`,
+          expected: `System should restrict submission and show validation alert message.`,
+          status: 'Pass'
+        },
+        {
+          id: 'TC_004',
+          type: 'Negative',
+          scenario: `Verify mandatory remarks/reason validation`,
+          steps: `1. Select "${primaryItem}" checkbox\n2. Choose status requiring remarks (e.g., On Duty)\n3. Leave Reason blank or enter only spaces and click "${actionBtn}"`,
+          expected: `System should prompt user to enter valid mandatory reason before confirmation.`,
+          status: 'Pass'
+        },
+        {
+          id: 'TC_005',
+          type: 'Exploratory',
+          scenario: `Verify Page Refresh (F5) & Duplicate Click behavior`,
+          steps: `1. Confirm attendance/record for "${primaryItem}"\n2. Press F5 (Refresh page) and check status\n3. Try double-clicking "${actionBtn}" rapidly during save`,
+          expected: `Saved state must persist after refresh; rapid clicks must not create duplicate records.`,
+          status: 'Pass'
+        },
+        {
+          id: 'TC_006',
+          type: 'Regression',
+          scenario: `Verify existing designations/records in "${mod}"`,
+          steps: `1. Select any pre-existing record other than "${primaryItem}"\n2. Update status and click "${actionBtn}"\n3. Check ${impactList[0] || 'related reports'}`,
+          expected: `Existing functionalities and reports should work as expected without side-effects.`,
+          status: 'Pass'
+        }
+      ];
+
+      // AGENT 3: REQUIREMENT MATCH, EXPLORATORY & REGRESSION GUARD CHECKLISTS
+      guardChecklists = {
+        reqMatch: [
+          { text: `Requirement Match: "${primaryItem}" is spelled accurately and visible under ${mod}.`, done: true },
+          { text: `UI Controls Match: ${compList.join(', ')} are aligned and functional.`, done: true },
+          { text: `Role Access: Login (${login}) has proper permission to view and confirm "${primaryItem}".`, done: true },
+          { text: `Database / State Match: Confirmed record reflects immediately in UI & backend.`, done: true }
+        ],
+        exploratory: [
+          { text: `Empty / Null Check: Submit with "---select---" default dropdown value.`, done: false },
+          { text: `Boundary / Special Chars: Test remarks input with special characters (@#&*-) and long text.`, done: false },
+          { text: `Double Submit Probe: Click "${actionBtn}" twice rapidly on slow network.`, done: false },
+          { text: `Session / Refresh Probe: Reload browser (F5) immediately after confirmation.`, done: false }
+        ],
+        regression: impactList.map(item => ({
+          text: `Regression Check: Verify "${item}" is unaffected by this change.`,
+          done: false
+        })).concat([
+          { text: `Console & Network Check: No 404/500 API errors in DevTools Network tab.`, done: true }
+        ])
+      };
+    }
+
+    async function tryGeminiFunctionalAgents(apiKey, proj, mod, url, login, uiEls, impacted, summary) {
+      try {
+        const parts = [{
+          text: `You are a Rapid Manual QA Functional Lead. Do NOT generate automation code.
+Project: ${proj}, Module: ${mod}, URL: ${url}, Login: ${login}
+Changed UI Elements: ${uiEls}
+Impacted Areas: ${impacted}
+Change Summary: ${summary}
+
+Return STRICT JSON with keys:
+"scenarios": [{"id":"TS_01","cat":"Retesting|Functional|Negative|Exploratory|Regression","pri":"High|Medium","desc":"..."}],
+"testCases": [{"id":"TC_001","type":"Retesting|Functional|Negative|Exploratory|Regression","scenario":"...","steps":"1. ...\\n2. ...","expected":"...","status":"Pass"}],
+"guardChecklists": {
+  "reqMatch": [{"text":"...","done":true}],
+  "exploratory": [{"text":"...","done":false}],
+  "regression": [{"text":"...","done":false}]
+}`
+        }];
+
+        if (studioImages[0]) {
+          const base64Data = studioImages[0].split(',')[1];
+          const mimeType = studioImages[0].split(';')[0].split(':')[1];
+          parts.push({ inline_data: { mime_type: mimeType, data: base64Data } });
+        }
+
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: "application/json" } })
+        });
+
+        if (!resp.ok) return false;
+        const json = await resp.json();
+        const parsed = JSON.parse(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+        if (parsed.scenarios) studioScenarios = parsed.scenarios;
+        if (parsed.testCases) studioTestCases = parsed.testCases;
+        if (parsed.guardChecklists) guardChecklists = parsed.guardChecklists;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function getBadgeClassForType(t = '') {
+      const s = t.toLowerCase();
+      if (s.includes('retest')) return 'type-retest';
+      if (s.includes('neg')) return 'type-neg';
+      if (s.includes('expl')) return 'type-expl';
+      if (s.includes('reg')) return 'type-reg';
+      return 'type-func';
+    }
+
+    function renderStudioOutputs() {
+      document.getElementById('tcCount').textContent = studioTestCases.length;
+      document.getElementById('scenarioCount').textContent = studioScenarios.length;
+
+      // 1. Render Functional & Retest Cases
+      const tcBody = document.getElementById('studioTestCaseBody');
+      tcBody.innerHTML = '';
+      studioTestCases.forEach((tc, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:700;" class="st-id">${tc.id}</td>
+          <td><span class="badge-type ${getBadgeClassForType(tc.type)} st-type">${tc.type}</span></td>
+          <td contenteditable="true" class="st-scen" oninput="markUnsaved()">${tc.scenario}</td>
+          <td contenteditable="true" class="st-steps" style="white-space:pre-wrap;" oninput="markUnsaved()">${tc.steps}</td>
+          <td contenteditable="true" class="st-exp" oninput="markUnsaved()">${tc.expected}</td>
+          <td>
+            <select class="st-status" onchange="markUnsaved()" style="padding:4px 22px 4px 8px; font-size:0.74rem; font-weight:700;">
+              <option value="Pass" ${tc.status === 'Pass' ? 'selected' : ''}>Pass</option>
+              <option value="Fail" ${tc.status === 'Fail' ? 'selected' : ''}>Fail</option>
+              <option value="Retest" ${tc.status === 'Retest' ? 'selected' : ''}>Retest</option>
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <button type="button" class="delete-btn" onclick="studioTestCases.splice(${idx},1); renderStudioOutputs(); markUnsaved();">
+              <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+            </button>
+          </td>
+        `;
+        tcBody.appendChild(tr);
+      });
+
+      // 2. Render Scenarios
+      const sBody = document.getElementById('studioScenarioBody');
+      sBody.innerHTML = '';
+      studioScenarios.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:700;">${s.id}</td>
+          <td><span class="badge-type ${getBadgeClassForType(s.cat)}">${s.cat}</span></td>
+          <td contenteditable="true" oninput="markUnsaved()">${s.desc}</td>
+          <td style="font-weight:700;">${s.pri}</td>
+        `;
+        sBody.appendChild(tr);
+      });
+
+      // 3. Render Guard Checklists
+      renderChecklistGroup('reqMatchChecklist', guardChecklists.reqMatch || [], 'reqMatch');
+      renderChecklistGroup('exploratoryChecklist', guardChecklists.exploratory || [], 'exploratory');
+      renderChecklistGroup('regressionChecklist', guardChecklists.regression || [], 'regression');
+    }
+
+    function renderChecklistGroup(containerId, items, groupKey) {
+      const box = document.getElementById(containerId);
+      box.innerHTML = '';
+      items.forEach((item, idx) => {
+        const label = document.createElement('label');
+        label.className = `check-item ${item.done ? 'checked' : ''}`;
+        label.innerHTML = `
+          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleGuardItem('${groupKey}', ${idx}, this.checked)">
+          <span>${item.text}</span>
+        `;
+        box.appendChild(label);
+      });
+    }
+
+    function toggleGuardItem(groupKey, idx, checked) {
+      if (guardChecklists[groupKey] && guardChecklists[groupKey][idx]) {
+        guardChecklists[groupKey][idx].done = checked;
+        renderChecklistGroup(
+          groupKey === 'reqMatch' ? 'reqMatchChecklist' : (groupKey === 'exploratory' ? 'exploratoryChecklist' : 'regressionChecklist'),
+          guardChecklists[groupKey],
+          groupKey
+        );
+        markUnsaved();
+      }
+    }
+
+    function syncStudioTableEditsFromDOM() {
+      const rows = document.querySelectorAll('#studioTestCaseBody tr');
+      if (!rows.length) return;
+      studioTestCases = Array.from(rows).map(r => ({
+        id: r.querySelector('.st-id')?.textContent.trim() || 'TC',
+        type: r.querySelector('.st-type')?.textContent.trim() || 'Functional',
+        scenario: r.querySelector('.st-scen')?.innerText.trim() || '',
+        steps: r.querySelector('.st-steps')?.innerText.trim() || '',
+        expected: r.querySelector('.st-exp')?.innerText.trim() || '',
+        status: r.querySelector('.st-status')?.value || 'Pass'
+      }));
+    }
+
+    function addCustomStudioTestCase() {
+      syncStudioTableEditsFromDOM();
+      const nextNum = String(studioTestCases.length + 1).padStart(3, '0');
+      studioTestCases.push({
+        id: `TC_${nextNum}`,
+        type: 'Functional',
+        scenario: 'Custom functional verification',
+        steps: '1. Navigate to module\n2. Verify feature behavior',
+        expected: 'Functioning as expected.',
+        status: 'Pass'
+      });
+      renderStudioOutputs();
+      markUnsaved();
+    }
+
+    function switchStudioTab(tabId, btn) {
+      document.querySelectorAll('#viewStudio .tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#viewStudio .tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // One-Click Push from Studio -> Execution Report
+    function pushStudioToExecutionReport() {
+      syncStudioTableEditsFromDOM();
+      const summary = document.getElementById('studioChangeSummary').value.trim();
+      if (summary) {
+        document.getElementById('featureDesc').value = summary;
+      }
+      if (studioTestCases.length > 0) {
+        // Combine primary functional steps into Execution Report steps
+        document.getElementById('execSteps').value = studioTestCases[1]?.steps || studioTestCases[0].steps;
+      }
+      if (studioImages.length > 0) {
+        execImages = [...studioImages];
+        renderImages('exec');
+      }
+      switchWorkspaceMode('report');
+      performSaveNow();
+      alert('Synced Change Description, Steps & Screenshots to Execution Report!');
+    }
+
+    // =========================================================
+    // 6. DEFECTS TABLE (REPORT MODE)
+    // =========================================================
+    function addDefectRow(data = {}, skipDirty = false) {
+      document.getElementById('noDefectsNotice').style.display = 'none';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" class="d-id" placeholder="#00142" value="${data.id || ''}"></td>
+        <td>
+          <select class="d-sev">
+            <option value="minor" ${data.sev === 'minor' ? 'selected' : ''}>minor</option>
+            <option value="major" ${data.sev === 'major' ? 'selected' : ''}>major</option>
+            <option value="block" ${data.sev === 'block' ? 'selected' : ''}>block</option>
+            <option value="crash" ${data.sev === 'crash' ? 'selected' : ''}>crash</option>
+          </select>
+        </td>
+        <td>
+          <select class="d-pri">
+            <option value="normal" ${data.pri === 'normal' ? 'selected' : ''}>normal</option>
+            <option value="high" ${data.pri === 'high' ? 'selected' : ''}>high</option>
+            <option value="urgent" ${data.pri === 'urgent' ? 'selected' : ''}>urgent</option>
+          </select>
+        </td>
+        <td><input type="text" class="d-desc" placeholder="Summary..." value="${data.desc || ''}"></td>
+        <td>
+          <select class="d-status">
+            <option value="resolved" ${data.status === 'resolved' ? 'selected' : ''}>resolved</option>
+            <option value="closed" ${data.status === 'closed' ? 'selected' : ''}>closed</option>
+            <option value="new" ${data.status === 'new' ? 'selected' : ''}>new</option>
+          </select>
+        </td>
+        <td style="text-align:center;">
+          <button type="button" class="delete-btn" data-tooltip="Delete Row" onclick="this.closest('tr').remove(); checkDefectCount();">
+            <span class="material-symbols-rounded">delete</span>
+          </button>
+        </td>
+      `;
+      document.getElementById('defectTableBody').appendChild(tr);
+      tr.querySelectorAll('input, select').forEach(el => el.addEventListener('input', markUnsaved));
+      if (!skipDirty) markUnsaved();
+    }
+
+    function checkDefectCount(skipDirty = false) {
+      if (document.querySelectorAll('#defectTableBody tr').length === 0) {
+        document.getElementById('noDefectsNotice').style.display = 'block';
+      }
+      if (!skipDirty) markUnsaved();
+    }
+
+    // =========================================================
+    // 7. EXPORTS & PREVIEW (SUPPORTS BOTH REPORT & STUDIO MODES)
+    // =========================================================
+    function buildReportDocHtml() {
+      const p = document.getElementById('projectSelect').value;
+      const mod = document.getElementById('moduleSelect').value;
+      const url = document.getElementById('testUrl').value;
+      const login = document.getElementById('loginRef').value;
+      const desc = document.getElementById('featureDesc').value;
+      const steps = document.getElementById('execSteps').value;
+      const res = document.getElementById('actualResult').value;
+
+      let prodSectionHtml = '';
+      if (prodImages.length > 0) {
+        prodSectionHtml = `
+          <div class="doc-section-heading">Production Screenshot reference:-</div>
+          ${prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('')}
+        `;
+      }
+
+      let execImgsHtml = '';
+      if (execImages.length > 0) {
+        execImgsHtml = execImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
+      }
+
+      return `
+        <div class="doc-page">
+          <div class="doc-main-title">Test Execution Report</div>
+          <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${p}</div>
+          <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${mod}</div>
+          <div class="doc-header-field"><strong>Test URL:</strong> ${url}</div>
+          <div class="doc-header-field"><strong>Login :-</strong> ${login}</div>
+          
+          <div class="doc-section-heading">Detailed Description about Features/Services Tested:</div>
+          <div class="doc-text">${desc}</div>
+          
+          ${prodSectionHtml}
+
+          <div class="doc-section-heading">Actual Result:</div>
+          <div class="doc-text">${res}</div>
+
+          <div class="doc-section-heading">Execution Steps:</div>
+          <div class="doc-text">${steps}</div>
+          
+          ${execImgsHtml}
+        </div>
+      `;
+    }
+
+    function buildStudioDocHtml() {
+      syncStudioTableEditsFromDOM();
+      const p = document.getElementById('projectSelect').value;
+      const mod = document.getElementById('moduleSelect').value;
+      const url = document.getElementById('testUrl').value;
+      const login = document.getElementById('loginRef').value;
+      const summary = document.getElementById('studioChangeSummary').value;
+
+      const rowsHtml = studioTestCases.map(tc => `
+        <tr>
+          <td style="border:1px solid #000; padding:6px;"><strong>${tc.id}</strong></td>
+          <td style="border:1px solid #000; padding:6px;">${tc.type}</td>
+          <td style="border:1px solid #000; padding:6px;">${tc.scenario}</td>
+          <td style="border:1px solid #000; padding:6px; white-space:pre-wrap;">${tc.steps}</td>
+          <td style="border:1px solid #000; padding:6px;">${tc.expected}</td>
+          <td style="border:1px solid #000; padding:6px; font-weight:bold;">${tc.status}</td>
+        </tr>
+      `).join('');
+
+      const imgsHtml = studioImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
+
+      return `
+        <div class="doc-page">
+          <div class="doc-main-title">Functional, Retesting & Regression Test Cases</div>
+          <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${p}</div>
+          <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${mod}</div>
+          <div class="doc-header-field"><strong>Test URL:</strong> ${url}</div>
+          <div class="doc-header-field"><strong>Login :-</strong> ${login}</div>
+
+          <div class="doc-section-heading">Requirement / Change Summary:</div>
+          <div class="doc-text">${summary}</div>
+
+          <div class="doc-section-heading">Verified Test Cases (${studioTestCases.length}):</div>
+          <table style="width:100%; border-collapse:collapse; margin-top:8px; margin-bottom:18px; font-size:9.5pt;">
+            <thead>
+              <tr style="background:#f1f5f9;">
+                <th style="border:1px solid #000; padding:6px;">TC ID</th>
+                <th style="border:1px solid #000; padding:6px;">Type</th>
+                <th style="border:1px solid #000; padding:6px;">Scenario</th>
+                <th style="border:1px solid #000; padding:6px;">Execution Steps</th>
+                <th style="border:1px solid #000; padding:6px;">Expected Result</th>
+                <th style="border:1px solid #000; padding:6px;">Status</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+
+          ${imgsHtml}
+        </div>
+      `;
+    }
+
+    function getActiveDocHtml() {
+      return currentMode === 'studio' ? buildStudioDocHtml() : buildReportDocHtml();
+    }
+
+    function openPreviewModal() {
+      document.getElementById('previewModalContent').innerHTML = getActiveDocHtml();
+      document.getElementById('previewModal').classList.add('active');
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.remove('active');
+    }
+
+    function triggerCleanPdfPrint() {
+      const printable = document.getElementById('printableDocArea');
+      printable.innerHTML = getActiveDocHtml();
+      printable.style.display = 'block';
+      setTimeout(() => {
+        window.print();
+        printable.style.display = 'none';
+        printable.innerHTML = '';
+      }, 100);
+    }
+
+    function exportActiveToWord() {
+      const content = getActiveDocHtml();
+      const htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>QA Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; }
+          .doc-main-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 16pt; }
+          .doc-header-field { margin: 3pt 0; }
+          .doc-section-heading { font-weight: bold; margin-top: 14pt; margin-bottom: 4pt; }
+          img { width: 100%; max-width: 650px; border: 1px solid #000; margin: 8pt 0; }
+        </style>
+        </head><body>${content}</body></html>`;
+
+      const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const prefix = currentMode === 'studio' ? 'Functional_Test_Cases' : 'Test_Execution_Report';
+      a.download = `${prefix}_${document.getElementById('mantisId').value.replace('#','') || 'JNB_Nivas'}.doc`;
+      a.click();
+    }
+
+    function downloadActiveHtml() {
+      const docHtml = getActiveDocHtml();
+      const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QA Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; background: #e2e8f0; padding: 30px 15px; margin: 0; display:flex; justify-content:center; }
+        .doc-page { background: #fff; width: 100%; max-width: 850px; padding: 44px 48px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); font-size: 11pt; color: #000; line-height: 1.5; box-sizing: border-box; }
+        .doc-main-title { font-size: 17pt; font-weight: 700; text-align: center; margin-bottom: 22px; }
+        .doc-header-field { margin-bottom: 4px; }
+        .doc-section-heading { font-weight: 700; margin-top: 20px; margin-bottom: 6px; }
+        .doc-text { white-space: pre-wrap; margin-bottom: 14px; }
+        .doc-img-item { margin-top: 10px; margin-bottom: 20px; width: 100%; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .doc-img-item img { width: 100%; height: auto; display: block; }
+      </style>
+      </head><body>${docHtml}</body></html>`;
+
+      const blob = new Blob([fullHtml], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `QA_Report_${document.getElementById('mantisId').value.replace('#','') || 'JNB_Nivas'}.html`;
+      a.click();
+    }
+
+    function exportStudioToExcel() {
+      syncStudioTableEditsFromDOM();
+      const proj = document.getElementById('projectSelect').value;
+      const mod = document.getElementById('moduleSelect').value;
+      let csv = 'Project,Module,Test Case ID,Testing Type,Scenario,Execution Steps,Expected Result,Status\n';
+      studioTestCases.forEach(tc => {
+        const clean = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+        csv += `${clean(proj)},${clean(mod)},${clean(tc.id)},${clean(tc.type)},${clean(tc.scenario)},${clean(tc.steps)},${clean(tc.expected)},${clean(tc.status)}\n`;
+      });
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Functional_Test_Cases_${mod.replace(/[^a-z0-9]/gi, '_')}.csv`;
+      a.click();
+    }
+
+    function copyMantisSummary() {
+      const p = document.getElementById('projectSelect').value;
+      const mId = document.getElementById('mantisId').value || 'N/A';
+      const bVer = document.getElementById('buildVersion').value;
+      const mod = document.getElementById('moduleSelect').value;
+      const url = document.getElementById('testUrl').value;
+      const login = document.getElementById('loginRef').value;
+      const desc = document.getElementById('featureDesc').value;
+      const steps = document.getElementById('execSteps').value;
+      const res = document.getElementById('actualResult').value;
+
+      const note = `=====================================================
+TEST EXECUTION REPORT
+=====================================================
+* Application Name : ${p}
+* MantisBT Ticket  : ${mId}
+* Build Version    : ${bVer}
+* Tested Module    : ${mod}
+* Test URL         : ${url}
+* Login Reference  : ${login}
+-----------------------------------------------------
+DESCRIPTION:
+${desc}
+
+EXECUTION STEPS:
+${steps}
+
+ACTUAL RESULT:
+${res}
+=====================================================`;
+
+      navigator.clipboard.writeText(note).then(() => alert('Copied MantisBT Note to clipboard!'));
+    }
+
+    function openApiModal() {
+      document.getElementById('geminiApiKeyInput').value = localStorage.getItem(GEMINI_KEY_STORAGE) || '';
+      document.getElementById('apiModal').classList.add('active');
+    }
+
+    function saveApiKey() {
+      const k = document.getElementById('geminiApiKeyInput').value.trim();
+      if (k) localStorage.setItem(GEMINI_KEY_STORAGE, k);
+      else localStorage.removeItem(GEMINI_KEY_STORAGE);
+      document.getElementById('apiModal').classList.remove('active');
+    }
+
+    function resetToDocDefaults() {
+      if (confirm('Are you sure you want to reset to defaults?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
+
+    // 8. Initialization
+    window.onload = function() {
+      let parsed = null;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) parsed = JSON.parse(saved);
+      } catch (e) {}
+
+      populateProjectDropdown(parsed?.project || null);
+      populateModuleDropdown(parsed?.module || null);
+
+      if (parsed) {
+        if (parsed.mantisId) document.getElementById('mantisId').value = parsed.mantisId;
+        if (parsed.build) document.getElementById('buildVersion').value = parsed.build;
+        if (parsed.url) document.getElementById('testUrl').value = parsed.url;
+        if (parsed.login) document.getElementById('loginRef').value = parsed.login;
+        if (parsed.desc) document.getElementById('featureDesc').value = parsed.desc;
+        if (parsed.steps) document.getElementById('execSteps').value = parsed.steps;
+        if (parsed.res) document.getElementById('actualResult').value = parsed.res;
+        if (parsed.studioUiElements) document.getElementById('studioUiElements').value = parsed.studioUiElements;
+        if (parsed.studioImpactedAreas) document.getElementById('studioImpactedAreas').value = parsed.studioImpactedAreas;
+        if (parsed.studioChangeSummary) document.getElementById('studioChangeSummary').value = parsed.studioChangeSummary;
+
+        if (Array.isArray(parsed.defects) && parsed.defects.length > 0) {
+          parsed.defects.forEach(df => addDefectRow(df, true));
+        }
+        if (Array.isArray(parsed.studioScenarios) && parsed.studioScenarios.length > 0) {
+          studioScenarios = parsed.studioScenarios;
+          studioTestCases = parsed.studioTestCases || [];
+          guardChecklists = parsed.guardChecklists || { reqMatch: [], exploratory: [], regression: [] };
+          renderStudioOutputs();
+        } else {
+          generateManualQaSuite(
+            document.getElementById('projectSelect').value,
+            document.getElementById('moduleSelect').value,
+            document.getElementById('testUrl').value,
+            document.getElementById('loginRef').value,
+            document.getElementById('studioUiElements').value,
+            document.getElementById('studioImpactedAreas').value,
+            document.getElementById('studioChangeSummary').value
+          );
+          renderStudioOutputs();
+        }
+      } else {
+        generateManualQaSuite(
+          document.getElementById('projectSelect').value,
+          document.getElementById('moduleSelect').value,
+          document.getElementById('testUrl').value,
+          document.getElementById('loginRef').value,
+          document.getElementById('studioUiElements').value,
+          document.getElementById('studioImpactedAreas').value,
+          document.getElementById('studioChangeSummary').value
+        );
+        renderStudioOutputs();
+      }
+
+      checkDefectCount(true);
+
+      document.querySelectorAll('#mantisId, #buildVersion, #testUrl, #loginRef, #featureDesc, #actualResult, #execSteps, #studioUiElements, #studioImpactedAreas, #studioChangeSummary').forEach(el => {
+        el.addEventListener('input', markUnsaved);
+      });
+    };
+  </script>
+</body>
+</html>
