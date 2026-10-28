@@ -11,15 +11,9 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
     
-    /* Fixed App Shell Layout - No endless window scrolling */
-    html, body { height: 100%; overflow: hidden; background-color: #f1f5f9; color: #0f172a; -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; overflow: hidden; background-color: #f8fafc; color: #0f172a; -webkit-font-smoothing: antialiased; }
     
-    .app-shell {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100vw;
-    }
+    .app-shell { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
 
     .material-symbols-rounded {
       font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
@@ -28,12 +22,10 @@
       line-height: 1;
     }
 
-    /* Keyframe Animations */
     @keyframes greenBounce {
       0%, 100% { transform: translateY(0) scale(1); }
-      30% { transform: translateY(-6px) scale(1.25); }
+      30% { transform: translateY(-5px) scale(1.2); }
       50% { transform: translateY(0) scale(0.95); }
-      70% { transform: translateY(-3px) scale(1.12); }
     }
     @keyframes spinIcon {
       from { transform: rotate(0deg); }
@@ -41,10 +33,9 @@
     }
     @keyframes pulsePending {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.55; transform: scale(0.92); }
+      50% { opacity: 0.5; transform: scale(0.92); }
     }
 
-    /* Hover Tooltips */
     [data-tooltip] { position: relative; }
     [data-tooltip]::after {
       content: attr(data-tooltip);
@@ -54,103 +45,64 @@
       transform: translateX(-50%) translateY(4px);
       background: #0f172a;
       color: #ffffff;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 600;
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
       white-space: nowrap;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.16s ease, transform 0.16s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       z-index: 999999;
     }
-    [data-tooltip]:hover::after {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    .tooltip-bottom[data-tooltip]::after {
-      bottom: auto;
-      top: calc(100% + 8px);
-      transform: translateX(-50%) translateY(-4px);
-    }
-    .tooltip-bottom[data-tooltip]:hover::after {
-      transform: translateX(-50%) translateY(0);
-    }
+    [data-tooltip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .tooltip-bottom[data-tooltip]::after { bottom: auto; top: calc(100% + 8px); transform: translateX(-50%) translateY(-4px); }
+    .tooltip-bottom[data-tooltip]:hover::after { transform: translateX(-50%) translateY(0); }
 
-    /* =========================================================
-       TOP FIXED HEADER & QUICK NAVIGATION BAR
-       ========================================================= */
-    header { 
-      background: #ffffff; 
-      border-bottom: 1px solid #e2e8f0; 
-      flex-shrink: 0;
-      z-index: 60;
-    }
+    /* Top Header */
+    header { background: #ffffff; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; z-index: 60; }
     .header-top {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
+      max-width: 1180px; margin: 0 auto; padding: 12px 20px;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
     }
     
     .brand-wrap { display: flex; align-items: center; gap: 10px; }
     .brand-avatar {
-      width: 38px; height: 38px; border-radius: 10px;
+      width: 36px; height: 36px; border-radius: 9px;
       background: linear-gradient(135deg, #0d9488, #0f766e);
-      color: #ffffff;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+      color: #ffffff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 5px rgba(13, 148, 136, 0.2);
     }
     .brand-avatar.studio-mode {
       background: linear-gradient(135deg, #6366f1, #4f46e5);
-      box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+      box-shadow: 0 2px 5px rgba(99, 102, 241, 0.2);
     }
-    .brand-avatar .material-symbols-rounded { font-size: 22px; }
+    .brand-avatar .material-symbols-rounded { font-size: 20px; }
     
-    .title-area h1 { font-size: 1.1rem; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
-    .title-area p { font-size: 0.71rem; color: #64748b; }
+    .title-area h1 { font-size: 1.05rem; font-weight: 800; color: #0f172a; letter-spacing: -0.2px; }
+    .title-area p { font-size: 0.7rem; color: #64748b; }
 
     /* Mode Switcher */
     .mode-switch-pill {
-      display: inline-flex;
-      background: #f1f5f9;
-      padding: 4px;
-      border-radius: 10px;
-      border: 1px solid #cbd5e1;
-      gap: 4px;
+      display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 9px; border: 1px solid #cbd5e1; gap: 3px;
     }
     .mode-btn {
-      padding: 6px 14px;
-      border-radius: 7px;
-      border: none;
-      font-size: 0.76rem;
-      font-weight: 700;
-      color: #475569;
-      background: transparent;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
+      padding: 5px 12px; border-radius: 6px; border: none; font-size: 0.74rem; font-weight: 700;
+      color: #475569; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;
     }
-    .mode-btn .material-symbols-rounded { font-size: 17px; }
-    .mode-btn.active-report { background: #0d9488; color: #ffffff; box-shadow: 0 1px 4px rgba(13, 148, 136, 0.3); }
-    .mode-btn.active-studio { background: #4f46e5; color: #ffffff; box-shadow: 0 1px 4px rgba(79, 70, 229, 0.3); }
+    .mode-btn .material-symbols-rounded { font-size: 16px; }
+    .mode-btn.active-report { background: #0d9488; color: #ffffff; box-shadow: 0 1px 3px rgba(13, 148, 136, 0.25); }
+    .mode-btn.active-studio { background: #4f46e5; color: #ffffff; box-shadow: 0 1px 3px rgba(79, 70, 229, 0.25); }
 
-    /* Familiar Icon-Only Action Buttons */
-    .btn-group { display: flex; gap: 8px; align-items: center; }
+    /* Action Buttons */
+    .btn-group { display: flex; gap: 6px; align-items: center; }
     .btn-icon { 
-      width: 38px; height: 38px; border-radius: 9px; cursor: pointer; 
-      border: 1px solid transparent; transition: all 0.15s ease;
-      display: inline-flex; align-items: center; justify-content: center;
-      user-select: none; flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 8px; cursor: pointer; 
+      border: 1px solid transparent; transition: all 0.12s ease;
+      display: inline-flex; align-items: center; justify-content: center; user-select: none; flex-shrink: 0;
     }
-    .btn-icon .material-symbols-rounded { font-size: 20px; }
+    .btn-icon .material-symbols-rounded { font-size: 19px; }
     .btn-icon:hover { transform: translateY(-1px); }
 
     .btn-slate { background: #ffffff; color: #334155; border-color: #cbd5e1; }
@@ -168,256 +120,156 @@
     .btn-danger { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
     .btn-danger:hover { background: #ffe4e6; }
 
-    /* Save Status Badge (Kept exactly as requested) */
-    .status-badge { 
-      width: 38px; height: 38px; border-radius: 9px; 
-      display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; user-select: none; transition: all 0.25s ease;
-    }
-    .status-badge .material-symbols-rounded { font-size: 21px; }
+    /* Save Status Badge */
+    .status-badge { width: 36px; height: 36px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; }
+    .status-badge .material-symbols-rounded { font-size: 20px; }
     .status-pending { background: #fffbeb; border: 1px solid #fde68a; }
     .status-pending .material-symbols-rounded { color: #d97706; animation: pulsePending 1.4s infinite ease-in-out; }
     .status-saving { background: #eff6ff; border: 1px solid #bfdbfe; }
     .status-saving .material-symbols-rounded { color: #2563eb; animation: spinIcon 0.9s infinite linear; }
     .status-saved { background: #ecfdf5; border: 1px solid #a7f3d0; }
-    .status-saved .material-symbols-rounded { color: #059669; animation: greenBounce 0.75s cubic-bezier(0.28, 0.84, 0.42, 1); }
+    .status-saved .material-symbols-rounded { color: #059669; animation: greenBounce 0.7s cubic-bezier(0.28, 0.84, 0.42, 1); }
 
-    /*Pinned Quick Context & Section Jump Sub-bar */
-    .sub-nav-bar {
-      background: #f8fafc;
-      border-top: 1px solid #e2e8f0;
-      padding: 8px 20px;
-    }
-    .sub-nav-container {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .jump-pills {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .jump-label {
-      font-size: 0.7rem;
-      font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-      margin-right: 4px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
+    /* Sub Nav Quick Jump */
+    .sub-nav-bar { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 6px 20px; }
+    .sub-nav-container { max-width: 1180px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .jump-pills { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+    .jump-label { font-size: 0.68rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px; display: flex; align-items: center; gap: 3px; }
     .jump-pill {
-      padding: 5px 11px;
-      border-radius: 6px;
-      font-size: 0.73rem;
-      font-weight: 700;
-      color: #334155;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.15s ease;
+      padding: 4px 10px; border-radius: 6px; font-size: 0.71rem; font-weight: 700; color: #334155;
+      background: #ffffff; border: 1px solid #cbd5e1; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.12s ease;
     }
-    .jump-pill:hover {
-      border-color: #0d9488;
-      color: #0d9488;
-      background: #f0fdfa;
-    }
-    .jump-pill .material-symbols-rounded { font-size: 15px; }
+    .jump-pill:hover { border-color: #0d9488; color: #0d9488; background: #f0fdfa; }
+    .jump-pill .material-symbols-rounded { font-size: 14px; }
 
-    /* =========================================================
-       SCROLLABLE WORKSPACE AREA (SMOOTH INTERNAL SCROLL)
-       ========================================================= */
-    .workspace-scroll {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      scroll-behavior: smooth;
-    }
-    .main-container {
-      max-width: 1140px;
-      margin: 0 auto;
-      padding-bottom: 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-    .view-section { display: none; flex-direction: column; gap: 18px; }
+    /* Workspace */
+    .workspace-scroll { flex: 1; overflow-y: auto; padding: 18px; scroll-behavior: smooth; }
+    .main-container { max-width: 1120px; margin: 0 auto; padding-bottom: 50px; display: flex; flex-direction: column; gap: 16px; }
+    .view-section { display: none; flex-direction: column; gap: 16px; }
     .view-section.active { display: flex; }
 
-    /* Clean Attractive Cards */
-    .card {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-    }
+    /* Cards */
+    .card { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 18px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02); }
     .card-title { 
-      font-size: 0.9rem; font-weight: 800; color: #0f172a; 
-      padding-bottom: 12px; margin-bottom: 16px;
-      border-bottom: 1px solid #e2e8f0;
-      display: flex; justify-content: space-between; align-items: center; 
+      font-size: 0.86rem; font-weight: 800; color: #0f172a; padding-bottom: 10px; margin-bottom: 14px;
+      border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; 
     }
-    .card-title .heading-label { display: flex; align-items: center; gap: 8px; }
+    .card-title .heading-label { display: flex; align-items: center; gap: 7px; }
     .card-title .heading-icon {
-      width: 28px; height: 28px; border-radius: 7px;
-      background: #f0fdfa; color: #0d9488;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 18px;
+      width: 26px; height: 26px; border-radius: 6px; background: #f0fdfa; color: #0d9488;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 16px;
     }
     .card-title.indigo-accent .heading-icon { background: #eef2ff; color: #4f46e5; }
 
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 0.75rem; font-weight: 700; color: #334155; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    label { font-size: 0.73rem; font-weight: 700; color: #334155; }
     
     input[type="text"], input[type="password"], select, textarea {
-      width: 100%; padding: 8px 12px; font-size: 0.82rem; 
-      border: 1px solid #cbd5e1; border-radius: 8px; outline: none; 
-      background: #ffffff; color: #0f172a; transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%; padding: 7px 10px; font-size: 0.8rem; 
+      border: 1px solid #cbd5e1; border-radius: 7px; outline: none; background: #ffffff; color: #0f172a; transition: border-color 0.12s;
     }
     select {
       appearance: none; -webkit-appearance: none;
-      background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="16"%20height="16"%20viewBox="0%200%2024%2024"%20fill="none"%20stroke="%23475569"%20stroke-width="2"%20stroke-linecap="round"%20stroke-linejoin="round"><polyline%20points="6%209%2012%2015%2018%209"></polyline></svg>');
-      background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; padding-right: 32px; cursor: pointer;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="14"%20height="14"%20viewBox="0%200%2024%2024"%20fill="none"%20stroke="%23475569"%20stroke-width="2"%20stroke-linecap="round"%20stroke-linejoin="round"><polyline%20points="6%209%2012%2015%2018%209"></polyline></svg>');
+      background-repeat: no-repeat; background-position: right 8px center; background-size: 12px; padding-right: 28px; cursor: pointer;
     }
-    input:focus, select:focus, textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12); }
-    textarea { resize: vertical; line-height: 1.5; }
-    .input-action-row { display: flex; gap: 6px; align-items: center; }
+    input:focus, select:focus, textarea:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1); }
+    textarea { resize: vertical; line-height: 1.45; }
+    .input-action-row { display: flex; gap: 5px; align-items: center; }
 
-    /* Compact Attractive Drop Zones */
-    .upload-box-wrapper {
-      margin-top: 14px;
-      padding: 14px;
-      background: #f8fafc;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-    }
+    /* Compact Drop Zones */
+    .upload-box-wrapper { margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
     .drop-zone {
-      border: 2px dashed #94a3b8; border-radius: 8px; padding: 16px 12px; 
+      border: 2px dashed #94a3b8; border-radius: 7px; padding: 12px 10px; 
       text-align: center; background: #ffffff; cursor: pointer; 
-      transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      transition: all 0.12s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
     }
     .drop-zone:hover, .drop-zone.dragover { border-color: #0d9488; background: #f0fdfa; }
     .drop-zone.indigo-zone:hover, .drop-zone.indigo-zone.dragover { border-color: #4f46e5; background: #eef2ff; }
-    .drop-zone .upload-icon { font-size: 26px; color: #0d9488; }
+    .drop-zone .upload-icon { font-size: 24px; color: #0d9488; }
     .drop-zone.indigo-zone .upload-icon { color: #4f46e5; }
-    .drop-zone p { font-size: 0.79rem; color: #64748b; pointer-events: none; }
-    .drop-zone span { font-size: 0.79rem; color: #0d9488; font-weight: 700; pointer-events: none; }
+    .drop-zone p { font-size: 0.76rem; color: #64748b; pointer-events: none; }
+    .drop-zone span { font-size: 0.76rem; color: #0d9488; font-weight: 700; pointer-events: none; }
     .drop-zone.indigo-zone span { color: #4f46e5; }
     
-    .image-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
-    .image-preview { 
-      position: relative; width: 145px; height: 96px; border-radius: 8px; 
-      overflow: hidden; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer;
-    }
+    .image-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .image-preview { position: relative; width: 130px; height: 86px; border-radius: 7px; overflow: hidden; border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; }
     .image-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .image-preview .order-badge {
-      position: absolute; top: 4px; left: 4px; background: rgba(15, 23, 42, 0.85);
-      color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; z-index: 2;
-    }
-    .image-preview button { 
-      position: absolute; top: 4px; right: 4px; background: rgba(225, 29, 72, 0.9); 
-      color: white; border: none; border-radius: 50%; width: 20px; height: 20px; 
-      display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2;
-    }
-    .image-preview button .material-symbols-rounded { font-size: 13px; }
+    .image-preview .order-badge { position: absolute; top: 3px; left: 3px; background: rgba(15, 23, 42, 0.85); color: #fff; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; z-index: 2; }
+    .image-preview button { position: absolute; top: 3px; right: 3px; background: rgba(225, 29, 72, 0.9); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+    .image-preview button .material-symbols-rounded { font-size: 12px; }
 
-    /* 3-Agent Pipeline */
-    .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    .agent-node {
-      border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 10px; padding: 12px;
-      display: flex; align-items: center; gap: 10px;
-    }
+    /* Studio Pipeline */
+    .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .agent-node { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 8px; }
     .agent-node.done { border-color: #a7f3d0; background: #ecfdf5; }
-    .agent-avatar {
-      width: 36px; height: 36px; border-radius: 8px; background: #059669; color: #ffffff;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .agent-info h4 { font-size: 0.78rem; font-weight: 800; color: #0f172a; }
-    .agent-info p { font-size: 0.69rem; color: #64748b; }
+    .agent-avatar { width: 32px; height: 32px; border-radius: 7px; background: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .agent-info h4 { font-size: 0.75rem; font-weight: 800; color: #0f172a; }
+    .agent-info p { font-size: 0.66rem; color: #64748b; }
 
-    .agent-tabs { display: flex; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .agent-tabs { display: flex; gap: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 12px; flex-wrap: wrap; }
     .tab-btn {
-      padding: 7px 14px; border-radius: 7px; font-size: 0.76rem; font-weight: 700;
-      cursor: pointer; border: 1px solid #cbd5e1; background: #ffffff; color: #475569;
-      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 6px; font-size: 0.73rem; font-weight: 700;
+      cursor: pointer; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; display: flex; align-items: center; gap: 5px;
     }
     .tab-btn.active { background: #4f46e5; color: #ffffff; border-color: #4f46e5; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
     /* Tables */
-    table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
-    th { background: #f8fafc; color: #334155; font-weight: 700; text-align: left; padding: 9px 10px; border: 1px solid #cbd5e1; }
-    td { padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+    th { background: #f8fafc; color: #334155; font-weight: 700; text-align: left; padding: 8px; border: 1px solid #cbd5e1; }
+    td { padding: 7px 8px; border: 1px solid #e2e8f0; vertical-align: top; }
     .delete-btn { color: #e11d48; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; }
 
-    .badge-type { padding: 3px 7px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; display: inline-block; }
+    .badge-type { padding: 2px 6px; border-radius: 4px; font-size: 0.66rem; font-weight: 700; display: inline-block; }
     .type-func { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
     .type-retest { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
     .type-neg { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
     .type-expl { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
     .type-reg { background: #f3e8ff; color: #6d28d9; border: 1px solid #ddd6fe; }
 
-    .guard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
-    .guard-box { border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; background: #f8fafc; }
-    .guard-box h4 { font-size: 0.8rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .guard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+    .guard-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; background: #f8fafc; }
+    .guard-box h4 { font-size: 0.77rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
     .check-item {
-      display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px;
-      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px;
-      font-size: 0.76rem; color: #1e293b; cursor: pointer;
+      display: flex; align-items: flex-start; gap: 7px; padding: 6px 7px;
+      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 5px; margin-bottom: 5px;
+      font-size: 0.73rem; color: #1e293b; cursor: pointer;
     }
-    .check-item input[type="checkbox"] { margin-top: 2px; accent-color: #059669; width: 15px; height: 15px; }
+    .check-item input[type="checkbox"] { margin-top: 2px; accent-color: #059669; width: 14px; height: 14px; }
     .check-item.checked span { text-decoration: line-through; color: #64748b; }
 
     /* Modals */
-    .modal-overlay { 
-      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); 
-      z-index: 99999; align-items: center; justify-content: center;
-    }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 99999; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: #ffffff; border-radius: 14px; padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+    .modal-card { background: #ffffff; border-radius: 12px; padding: 20px; width: 90%; max-width: 420px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
     
     .preview-modal-card {
-      background: #ffffff; width: 95%; max-width: 960px; max-height: 92vh;
-      border-radius: 14px; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.25); overflow: hidden;
+      background: #ffffff; width: 95%; max-width: 920px; max-height: 90vh;
+      border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden;
     }
-    .preview-header { padding: 12px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #ffffff; }
-    .preview-body { padding: 24px; overflow-y: auto; background: #cbd5e1; display: flex; justify-content: center; }
+    .preview-header { padding: 10px 18px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #ffffff; }
+    .preview-body { padding: 20px; overflow-y: auto; background: #cbd5e1; display: flex; justify-content: center; }
 
-    /* Document Sheet */
     .doc-page {
-      background: #ffffff; width: 100%; max-width: 820px; padding: 40px 44px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1); border-radius: 4px;
-      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; color: #000000;
-      font-size: 11pt; line-height: 1.5; box-sizing: border-box;
+      background: #ffffff; width: 100%; max-width: 800px; padding: 36px 40px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-radius: 4px;
+      font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; color: #000000; font-size: 10.5pt; line-height: 1.45; box-sizing: border-box;
     }
-    .doc-page .doc-main-title { font-size: 16pt; font-weight: 700; color: #000000; text-align: center; margin-bottom: 20px; }
-    .doc-page .doc-header-field { margin-bottom: 4px; font-size: 11pt; color: #000000; }
-    .doc-page .doc-section-heading { font-weight: 700; color: #000000; margin-top: 18px; margin-bottom: 6px; font-size: 11pt; }
-    .doc-page .doc-text { color: #000000; white-space: pre-wrap; margin-bottom: 12px; font-size: 11pt; line-height: 1.5; }
+    .doc-page .doc-main-title { font-size: 15pt; font-weight: 700; color: #000000; text-align: center; margin-bottom: 18px; }
+    .doc-page .doc-header-field { margin-bottom: 4px; font-size: 10.5pt; color: #000000; }
+    .doc-page .doc-section-heading { font-weight: 700; color: #000000; margin-top: 16px; margin-bottom: 5px; font-size: 10.5pt; }
+    .doc-page .doc-text { color: #000000; white-space: pre-wrap; margin-bottom: 10px; font-size: 10.5pt; line-height: 1.45; }
     .doc-page .doc-img-item {
-      margin-top: 8px; margin-bottom: 16px; width: 100%; box-sizing: border-box;
+      margin-top: 6px; margin-bottom: 14px; width: 100%; box-sizing: border-box;
       overflow: hidden; border: 1px solid #000000; background: #ffffff; page-break-inside: avoid;
     }
     .doc-page .doc-img-item img { width: 100%; max-width: 100%; height: auto; display: block; }
 
-    .zoom-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.94);
-      z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out;
-    }
+    .zoom-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.92); z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; }
     .zoom-overlay.active { display: flex; }
     .zoom-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 6px; }
 
@@ -436,7 +288,6 @@
   <div id="printableDocArea" style="display:none;"></div>
 
   <div class="app-shell">
-    <!-- FIXED TOP HEADER -->
     <header>
       <div class="header-top">
         <div class="brand-wrap">
@@ -449,98 +300,85 @@
           </div>
         </div>
 
-        <!-- MODE SWITCHER -->
         <div class="mode-switch-pill">
           <button type="button" id="btnModeReport" class="mode-btn active-report" onclick="switchWorkspaceMode('report')">
             <span class="material-symbols-rounded">fact_check</span> Execution Report
           </button>
           <button type="button" id="btnModeStudio" class="mode-btn" onclick="switchWorkspaceMode('studio')">
-            <span class="material-symbols-rounded">auto_fix_high</span> Test Case & Scenario Studio
+            <span class="material-symbols-rounded">auto_fix_high</span> Test Studio
           </button>
         </div>
         
-        <!-- FAMILIAR RECOGNIZABLE ICON ACTIONS -->
         <div class="btn-group">
-          <!-- 1. Auto-Save Status Icon (Unchanged as requested) -->
           <span id="saveStatus" class="status-badge status-saved tooltip-bottom" onclick="performSaveNow()" data-tooltip="Auto-saved (Click to save now)">
             <span class="material-symbols-rounded">check_circle</span>
           </span>
 
-          <!-- Studio Specific Familiar Icons -->
-          <button type="button" id="btnRunAgentsTop" style="display:none;" onclick="runFunctionalAgents()" class="btn-icon btn-indigo tooltip-bottom" data-tooltip="Generate Test Scenarios & Cases">
+          <button type="button" id="btnRunAgentsTop" style="display:none;" onclick="runFunctionalAgents()" class="btn-icon btn-indigo tooltip-bottom" data-tooltip="Generate Scenarios & Cases">
             <span class="material-symbols-rounded">magic_button</span>
           </button>
-          <button type="button" id="btnExcelTop" style="display:none;" onclick="exportStudioToExcel()" class="btn-icon btn-emerald tooltip-bottom" data-tooltip="Download Excel Sheet (.csv)">
+          <button type="button" id="btnExcelTop" style="display:none;" onclick="exportStudioToExcel()" class="btn-icon btn-emerald tooltip-bottom" data-tooltip="Download Excel (.csv)">
             <span class="material-symbols-rounded">grid_on</span>
           </button>
           <button type="button" id="btnSyncToReportTop" style="display:none;" onclick="pushStudioToExecutionReport()" class="btn-icon btn-amber tooltip-bottom" data-tooltip="Move Steps to Execution Report">
             <span class="material-symbols-rounded">send_and_archive</span>
           </button>
 
-          <!-- 2. Preview Document (Familiar Pageview/Search Icon) -->
           <button type="button" onclick="openPreviewModal()" class="btn-icon btn-slate tooltip-bottom" data-tooltip="Preview Report">
             <span class="material-symbols-rounded">pageview</span>
           </button>
 
-          <!-- 3. Word Download (Familiar Download Icon) -->
           <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word Document (.doc)">
             <span class="material-symbols-rounded">download</span>
           </button>
 
-          <!-- 4. Print / Save PDF (Familiar Printer Icon) -->
           <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-teal tooltip-bottom" data-tooltip="Print / Save as PDF">
             <span class="material-symbols-rounded">print</span>
           </button>
 
-          <!-- 5. Reset Icon (Unchanged as requested) -->
           <button type="button" onclick="resetToDocDefaults()" class="btn-icon btn-danger tooltip-bottom" data-tooltip="Reset All">
             <span class="material-symbols-rounded">restart_alt</span>
           </button>
         </div>
       </div>
 
-      <!-- PINNED QUICK JUMP BAR (No scrolling up/down to find sections) -->
       <div class="sub-nav-bar">
         <div class="sub-nav-container">
           <div class="jump-pills" id="reportJumpPills">
-            <span class="jump-label"><span class="material-symbols-rounded" style="font-size:15px;">near_me</span> Quick Jump:</span>
+            <span class="jump-label"><span class="material-symbols-rounded" style="font-size:14px;">near_me</span> Quick Jump:</span>
             <button type="button" class="jump-pill" onclick="scrollToCard('secContext')">
-              <span class="material-symbols-rounded">folder_Copy</span> 1. Project & Module
+              <span class="material-symbols-rounded">folder_copy</span> 1. Project & Module
             </button>
             <button type="button" class="jump-pill" onclick="scrollToCard('secDescProd')">
-              <span class="material-symbols-rounded">notes</span> 2. Description & Prod Screenshot
+              <span class="material-symbols-rounded">notes</span> 2. Description & Prod SS
             </button>
             <button type="button" class="jump-pill" onclick="scrollToCard('secStepsExec')">
-              <span class="material-symbols-rounded">checklist</span> 3. Steps & Test Screenshots
+              <span class="material-symbols-rounded">checklist</span> 3. Steps & Evidence
             </button>
             <button type="button" class="jump-pill" onclick="scrollToCard('secDefects')">
-              <span class="material-symbols-rounded">bug_report</span> 4. Mantis Defects
+              <span class="material-symbols-rounded">bug_report</span> 4. Defects
             </button>
           </div>
 
           <div class="jump-pills" id="studioJumpPills" style="display:none;">
-            <span class="jump-label"><span class="material-symbols-rounded" style="font-size:15px;">near_me</span> Quick Jump:</span>
+            <span class="jump-label"><span class="material-symbols-rounded" style="font-size:14px;">near_me</span> Quick Jump:</span>
             <button type="button" class="jump-pill" onclick="scrollToCard('secContext')">
               <span class="material-symbols-rounded">folder_copy</span> 1. Project & Module
             </button>
             <button type="button" class="jump-pill" onclick="scrollToCard('secStudioInput')">
-              <span class="material-symbols-rounded">edit_note</span> 2. Feature / Requirement Input
+              <span class="material-symbols-rounded">edit_note</span> 2. Requirement Details
             </button>
             <button type="button" class="jump-pill" onclick="scrollToCard('secStudioOutput')">
-              <span class="material-symbols-rounded">table_chart</span> 3. Generated Scenarios & Cases
+              <span class="material-symbols-rounded">table_chart</span> 3. Generated Test Cases
             </button>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- INTERNAL SCROLLABLE WORKSPACE -->
     <div class="workspace-scroll" id="workspaceScroll">
       <main class="main-container">
 
-        <!-- =========================================================
-             SHARED SECTION 1: PROJECT, MODULE & TEST CREDENTIALS
-             ========================================================= -->
         <div class="card" id="secContext">
           <div class="card-title" id="sharedCardHeader">
             <span class="heading-label">
@@ -563,7 +401,7 @@
               <label>Tested Module / Feature Names *</label>
               <div class="input-action-row">
                 <select id="moduleSelect" onchange="markUnsaved()"></select>
-                <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module / Feature">
+                <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module">
                   <span class="material-symbols-rounded">add</span>
                 </button>
               </div>
@@ -571,7 +409,7 @@
 
             <div class="form-group">
               <label>Test Credentials *</label>
-              <input type="text" id="loginRef" value="52." placeholder="e.g. Warden Login / 52">
+              <input type="text" id="loginRef" value="52." placeholder="e.g. Warden / 52">
             </div>
 
             <div class="form-group">
@@ -591,12 +429,8 @@
           </div>
         </div>
 
-        <!-- =========================================================
-             MODE 1 VIEW: EXECUTION REPORT GENERATOR
-             ========================================================= -->
         <div id="viewReport" class="view-section active">
 
-          <!-- Section 2: Detailed Description + Production Screenshot Immediately Below -->
           <div class="card" id="secDescProd">
             <div class="card-title">
               <span class="heading-label">
@@ -610,9 +444,8 @@
               <textarea id="featureDesc" rows="3">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
             </div>
 
-            <!-- Production Screenshot Placed Immediately After Detailed Description -->
             <div class="upload-box-wrapper">
-              <label style="display:block; margin-bottom:6px;">Production Screenshot Reference (Optional - Prints right below Description)</label>
+              <label style="display:block; margin-bottom:5px;">Production Screenshot Reference (Optional - Prints right below Description)</label>
               <div class="drop-zone" id="prodDropZone">
                 <span class="material-symbols-rounded upload-icon">add_photo_alternate</span>
                 <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Production Screenshot</p>
@@ -622,7 +455,6 @@
             </div>
           </div>
 
-          <!-- Section 3: Actual Result, Execution Steps & Test Execution Screenshots -->
           <div class="card" id="secStepsExec">
             <div class="card-title">
               <span class="heading-label">
@@ -631,7 +463,7 @@
               </span>
             </div>
 
-            <div class="form-group" style="margin-bottom: 14px;">
+            <div class="form-group" style="margin-bottom: 12px;">
               <label>Actual Result *</label>
               <input type="text" id="actualResult" value="Functioning as Expected." style="font-weight: 600;">
             </div>
@@ -642,11 +474,10 @@
 2. Login as mentioned user , navigate to “Staff Management Staff Attendance Confirmation” , verify the presence of the "Principal" designation , check the record , select values and click “Confirm”.</textarea>
             </div>
 
-            <!-- Execution Screenshots Placed Immediately After Steps -->
             <div class="upload-box-wrapper">
-              <label style="display:block; margin-bottom:6px;">Test Execution Screenshots / Verified Evidence (Prints below Execution Steps)</label>
+              <label style="display:block; margin-bottom:5px;">Test Execution Screenshots / Verified Evidence (Prints below Execution Steps)</label>
               <div class="drop-zone" id="execDropZone">
-                <span class="material-symbols-rounded upload-icon">Collections</span>
+                <span class="material-symbols-rounded upload-icon">collections</span>
                 <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Execution Evidence Screenshots</p>
                 <input type="file" id="execFileInput" accept="image/*" multiple style="display:none">
               </div>
@@ -654,7 +485,6 @@
             </div>
           </div>
 
-          <!-- Section 4: MantisBT Defects Logged -->
           <div class="card" id="secDefects">
             <div class="card-title">
               <span class="heading-label">
@@ -669,35 +499,31 @@
               <table>
                 <thead>
                   <tr>
-                    <th style="width: 120px;">Bug ID</th>
-                    <th style="width: 110px;">Severity</th>
-                    <th style="width: 110px;">Priority</th>
+                    <th style="width: 110px;">Bug ID</th>
+                    <th style="width: 100px;">Severity</th>
+                    <th style="width: 100px;">Priority</th>
                     <th>Defect Summary</th>
-                    <th style="width: 110px;">Status</th>
-                    <th style="width: 45px; text-align: center;">Del</th>
+                    <th style="width: 100px;">Status</th>
+                    <th style="width: 40px; text-align: center;">Del</th>
                   </tr>
                 </thead>
                 <tbody id="defectTableBody"></tbody>
               </table>
             </div>
-            <p id="noDefectsNotice" style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 10px;">No defects logged for this execution.</p>
+            <p id="noDefectsNotice" style="font-size: 0.72rem; color: #94a3b8; text-align: center; margin-top: 8px;">No defects logged for this execution.</p>
           </div>
 
         </div>
 
-        <!-- =========================================================
-             MODE 2 VIEW: UNIVERSAL TEST CASE & SCENARIO STUDIO
-             ========================================================= -->
         <div id="viewStudio" class="view-section">
 
-          <!-- Studio Section 2: Universal Feature / Requirement Input -->
           <div class="card" id="secStudioInput">
             <div class="card-title indigo-accent">
               <span class="heading-label">
                 <span class="material-symbols-rounded heading-icon">edit_note</span>
                 2. Feature, Fresh Development, or Requirement Details & Screenshots
               </span>
-              <div style="display:flex; gap:8px;">
+              <div style="display:flex; gap:6px;">
                 <button type="button" onclick="openApiModal()" class="btn-icon btn-amber" data-tooltip="Optional Gemini Vision AI Key">
                   <span class="material-symbols-rounded">vpn_key</span>
                 </button>
@@ -707,7 +533,7 @@
               </div>
             </div>
 
-            <div class="grid-3" style="margin-bottom: 14px;">
+            <div class="grid-3" style="margin-bottom: 12px;">
               <div class="form-group">
                 <label>Testing Scope / Development Type *</label>
                 <select id="studioScopeType" onchange="markUnsaved()">
@@ -719,23 +545,23 @@
               </div>
 
               <div class="form-group">
-                <label>UI Screens / Fields / Components Involved</label>
-                <input type="text" id="studioUiElements" value="Principal Designation Row, Checkbox, Attendance Dropdown, Reason Input, Confirm Button" placeholder="e.g. Form inputs, Dropdowns, Submit, Table">
+                <label>UI Screens / Fields Involved</label>
+                <input type="text" id="studioUiElements" value="Principal Designation Row, Checkbox, Attendance Dropdown, Reason Input, Confirm Button">
               </div>
 
               <div class="form-group">
-                <label>Connected Modules (For Regression Check)</label>
+                <label>Connected Modules (Regression)</label>
                 <input type="text" id="studioImpactedAreas" value="Existing Staff Designations, Attendance Summary Report, Biometric Sync">
               </div>
             </div>
 
             <div class="form-group">
               <label>Feature / Requirement / Workflow Explanation (Works for Fresh Dev, New Features, CRs, or Bug Fixes) *</label>
-              <textarea id="studioChangeSummary" rows="3" placeholder="Explain the new feature workflow, user story, or change requirement...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Added the "Principal" designation in the Employee (Type & Designation) column, allowed selecting attendance status (On Duty / Present / Absent), entering Reason for On Duty, and confirming attendance via the Confirm button.</textarea>
+              <textarea id="studioChangeSummary" rows="3" placeholder="Explain the workflow or change...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Added the "Principal" designation in the Employee (Type & Designation) column, allowed selecting attendance status (On Duty / Present / Absent), entering Reason for On Duty, and confirming attendance via the Confirm button.</textarea>
             </div>
 
             <div class="upload-box-wrapper">
-              <label style="display:block; margin-bottom:6px;">Upload UI / Requirement Screenshots (Paste Ctrl+V or Drag & Drop)</label>
+              <label style="display:block; margin-bottom:5px;">Upload UI / Requirement Screenshots (Paste Ctrl+V or Drag & Drop)</label>
               <div class="drop-zone indigo-zone" id="studioDropZone">
                 <span class="material-symbols-rounded upload-icon">add_photo_alternate</span>
                 <p>Click to Browse or <span>Drag & Drop / Paste (Ctrl+V)</span> Application Screenshots</p>
@@ -745,14 +571,13 @@
             </div>
           </div>
 
-          <!-- Studio Section 3: Generated Scenarios, Functional Cases & Checklists -->
           <div class="card" id="secStudioOutput">
             <div class="card-title indigo-accent">
               <span class="heading-label">
                 <span class="material-symbols-rounded heading-icon">table_chart</span>
                 3. Generated Test Scenarios, Functional Cases & Verification Guard
               </span>
-              <div style="display:flex; gap:8px;">
+              <div style="display:flex; gap:6px;">
                 <button type="button" onclick="addCustomStudioTestCase()" class="btn-icon btn-slate" data-tooltip="Add Custom Test Case Row">
                   <span class="material-symbols-rounded">add</span>
                 </button>
@@ -791,29 +616,28 @@
 
             <div class="agent-tabs">
               <button type="button" class="tab-btn active" onclick="switchStudioTab('tabFunctionalCases', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Test Cases (<span id="tcCount">0</span>)
+                <span class="material-symbols-rounded" style="font-size:15px;">fact_check</span> Test Cases (<span id="tcCount">0</span>)
               </button>
               <button type="button" class="tab-btn" onclick="switchStudioTab('tabScenarios', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">format_list_bulleted</span> Test Scenarios (<span id="scenarioCount">0</span>)
+                <span class="material-symbols-rounded" style="font-size:15px;">format_list_bulleted</span> Test Scenarios (<span id="scenarioCount">0</span>)
               </button>
               <button type="button" class="tab-btn" onclick="switchStudioTab('tabGuardChecklist', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">rule</span> Requirement, Exploratory & Regression Checklist
+                <span class="material-symbols-rounded" style="font-size:15px;">rule</span> Requirement, Exploratory & Regression Checklist
               </button>
             </div>
 
-            <!-- TAB 1: TEST CASES -->
             <div id="tabFunctionalCases" class="tab-panel active">
               <div style="overflow-x:auto;">
                 <table>
                   <thead>
                     <tr>
-                      <th style="width:80px;">TC ID</th>
-                      <th style="width:105px;">Category</th>
-                      <th style="width:185px;">Scenario / Objective</th>
+                      <th style="width:75px;">TC ID</th>
+                      <th style="width:100px;">Category</th>
+                      <th style="width:175px;">Scenario / Objective</th>
                       <th>Execution Steps (Click to Edit)</th>
-                      <th style="width:190px;">Expected Result</th>
-                      <th style="width:85px;">Status</th>
-                      <th style="width:40px; text-align:center;">Del</th>
+                      <th style="width:180px;">Expected Result</th>
+                      <th style="width:80px;">Status</th>
+                      <th style="width:38px; text-align:center;">Del</th>
                     </tr>
                   </thead>
                   <tbody id="studioTestCaseBody"></tbody>
@@ -821,16 +645,15 @@
               </div>
             </div>
 
-            <!-- TAB 2: SCENARIOS -->
             <div id="tabScenarios" class="tab-panel">
               <div style="overflow-x:auto;">
                 <table>
                   <thead>
                     <tr>
-                      <th style="width:95px;">Scenario ID</th>
-                      <th style="width:120px;">Type</th>
+                      <th style="width:90px;">Scenario ID</th>
+                      <th style="width:110px;">Type</th>
                       <th>Scenario Description</th>
-                      <th style="width:90px;">Priority</th>
+                      <th style="width:85px;">Priority</th>
                     </tr>
                   </thead>
                   <tbody id="studioScenarioBody"></tbody>
@@ -838,19 +661,18 @@
               </div>
             </div>
 
-            <!-- TAB 3: CHECKLISTS -->
             <div id="tabGuardChecklist" class="tab-panel">
               <div class="guard-grid">
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#059669;">task_alt</span> Requirement Match</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#059669; font-size:16px;">task_alt</span> Requirement Match</h4>
                   <div id="reqMatchChecklist"></div>
                 </div>
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#d97706;">explore</span> Exploratory & Boundary</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#d97706; font-size:16px;">explore</span> Exploratory & Boundary</h4>
                   <div id="exploratoryChecklist"></div>
                 </div>
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#4f46e5;">history</span> Regression Check</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#4f46e5; font-size:16px;">history</span> Regression Check</h4>
                   <div id="regressionChecklist"></div>
                 </div>
               </div>
@@ -864,30 +686,28 @@
     </div>
   </div>
 
-  <!-- Add Project Modal -->
   <div class="modal-overlay" id="projectModal">
     <div class="modal-card">
-      <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+      <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
         <span class="material-symbols-rounded" style="color:#0d9488;">create_new_folder</span> Add New Project
       </h3>
       <div class="form-group">
         <label>Project / Application Name *</label>
         <input type="text" id="newProjectInput" placeholder="e.g. JNB-Hostel Application" onkeydown="if(event.key==='Enter') saveNewProject();">
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
         <button type="button" onclick="closeProjectModal()" class="btn-icon btn-slate" data-tooltip="Cancel"><span class="material-symbols-rounded">close</span></button>
-        <button type="button" onclick="saveNewProject()" class="btn-icon btn-teal" data-tooltip="Save Project"><span class="material-symbols-rounded">check</span></button>
+        <button type="button" onclick="saveNewProject()" class="btn-icon btn-teal" data-tooltip="Save"><span class="material-symbols-rounded">check</span></button>
       </div>
     </div>
   </div>
 
-  <!-- Add Module Modal -->
   <div class="modal-overlay" id="moduleModal">
     <div class="modal-card">
-      <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+      <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
         <span class="material-symbols-rounded" style="color:#0d9488;">post_add</span> Add New Module / Feature
       </h3>
-      <div class="form-group" style="margin-bottom: 10px;">
+      <div class="form-group" style="margin-bottom: 8px;">
         <label>For Project:</label>
         <input type="text" id="moduleModalProjectName" disabled style="background:#f1f5f9; color:#475569; font-weight:600;">
       </div>
@@ -895,86 +715,61 @@
         <label>Module / Feature Name *</label>
         <input type="text" id="newModuleInput" placeholder="e.g. Staff Attendance Confirmation" onkeydown="if(event.key==='Enter') saveNewModule();">
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
         <button type="button" onclick="closeModuleModal()" class="btn-icon btn-slate" data-tooltip="Cancel"><span class="material-symbols-rounded">close</span></button>
-        <button type="button" onclick="saveNewModule()" class="btn-icon btn-teal" data-tooltip="Save Module"><span class="material-symbols-rounded">check</span></button>
+        <button type="button" onclick="saveNewModule()" class="btn-icon btn-teal" data-tooltip="Save"><span class="material-symbols-rounded">check</span></button>
       </div>
     </div>
   </div>
 
-  <!-- Optional Gemini Key Modal -->
   <div class="modal-overlay" id="apiModal">
     <div class="modal-card">
-      <h3 style="font-size: 1rem; font-weight: 800; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+      <h3 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
         <span class="material-symbols-rounded" style="color:#d97706;">vpn_key</span> Gemini Vision AI Key (Optional)
       </h3>
-      <p style="font-size: 0.74rem; color:#64748b; margin-bottom: 12px;">
-        Works offline automatically. Add a Gemini API key if you want AI to read uploaded screenshot labels directly.
-      </p>
+      <p style="font-size: 0.72rem; color:#64748b; margin-bottom: 10px;">Works offline automatically. Add a Gemini API key if you want AI to read screenshots directly.</p>
       <div class="form-group">
         <label>Gemini API Key</label>
         <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy...">
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
         <button type="button" onclick="document.getElementById('apiModal').classList.remove('active')" class="btn-icon btn-slate" data-tooltip="Close"><span class="material-symbols-rounded">close</span></button>
         <button type="button" onclick="saveApiKey()" class="btn-icon btn-teal" data-tooltip="Save Key"><span class="material-symbols-rounded">check</span></button>
       </div>
     </div>
   </div>
 
-  <!-- Preview Modal -->
   <div class="modal-overlay" id="previewModal">
     <div class="preview-modal-card">
       <div class="preview-header">
-        <h3 style="font-size: 0.95rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-          <span class="material-symbols-rounded" style="color:#0d9488;">pageview</span> Document Preview
+        <h3 style="font-size: 0.9rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+          <span class="material-symbols-rounded" style="color:#0d9488; font-size:18px;">pageview</span> Document Preview
         </h3>
-        <div style="display:flex; gap:8px;">
-          <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word (.doc)">
-            <span class="material-symbols-rounded">download</span>
-          </button>
-          <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-teal tooltip-bottom" data-tooltip="Print / Save as PDF">
-            <span class="material-symbols-rounded">print</span>
-          </button>
-          <button type="button" onclick="closePreviewModal()" class="btn-icon btn-danger tooltip-bottom" data-tooltip="Close Preview">
-            <span class="material-symbols-rounded">close</span>
-          </button>
+        <div style="display:flex; gap:6px;">
+          <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word (.doc)"><span class="material-symbols-rounded">download</span></button>
+          <button type="button" onclick="triggerCleanPdfPrint()" class="btn-icon btn-teal tooltip-bottom" data-tooltip="Print / Save PDF"><span class="material-symbols-rounded">print</span></button>
+          <button type="button" onclick="closePreviewModal()" class="btn-icon btn-danger tooltip-bottom" data-tooltip="Close"><span class="material-symbols-rounded">close</span></button>
         </div>
       </div>
       <div class="preview-body" id="previewModalContent"></div>
     </div>
   </div>
 
-  <!-- Lightbox Zoom -->
   <div class="zoom-overlay" id="zoomOverlay" onclick="this.classList.remove('active')">
-    <img id="zoomOverlayImg" src="" alt="Zoomed Screenshot">
+    <img id="zoomOverlayImg" src="" alt="Zoomed">
   </div>
 
   <script>
-    const STORAGE_KEY = 'jnb_unified_qa_suite_v2';
+    const STORAGE_KEY = 'jnb_unified_qa_suite_v4';
     const PROJECTS_KEY = 'qa_projects_list_v7';
     const MODULES_MAP_KEY = 'qa_project_modules_map_v3';
     const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
 
-    const defaultProjects = [
-      "JNB-Nivas Web Application.",
-      "JNB-Hostel Application",
-      "APCFSS Portal"
-    ];
-
+    const defaultProjects = ["JNB-Nivas Web Application.", "JNB-Hostel Application", "APCFSS Portal"];
     const defaultModulesMap = {
-      "JNB-Nivas Web Application.": [
-        "Staff Management  Staff Attendance Confirmation.",
-        "Reports New --> Item Wise Purchase report"
-      ],
-      "JNB-Hostel Application": [
-        "Student Registration & Allocation",
-        "Biometric Attendance Tracking"
-      ],
-      "APCFSS Portal": [
-        "User Access Management",
-        "Role Based Service Allocation"
-      ]
+      "JNB-Nivas Web Application.": ["Staff Management  Staff Attendance Confirmation.", "Reports New --> Item Wise Purchase report"],
+      "JNB-Hostel Application": ["Student Registration & Allocation", "Biometric Attendance Tracking"],
+      "APCFSS Portal": ["User Access Management", "Role Based Service Allocation"]
     };
 
     let currentMode = 'report';
@@ -990,17 +785,11 @@
     let isDirty = false;
     let autoSaveTimer = null;
 
-    // Smooth Jump to Section inside Workspace
     function scrollToCard(cardId) {
       const el = document.getElementById(cardId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // =========================================================
-    // 1. WORKSPACE MODE SWITCHER
-    // =========================================================
     function switchWorkspaceMode(mode) {
       currentMode = mode;
       const viewReport = document.getElementById('viewReport');
@@ -1047,9 +836,6 @@
       document.getElementById('workspaceScroll').scrollTop = 0;
     }
 
-    // =========================================================
-    // 2. 30-SECOND AUTO-SAVE & GREEN BOUNCE BADGE
-    // =========================================================
     function setBadgeState(state) {
       const badge = document.getElementById('saveStatus');
       badge.className = 'status-badge tooltip-bottom';
@@ -1073,22 +859,14 @@
     function markUnsaved() {
       isDirty = true;
       setBadgeState('pending');
-      if (!autoSaveTimer) {
-        autoSaveTimer = setTimeout(performSaveNow, 30000);
-      }
+      if (!autoSaveTimer) autoSaveTimer = setTimeout(performSaveNow, 30000);
     }
 
     function performSaveNow() {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
-        autoSaveTimer = null;
-      }
-
+      if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null; }
       setBadgeState('saving');
-
       setTimeout(() => {
         syncStudioTableEditsFromDOM();
-
         const defectRows = [];
         document.querySelectorAll('#defectTableBody tr').forEach(tr => {
           defectRows.push({
@@ -1125,14 +903,11 @@
           isDirty = false;
           setBadgeState('saved');
         } catch (e) {}
-      }, 240);
+      }, 200);
     }
 
     setInterval(() => { if (isDirty) performSaveNow(); }, 30000);
 
-    // =========================================================
-    // 3. PROJECT & MODULE MAPPING
-    // =========================================================
     function getStoredProjects() {
       try {
         const s = JSON.parse(localStorage.getItem(PROJECTS_KEY));
@@ -1156,8 +931,7 @@
       select.innerHTML = '';
       projects.forEach(p => {
         const opt = document.createElement('option');
-        opt.value = p; opt.textContent = p;
-        select.appendChild(opt);
+        opt.value = p; opt.textContent = p; select.appendChild(opt);
       });
       select.value = projects.includes(cur) ? cur : projects[0];
     }
@@ -1170,13 +944,11 @@
       select.innerHTML = '';
       if (!modules.length) {
         const opt = document.createElement('option');
-        opt.value = ''; opt.textContent = '-- No modules added (Click + Icon) --';
-        select.appendChild(opt);
+        opt.value = ''; opt.textContent = '-- No modules added --'; select.appendChild(opt);
       } else {
         modules.forEach(m => {
           const opt = document.createElement('option');
-          opt.value = m; opt.textContent = m;
-          select.appendChild(opt);
+          opt.value = m; opt.textContent = m; select.appendChild(opt);
         });
         select.value = (selected && modules.includes(selected)) ? selected : modules[0];
       }
@@ -1213,9 +985,6 @@
       closeModuleModal(); populateModuleDropdown(val); performSaveNow();
     }
 
-    // =========================================================
-    // 4. SCREENSHOT UPLOAD & WORD-SAFE RESIZER
-    // =========================================================
     function readFileAsDataURL(file) {
       return new Promise(res => {
         const reader = new FileReader();
@@ -1225,7 +994,6 @@
       });
     }
 
-    // Pre-scales image for Word export so it NEVER overflows page borders in MS Word
     function resizeImageForWord(dataUrl, maxWidth = 600) {
       return new Promise(resolve => {
         const img = new Image();
@@ -1252,17 +1020,12 @@
           else execImages.push(dataUrl);
         }
       }
-      requestAnimationFrame(() => {
-        renderImages('prod');
-        renderImages('exec');
-        renderImages('studio');
-      });
+      requestAnimationFrame(() => { renderImages('prod'); renderImages('exec'); renderImages('studio'); });
     }
 
     function bindDropZone(zoneId, inputId, type) {
       const zone = document.getElementById(zoneId);
       const input = document.getElementById(inputId);
-
       zone.addEventListener('click', () => { activeDropTarget = type; input.click(); });
       input.addEventListener('change', (e) => { processFiles(e.target.files, type); input.value = ''; });
       zone.addEventListener('dragenter', (e) => { e.preventDefault(); zone.classList.add('dragover'); activeDropTarget = type; });
@@ -1309,9 +1072,7 @@
         div.innerHTML = `
           <span class="order-badge">#${idx + 1}</span>
           <img src="${src}" onclick="openZoom('${src}')" loading="lazy">
-          <button type="button" data-tooltip="Remove Screenshot" onclick="removeImage('${type}', ${idx}, event)">
-            <span class="material-symbols-rounded">close</span>
-          </button>
+          <button type="button" data-tooltip="Remove" onclick="removeImage('${type}', ${idx}, event)"><span class="material-symbols-rounded">close</span></button>
         `;
         grid.appendChild(div);
       });
@@ -1330,9 +1091,6 @@
       document.getElementById('zoomOverlay').classList.add('active');
     }
 
-    // =========================================================
-    // 5. UNIVERSAL TEST CASE & SCENARIO ENGINE (FRESH DEV, NEW FEATURE, CR, RETEST)
-    // =========================================================
     async function runFunctionalAgents() {
       const proj = document.getElementById('projectSelect').value;
       const mod = document.getElementById('moduleSelect').value;
@@ -1343,20 +1101,12 @@
       const impacted = document.getElementById('studioImpactedAreas').value;
       const summary = document.getElementById('studioChangeSummary').value.trim();
 
-      if (!summary) {
-        alert('Please enter the feature, development workflow, or change details.');
-        return;
-      }
+      if (!summary) { alert('Please enter the feature or workflow details.'); return; }
 
       const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
       if (apiKey && studioImages.length > 0) {
         const ok = await tryGeminiFunctionalAgents(apiKey, proj, mod, scopeType, url, creds, uiEls, impacted, summary);
-        if (ok) {
-          renderStudioOutputs();
-          performSaveNow();
-          scrollToCard('secStudioOutput');
-          return;
-        }
+        if (ok) { renderStudioOutputs(); performSaveNow(); scrollToCard('secStudioOutput'); return; }
       }
 
       generateUniversalQaSuite(proj, mod, scopeType, url, creds, uiEls, impacted, summary);
@@ -1371,7 +1121,6 @@
       const actionBtn = quoted[1] || 'Confirm / Submit';
       const compList = uiEls.split(',').map(s => s.trim()).filter(Boolean);
       const impactList = impacted.split(',').map(s => s.trim()).filter(Boolean);
-
       const isFresh = scopeType.includes('New Feature');
 
       studioScenarios = [
@@ -1384,109 +1133,43 @@
       ];
 
       studioTestCases = [
-        {
-          id: 'TC_001',
-          type: isFresh ? 'Functional' : 'Retesting',
-          scenario: `Verify screen load & presence of "${primaryItem}" (${scopeType})`,
-          steps: `1. Navigate to ${url}\n2. Login with Test Credentials (${creds})\n3. Go to "${mod}"\n4. Verify UI elements (${compList.slice(0,3).join(', ')}) and "${primaryItem}"`,
-          expected: `"${primaryItem}" and all required UI controls should render accurately as per specification.`,
-          status: 'Pass'
-        },
-        {
-          id: 'TC_002',
-          type: 'Functional',
-          scenario: `Verify positive end-to-end submission for "${primaryItem}"`,
-          steps: `1. In "${mod}", select/enter valid data for "${primaryItem}"\n2. Choose valid dropdown/input options\n3. Click "${actionBtn}"`,
-          expected: `Operation should succeed with confirmation message and data saved accurately.`,
-          status: 'Pass'
-        },
-        {
-          id: 'TC_003',
-          type: 'Negative',
-          scenario: `Verify validation on empty/unselected mandatory fields`,
-          steps: `1. Open "${mod}"\n2. Leave mandatory checkboxes/dropdowns unselected\n3. Click "${actionBtn}"`,
-          expected: `System should prevent submission and show clear validation message.`,
-          status: 'Pass'
-        },
-        {
-          id: 'TC_004',
-          type: 'Negative',
-          scenario: `Verify conditional mandatory inputs & invalid formats`,
-          steps: `1. Select "${primaryItem}"\n2. Trigger conditional input (e.g. On Duty / Remarks) and leave it blank or enter spaces only\n3. Click "${actionBtn}"`,
-          expected: `Validation alert should prompt user to provide valid mandatory details.`,
-          status: 'Pass'
-        },
-        {
-          id: 'TC_005',
-          type: 'Exploratory',
-          scenario: `Verify refresh (F5) persistence & rapid double-click behavior`,
-          steps: `1. Complete submission for "${primaryItem}"\n2. Refresh browser (F5) and verify saved state\n3. Test rapid double-click on "${actionBtn}"`,
-          expected: `Data remains intact after refresh; no duplicate submissions occur.`,
-          status: 'Pass'
-        },
-        {
-          id: 'TC_006',
-          type: 'Regression',
-          scenario: `Verify existing workflows & connected modules (${impactList[0] || 'Regression'})`,
-          steps: `1. Execute standard flow on existing records in "${mod}"\n2. Verify data reflection in ${impactList.join(', ') || 'reports'}`,
-          expected: `Existing features and reports continue functioning without regression issues.`,
-          status: 'Pass'
-        }
+        { id: 'TC_001', type: isFresh ? 'Functional' : 'Retesting', scenario: `Verify screen load & presence of "${primaryItem}"`, steps: `1. Navigate to ${url}\n2. Login with Credentials (${creds})\n3. Go to "${mod}"\n4. Verify UI elements`, expected: `"${primaryItem}" and all UI controls render accurately.`, status: 'Pass' },
+        { id: 'TC_002', type: 'Functional', scenario: `Verify positive end-to-end submission`, steps: `1. In "${mod}", select/enter valid data for "${primaryItem}"\n2. Choose options\n3. Click "${actionBtn}"`, expected: `Operation succeeds with confirmation message.`, status: 'Pass' },
+        { id: 'TC_003', type: 'Negative', scenario: `Verify validation on empty fields`, steps: `1. Open "${mod}"\n2. Leave mandatory fields unselected\n3. Click "${actionBtn}"`, expected: `System prevents submission and shows alert.`, status: 'Pass' },
+        { id: 'TC_004', type: 'Negative', scenario: `Verify conditional mandatory inputs`, steps: `1. Select "${primaryItem}"\n2. Trigger conditional input and leave blank\n3. Click "${actionBtn}"`, expected: `Validation alert prompts user for valid details.`, status: 'Pass' },
+        { id: 'TC_005', type: 'Exploratory', scenario: `Verify refresh persistence & rapid clicks`, steps: `1. Complete submission\n2. Refresh browser (F5)\n3. Test rapid double-click on button`, expected: `Data remains intact; no duplicate submissions.`, status: 'Pass' },
+        { id: 'TC_006', type: 'Regression', scenario: `Verify existing workflows (${impactList[0] || 'Regression'})`, steps: `1. Execute standard flow on existing records\n2. Verify data reflection`, expected: `Existing features function without issues.`, status: 'Pass' }
       ];
 
       guardChecklists = {
         reqMatch: [
-          { text: `Scope Verified (${scopeType}): "${primaryItem}" matches requirement under ${mod}.`, done: true },
-          { text: `UI Controls Verified: ${compList.join(', ')} are aligned and responsive.`, done: true },
-          { text: `Test Credentials (${creds}): User permissions & role access verified.`, done: true },
-          { text: `Data Persistence: Saved changes reflect in UI & backend reports.`, done: true }
+          { text: `Scope Verified (${scopeType}): "${primaryItem}" matches requirement.`, done: true },
+          { text: `UI Controls Verified: ${compList.join(', ')} active.`, done: true },
+          { text: `Test Credentials (${creds}): Role access checked.`, done: true },
+          { text: `Data Persistence: Saved changes reflect in UI/backend.`, done: true }
         ],
         exploratory: [
-          { text: `Default / Null State: Submit with default "---select---" option.`, done: false },
-          { text: `Boundary & Special Characters: Test text inputs with @#$%&* and max length.`, done: false },
-          { text: `Rapid Double Click: Click "${actionBtn}" multiple times rapidly.`, done: false },
-          { text: `Browser Refresh / Back Button: Verify state after F5 reload.`, done: false }
+          { text: `Default State: Submit with default select options.`, done: false },
+          { text: `Boundary & Special Characters: Test inputs with special symbols.`, done: false },
+          { text: `Rapid Double Click: Click submit multiple times quickly.`, done: false },
+          { text: `Browser Refresh: Verify state after F5 reload.`, done: false }
         ],
-        regression: impactList.map(item => ({
-          text: `Regression Check: "${item}" verified and unaffected.`,
-          done: false
-        })).concat([
-          { text: `Console & Network Check: Zero 404/500 errors in browser DevTools.`, done: true }
+        regression: impactList.map(item => ({ text: `Regression Check: "${item}" verified.`, done: false })).concat([
+          { text: `Console & Network Check: Zero 404/500 errors.`, done: true }
         ])
       };
     }
 
     async function tryGeminiFunctionalAgents(apiKey, proj, mod, scopeType, url, creds, uiEls, impacted, summary) {
       try {
-        const parts = [{
-          text: `You are a QA Lead generating scenarios & manual test cases for: ${scopeType}.
-Project: ${proj}, Module: ${mod}, URL: ${url}, Test Credentials: ${creds}
-UI Elements: ${uiEls}
-Impacted Areas: ${impacted}
-Requirement Details: ${summary}
-
-Return STRICT JSON with keys:
-"scenarios": [{"id":"TS_01","cat":"Functional|Retesting|Negative|Exploratory|Regression","pri":"High|Medium","desc":"..."}],
-"testCases": [{"id":"TC_001","type":"Functional|Retesting|Negative|Exploratory|Regression","scenario":"...","steps":"1. ...\\n2. ...","expected":"...","status":"Pass"}],
-"guardChecklists": {
-  "reqMatch": [{"text":"...","done":true}],
-  "exploratory": [{"text":"...","done":false}],
-  "regression": [{"text":"...","done":false}]
-}`
-        }];
-
+        const parts = [{ text: `Generate test cases for ${scopeType} in ${proj} - ${mod}. Return JSON with scenarios, test cases, and guardChecklists.` }];
         if (studioImages[0]) {
-          const base64Data = studioImages[0].split(',')[1];
-          const mimeType = studioImages[0].split(';')[0].split(':')[1];
-          parts.push({ inline_data: { mime_type: mimeType, data: base64Data } });
+          parts.push({ inline_data: { mime_type: studioImages[0].split(';')[0].split(':')[1], data: studioImages[0].split(',')[1] } });
         }
-
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: "application/json" } })
         });
-
         if (!resp.ok) return false;
         const json = await resp.json();
         const parsed = JSON.parse(json.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
@@ -1494,9 +1177,7 @@ Return STRICT JSON with keys:
         if (parsed.testCases) studioTestCases = parsed.testCases;
         if (parsed.guardChecklists) guardChecklists = parsed.guardChecklists;
         return true;
-      } catch (e) {
-        return false;
-      }
+      } catch (e) { return false; }
     }
 
     function getBadgeClassForType(t = '') {
@@ -1523,16 +1204,14 @@ Return STRICT JSON with keys:
           <td contenteditable="true" class="st-steps" style="white-space:pre-wrap;" oninput="markUnsaved()">${tc.steps}</td>
           <td contenteditable="true" class="st-exp" oninput="markUnsaved()">${tc.expected}</td>
           <td>
-            <select class="st-status" onchange="markUnsaved()" style="padding:4px 22px 4px 8px; font-size:0.74rem; font-weight:700;">
+            <select class="st-status" onchange="markUnsaved()" style="padding:3px 18px 3px 6px; font-size:0.72rem; font-weight:700;">
               <option value="Pass" ${tc.status === 'Pass' ? 'selected' : ''}>Pass</option>
               <option value="Fail" ${tc.status === 'Fail' ? 'selected' : ''}>Fail</option>
               <option value="Retest" ${tc.status === 'Retest' ? 'selected' : ''}>Retest</option>
             </select>
           </td>
           <td style="text-align:center;">
-            <button type="button" class="delete-btn" onclick="studioTestCases.splice(${idx},1); renderStudioOutputs(); markUnsaved();">
-              <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
-            </button>
+            <button type="button" class="delete-btn" onclick="studioTestCases.splice(${idx},1); renderStudioOutputs(); markUnsaved();"><span class="material-symbols-rounded" style="font-size:15px;">delete</span></button>
           </td>
         `;
         tcBody.appendChild(tr);
@@ -1562,22 +1241,15 @@ Return STRICT JSON with keys:
       items.forEach((item, idx) => {
         const label = document.createElement('label');
         label.className = `check-item ${item.done ? 'checked' : ''}`;
-        label.innerHTML = `
-          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleGuardItem('${groupKey}', ${idx}, this.checked)">
-          <span>${item.text}</span>
-        `;
+        label.innerHTML = `<input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleGuardItem('${groupKey}', ${idx}, this.checked)"><span>${item.text}</span>`;
         box.appendChild(label);
       });
     }
 
     function toggleGuardItem(groupKey, idx, checked) {
-      if (guardChecklists[groupKey] && guardChecklists[groupKey][idx]) {
+      if (guardChecklists[groupKey]?.[idx]) {
         guardChecklists[groupKey][idx].done = checked;
-        renderChecklistGroup(
-          groupKey === 'reqMatch' ? 'reqMatchChecklist' : (groupKey === 'exploratory' ? 'exploratoryChecklist' : 'regressionChecklist'),
-          guardChecklists[groupKey],
-          groupKey
-        );
+        renderChecklistGroup(groupKey === 'reqMatch' ? 'reqMatchChecklist' : (groupKey === 'exploratory' ? 'exploratoryChecklist' : 'regressionChecklist'), guardChecklists[groupKey], groupKey);
         markUnsaved();
       }
     }
@@ -1598,14 +1270,7 @@ Return STRICT JSON with keys:
     function addCustomStudioTestCase() {
       syncStudioTableEditsFromDOM();
       const nextNum = String(studioTestCases.length + 1).padStart(3, '0');
-      studioTestCases.push({
-        id: `TC_${nextNum}`,
-        type: 'Functional',
-        scenario: 'Custom functional verification',
-        steps: '1. Navigate to module\n2. Verify feature behavior',
-        expected: 'Functioning as expected.',
-        status: 'Pass'
-      });
+      studioTestCases.push({ id: `TC_${nextNum}`, type: 'Functional', scenario: 'Custom functional check', steps: '1. Navigate\n2. Verify', expected: 'Functioning properly.', status: 'Pass' });
       renderStudioOutputs();
       markUnsaved();
     }
@@ -1632,42 +1297,16 @@ Return STRICT JSON with keys:
       performSaveNow();
     }
 
-    // =========================================================
-    // 6. DEFECTS TABLE
-    // =========================================================
     function addDefectRow(data = {}, skipDirty = false) {
       document.getElementById('noDefectsNotice').style.display = 'none';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><input type="text" class="d-id" placeholder="#00142" value="${data.id || ''}"></td>
-        <td>
-          <select class="d-sev">
-            <option value="minor" ${data.sev === 'minor' ? 'selected' : ''}>minor</option>
-            <option value="major" ${data.sev === 'major' ? 'selected' : ''}>major</option>
-            <option value="block" ${data.sev === 'block' ? 'selected' : ''}>block</option>
-            <option value="crash" ${data.sev === 'crash' ? 'selected' : ''}>crash</option>
-          </select>
-        </td>
-        <td>
-          <select class="d-pri">
-            <option value="normal" ${data.pri === 'normal' ? 'selected' : ''}>normal</option>
-            <option value="high" ${data.pri === 'high' ? 'selected' : ''}>high</option>
-            <option value="urgent" ${data.pri === 'urgent' ? 'selected' : ''}>urgent</option>
-          </select>
-        </td>
+        <td><select class="d-sev"><option value="minor" ${data.sev === 'minor' ? 'selected' : ''}>minor</option><option value="major" ${data.sev === 'major' ? 'selected' : ''}>major</option><option value="block" ${data.sev === 'block' ? 'selected' : ''}>block</option><option value="crash" ${data.sev === 'crash' ? 'selected' : ''}>crash</option></select></td>
+        <td><select class="d-pri"><option value="normal" ${data.pri === 'normal' ? 'selected' : ''}>normal</option><option value="high" ${data.pri === 'high' ? 'selected' : ''}>high</option><option value="urgent" ${data.pri === 'urgent' ? 'selected' : ''}>urgent</option></select></td>
         <td><input type="text" class="d-desc" placeholder="Summary..." value="${data.desc || ''}"></td>
-        <td>
-          <select class="d-status">
-            <option value="resolved" ${data.status === 'resolved' ? 'selected' : ''}>resolved</option>
-            <option value="closed" ${data.status === 'closed' ? 'selected' : ''}>closed</option>
-            <option value="new" ${data.status === 'new' ? 'selected' : ''}>new</option>
-          </select>
-        </td>
-        <td style="text-align:center;">
-          <button type="button" class="delete-btn" data-tooltip="Delete Row" onclick="this.closest('tr').remove(); checkDefectCount();">
-            <span class="material-symbols-rounded">delete</span>
-          </button>
-        </td>
+        <td><select class="d-status"><option value="resolved" ${data.status === 'resolved' ? 'selected' : ''}>resolved</option><option value="closed" ${data.status === 'closed' ? 'selected' : ''}>closed</option><option value="new" ${data.status === 'new' ? 'selected' : ''}>new</option></select></td>
+        <td style="text-align:center;"><button type="button" class="delete-btn" data-tooltip="Delete" onclick="this.closest('tr').remove(); checkDefectCount();"><span class="material-symbols-rounded">delete</span></button></td>
       `;
       document.getElementById('defectTableBody').appendChild(tr);
       tr.querySelectorAll('input, select').forEach(el => el.addEventListener('input', markUnsaved));
@@ -1675,15 +1314,10 @@ Return STRICT JSON with keys:
     }
 
     function checkDefectCount(skipDirty = false) {
-      if (document.querySelectorAll('#defectTableBody tr').length === 0) {
-        document.getElementById('noDefectsNotice').style.display = 'block';
-      }
+      if (document.querySelectorAll('#defectTableBody tr').length === 0) document.getElementById('noDefectsNotice').style.display = 'block';
       if (!skipDirty) markUnsaved();
     }
 
-    // =========================================================
-    // 7. DOCUMENT PREVIEW, PDF & WORD-SAFE EXPORT (BORDER FIT FIX)
-    // =========================================================
     function buildReportDocHtml() {
       const p = document.getElementById('projectSelect').value;
       const mod = document.getElementById('moduleSelect').value;
@@ -1693,18 +1327,8 @@ Return STRICT JSON with keys:
       const steps = document.getElementById('execSteps').value;
       const res = document.getElementById('actualResult').value;
 
-      let prodSectionHtml = '';
-      if (prodImages.length > 0) {
-        prodSectionHtml = `
-          <div class="doc-section-heading">Production Screenshot reference:-</div>
-          ${prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('')}
-        `;
-      }
-
-      let execImgsHtml = '';
-      if (execImages.length > 0) {
-        execImgsHtml = execImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
-      }
+      let prodSectionHtml = prodImages.length ? `<div class="doc-section-heading">Production Screenshot reference:-</div>` + prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('') : '';
+      let execImgsHtml = execImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
 
       return `
         <div class="doc-page">
@@ -1713,18 +1337,13 @@ Return STRICT JSON with keys:
           <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${mod}</div>
           <div class="doc-header-field"><strong>Test URL:</strong> ${url}</div>
           <div class="doc-header-field"><strong>Test Credentials :-</strong> ${creds}</div>
-          
           <div class="doc-section-heading">Detailed Description about Features/Services Tested:</div>
           <div class="doc-text">${desc}</div>
-          
           ${prodSectionHtml}
-
           <div class="doc-section-heading">Actual Result:</div>
           <div class="doc-text">${res}</div>
-
           <div class="doc-section-heading">Execution Steps:</div>
           <div class="doc-text">${steps}</div>
-          
           ${execImgsHtml}
         </div>
       `;
@@ -1741,12 +1360,12 @@ Return STRICT JSON with keys:
 
       const rowsHtml = studioTestCases.map(tc => `
         <tr>
-          <td style="border:1px solid #000; padding:6px;"><strong>${tc.id}</strong></td>
-          <td style="border:1px solid #000; padding:6px;">${tc.type}</td>
-          <td style="border:1px solid #000; padding:6px;">${tc.scenario}</td>
-          <td style="border:1px solid #000; padding:6px; white-space:pre-wrap;">${tc.steps}</td>
-          <td style="border:1px solid #000; padding:6px;">${tc.expected}</td>
-          <td style="border:1px solid #000; padding:6px; font-weight:bold;">${tc.status}</td>
+          <td style="border:1px solid #000; padding:5px;"><strong>${tc.id}</strong></td>
+          <td style="border:1px solid #000; padding:5px;">${tc.type}</td>
+          <td style="border:1px solid #000; padding:5px;">${tc.scenario}</td>
+          <td style="border:1px solid #000; padding:5px; white-space:pre-wrap;">${tc.steps}</td>
+          <td style="border:1px solid #000; padding:5px;">${tc.expected}</td>
+          <td style="border:1px solid #000; padding:5px; font-weight:bold;">${tc.status}</td>
         </tr>
       `).join('');
 
@@ -1760,78 +1379,59 @@ Return STRICT JSON with keys:
           <div class="doc-header-field"><strong>Testing Scope:</strong> ${scopeType}</div>
           <div class="doc-header-field"><strong>Test URL:</strong> ${url}</div>
           <div class="doc-header-field"><strong>Test Credentials :-</strong> ${creds}</div>
-
           <div class="doc-section-heading">Feature / Requirement Summary:</div>
           <div class="doc-text">${summary}</div>
-
           <div class="doc-section-heading">Test Cases (${studioTestCases.length}):</div>
-          <table style="width:100%; border-collapse:collapse; margin-top:8px; margin-bottom:18px; font-size:9.5pt;">
+          <table style="width:100%; border-collapse:collapse; margin-top:6px; margin-bottom:14px; font-size:9.5pt;">
             <thead>
               <tr style="background:#f1f5f9;">
-                <th style="border:1px solid #000; padding:6px;">TC ID</th>
-                <th style="border:1px solid #000; padding:6px;">Category</th>
-                <th style="border:1px solid #000; padding:6px;">Scenario</th>
-                <th style="border:1px solid #000; padding:6px;">Execution Steps</th>
-                <th style="border:1px solid #000; padding:6px;">Expected Result</th>
-                <th style="border:1px solid #000; padding:6px;">Status</th>
+                <th style="border:1px solid #000; padding:5px;">TC ID</th>
+                <th style="border:1px solid #000; padding:5px;">Category</th>
+                <th style="border:1px solid #000; padding:5px;">Scenario</th>
+                <th style="border:1px solid #000; padding:5px;">Execution Steps</th>
+                <th style="border:1px solid #000; padding:5px;">Expected Result</th>
+                <th style="border:1px solid #000; padding:5px;">Status</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
           </table>
-
           ${imgsHtml}
         </div>
       `;
     }
 
-    function getActiveDocHtml() {
-      return currentMode === 'studio' ? buildStudioDocHtml() : buildReportDocHtml();
-    }
+    function getActiveDocHtml() { return currentMode === 'studio' ? buildStudioDocHtml() : buildReportDocHtml(); }
 
     function openPreviewModal() {
       document.getElementById('previewModalContent').innerHTML = getActiveDocHtml();
       document.getElementById('previewModal').classList.add('active');
     }
 
-    function closePreviewModal() {
-      document.getElementById('previewModal').classList.remove('active');
-    }
+    function closePreviewModal() { document.getElementById('previewModal').classList.remove('active'); }
 
     function triggerCleanPdfPrint() {
       const printable = document.getElementById('printableDocArea');
       printable.innerHTML = getActiveDocHtml();
       printable.style.display = 'block';
-      setTimeout(() => {
-        window.print();
-        printable.style.display = 'none';
-        printable.innerHTML = '';
-      }, 100);
+      setTimeout(() => { window.print(); printable.style.display = 'none'; printable.innerHTML = ''; }, 100);
     }
 
-    // WORD EXPORT WITH STRICT 600PX TABLE/IMAGE CONTAINMENT (Fixes Border Overflow in MS Word)
     async function exportActiveToWord() {
       const p = document.getElementById('projectSelect').value;
       const mod = document.getElementById('moduleSelect').value;
       const url = document.getElementById('testUrl').value;
       const creds = document.getElementById('loginRef').value;
-
       let bodyInnerHtml = '';
 
       if (currentMode === 'report') {
         const desc = document.getElementById('featureDesc').value;
         const steps = document.getElementById('execSteps').value;
         const res = document.getElementById('actualResult').value;
-
         const sizedProd = await Promise.all(prodImages.map(src => resizeImageForWord(src, 600)));
         const sizedExec = await Promise.all(execImages.map(src => resizeImageForWord(src, 600)));
 
-        let prodHtml = '';
-        if (sizedProd.length > 0) {
-          prodHtml = `<p class="heading">Production Screenshot reference:-</p>` +
-            sizedProd.map(im => `<table width="600" style="border-collapse:collapse; margin:8pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
-        }
-
-        const execHtml = sizedExec.map(im => `<table width="600" style="border-collapse:collapse; margin:8pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
+        let prodHtml = sizedProd.length ? `<p class="heading">Production Screenshot reference:-</p>` + sizedProd.map(im => `<table width="600" style="border-collapse:collapse; margin:6pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('') : '';
+        const execHtml = sizedExec.map(im => `<table width="600" style="border-collapse:collapse; margin:6pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
 
         bodyInnerHtml = `
           <div class="doc-main-title">Test Execution Report</div>
@@ -1839,18 +1439,13 @@ Return STRICT JSON with keys:
           <p><strong>Tested Module/Feature Names:</strong> ${mod}</p>
           <p><strong>Test URL:</strong> ${url}</p>
           <p><strong>Test Credentials :-</strong> ${creds}</p>
-          
           <p class="heading">Detailed Description about Features/Services Tested:</p>
           <p>${desc.replace(/\n/g, '<br>')}</p>
-          
           ${prodHtml}
-
           <p class="heading">Actual Result:</p>
           <p>${res}</p>
-
           <p class="heading">Execution Steps:</p>
           <p>${steps.replace(/\n/g, '<br>')}</p>
-          
           ${execHtml}
         `;
       } else {
@@ -1861,16 +1456,16 @@ Return STRICT JSON with keys:
 
         const rowsHtml = studioTestCases.map(tc => `
           <tr>
-            <td style="border:1pt solid #000; padding:5pt;"><strong>${tc.id}</strong></td>
-            <td style="border:1pt solid #000; padding:5pt;">${tc.type}</td>
-            <td style="border:1pt solid #000; padding:5pt;">${tc.scenario}</td>
-            <td style="border:1pt solid #000; padding:5pt;">${tc.steps.replace(/\n/g, '<br>')}</td>
-            <td style="border:1pt solid #000; padding:5pt;">${tc.expected}</td>
-            <td style="border:1pt solid #000; padding:5pt;"><strong>${tc.status}</strong></td>
+            <td style="border:1pt solid #000; padding:4pt;"><strong>${tc.id}</strong></td>
+            <td style="border:1pt solid #000; padding:4pt;">${tc.type}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${tc.scenario}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${tc.steps.replace(/\n/g, '<br>')}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${tc.expected}</td>
+            <td style="border:1pt solid #000; padding:4pt;"><strong>${tc.status}</strong></td>
           </tr>
         `).join('');
 
-        const studioImgsHtml = sizedStudio.map(im => `<table width="600" style="border-collapse:collapse; margin:8pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
+        const studioImgsHtml = sizedStudio.map(im => `<table width="600" style="border-collapse:collapse; margin:6pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
 
         bodyInnerHtml = `
           <div class="doc-main-title">Test Case & Scenario Specification</div>
@@ -1882,15 +1477,15 @@ Return STRICT JSON with keys:
           <p class="heading">Feature / Requirement Summary:</p>
           <p>${summary.replace(/\n/g, '<br>')}</p>
           <p class="heading">Test Cases (${studioTestCases.length}):</p>
-          <table width="600" style="border-collapse:collapse; font-size:9.5pt; margin-bottom:12pt;">
+          <table width="600" style="border-collapse:collapse; font-size:9.5pt; margin-bottom:10pt;">
             <thead>
               <tr style="background:#f1f5f9;">
-                <th style="border:1pt solid #000; padding:5pt;">TC ID</th>
-                <th style="border:1pt solid #000; padding:5pt;">Category</th>
-                <th style="border:1pt solid #000; padding:5pt;">Scenario</th>
-                <th style="border:1pt solid #000; padding:5pt;">Execution Steps</th>
-                <th style="border:1pt solid #000; padding:5pt;">Expected Result</th>
-                <th style="border:1pt solid #000; padding:5pt;">Status</th>
+                <th style="border:1pt solid #000; padding:4pt;">TC ID</th>
+                <th style="border:1pt solid #000; padding:4pt;">Category</th>
+                <th style="border:1pt solid #000; padding:4pt;">Scenario</th>
+                <th style="border:1pt solid #000; padding:4pt;">Execution Steps</th>
+                <th style="border:1pt solid #000; padding:4pt;">Expected Result</th>
+                <th style="border:1pt solid #000; padding:4pt;">Status</th>
               </tr>
             </thead>
             <tbody>${rowsHtml}</tbody>
@@ -1902,13 +1497,7 @@ Return STRICT JSON with keys:
       const htmlContent = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>QA Report</title>
-        <style>
-          @page { size: 21cm 29.7cm; margin: 2cm; }
-          body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; }
-          .doc-main-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 14pt; }
-          p { margin: 3pt 0; font-size: 11pt; }
-          .heading { font-weight: bold; margin-top: 14pt; margin-bottom: 4pt; }
-        </style>
+        <style> @page { size: 21cm 29.7cm; margin: 2cm; } body { font-family: Arial, sans-serif; font-size: 11pt; color: #000000; } .doc-main-title { font-size: 15pt; font-weight: bold; text-align: center; margin-bottom: 12pt; } p { margin: 2pt 0; font-size: 11pt; } .heading { font-weight: bold; margin-top: 12pt; margin-bottom: 3pt; } </style>
         </head><body>${bodyInnerHtml}</body></html>`;
 
       const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
@@ -1948,19 +1537,12 @@ Return STRICT JSON with keys:
     }
 
     function resetToDocDefaults() {
-      if (confirm('Are you sure you want to reset to defaults?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      }
+      if (confirm('Are you sure you want to reset to defaults?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); }
     }
 
-    // 8. Initialization
     window.onload = function() {
       let parsed = null;
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) parsed = JSON.parse(saved);
-      } catch (e) {}
+      try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) parsed = JSON.parse(saved); } catch (e) {}
 
       populateProjectDropdown(parsed?.project || null);
       populateModuleDropdown(parsed?.module || null);
@@ -1987,29 +1569,11 @@ Return STRICT JSON with keys:
           guardChecklists = parsed.guardChecklists || { reqMatch: [], exploratory: [], regression: [] };
           renderStudioOutputs();
         } else {
-          generateUniversalQaSuite(
-            document.getElementById('projectSelect').value,
-            document.getElementById('moduleSelect').value,
-            document.getElementById('studioScopeType').value,
-            document.getElementById('testUrl').value,
-            document.getElementById('loginRef').value,
-            document.getElementById('studioUiElements').value,
-            document.getElementById('studioImpactedAreas').value,
-            document.getElementById('studioChangeSummary').value
-          );
+          generateUniversalQaSuite(document.getElementById('projectSelect').value, document.getElementById('moduleSelect').value, document.getElementById('studioScopeType').value, document.getElementById('testUrl').value, document.getElementById('loginRef').value, document.getElementById('studioUiElements').value, document.getElementById('studioImpactedAreas').value, document.getElementById('studioChangeSummary').value);
           renderStudioOutputs();
         }
       } else {
-        generateUniversalQaSuite(
-          document.getElementById('projectSelect').value,
-          document.getElementById('moduleSelect').value,
-          document.getElementById('studioScopeType').value,
-          document.getElementById('testUrl').value,
-          document.getElementById('loginRef').value,
-          document.getElementById('studioUiElements').value,
-          document.getElementById('studioImpactedAreas').value,
-          document.getElementById('studioChangeSummary').value
-        );
+        generateUniversalQaSuite(document.getElementById('projectSelect').value, document.getElementById('moduleSelect').value, document.getElementById('studioScopeType').value, document.getElementById('testUrl').value, document.getElementById('loginRef').value, document.getElementById('studioUiElements').value, document.getElementById('studioImpactedAreas').value, document.getElementById('studioChangeSummary').value);
         renderStudioOutputs();
       }
 
