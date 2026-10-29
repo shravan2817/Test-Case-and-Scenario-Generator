@@ -43,19 +43,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Grammarly Style Suggestion Popup Card */
-    #grammarlyCard {
-      position: absolute; display: none; background: #ffffff; border: 1px solid #d1d5db;
-      border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); padding: 8px 12px;
-      z-index: 999999; font-size: 0.75rem; max-width: 220px; animation: slideDownFade 0.15s ease;
-    }
-    #grammarlyCard .g-title { font-weight: 700; color: #4b5563; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-    #grammarlyCard .g-suggestion {
-      background: #eff6ff; color: #1d4ed8; padding: 4px 8px; border-radius: 4px; cursor: pointer;
-      font-weight: 600; border: 1px solid #bfdbfe; display: inline-block; transition: background 0.1s;
-    }
-    #grammarlyCard .g-suggestion:hover { background: #dbeafe; }
-
     [data-tooltip] { position: relative; }
     [data-tooltip]::after {
       content: attr(data-tooltip);
@@ -212,12 +199,6 @@
     textarea { resize: vertical; line-height: 1.5; }
     .input-action-row { display: flex; gap: 8px; align-items: center; }
 
-    .autocorrect-hint {
-      position: absolute; right: 10px; top: 32px; background: #eff6ff; color: #1d4ed8; font-size: 0.68rem;
-      font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; pointer-events: none;
-      display: none;
-    }
-
     .upload-box-wrapper { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
     .drop-zone {
       border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; 
@@ -324,12 +305,6 @@
 </head>
 <body>
 
-  <!-- Grammarly Style Interactive Card -->
-  <div id="grammarlyCard">
-    <div class="g-title"><span class="material-symbols-rounded" style="font-size:15px; color:#2563eb;">auto_fix_high</span> Suggestion</div>
-    <div id="grammarlySuggestionText" class="g-suggestion" onclick="applyGrammarlyFix()"></div>
-  </div>
-
   <div id="printableDocArea" style="display:none;"></div>
 
   <div class="app-shell">
@@ -430,6 +405,9 @@
               <label>Tested Module / Feature Names *</label>
               <div class="input-action-row">
                 <select id="moduleSelect" onchange="markUnsaved()"></select>
+                <button type="button" onclick="copySelectedModule()" class="btn-icon btn-slate tooltip-bottom" data-tooltip="Copy Selected Module Name">
+                  <span class="material-symbols-rounded" style="font-size:18px;">content_copy</span>
+                </button>
                 <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module"><span class="material-symbols-rounded">add</span></button>
               </div>
             </div>
@@ -468,8 +446,7 @@
 
             <div class="form-group">
               <label>Detailed Description about Features/Services Tested *</label>
-              <textarea id="featureDesc" rows="3" spellcheck="true" placeholder="Type here with automatic typo correction...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
-              <div id="descHint" class="autocorrect-hint">Auto-corrected</div>
+              <textarea id="featureDesc" rows="3" spellcheck="true" placeholder="Type here...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
             </div>
 
             <div class="upload-box-wrapper">
@@ -503,8 +480,8 @@
 
             <div class="form-group">
               <label>Execution Steps *</label>
-              <textarea id="execSteps" rows="3" spellcheck="true">1. Navigate to the URL: JNB - Nivas  Web Application
-2. Login as mentioned user , navigate to “Staff Management Staff Attendance Confirmation” , verify the presence of the "Principal" designation , check the record , select values and click “Confirm”.</textarea>
+              <textarea id="execSteps" rows="3" spellcheck="true">1. Navigate to the URL: JNB - Nivas --> Web Application
+2. Login as mentioned user --> navigate to “Staff Management --> Staff Attendance Confirmation” --> verify the presence of the "Principal" designation --> check the record --> select values and click “Confirm”.</textarea>
             </div>
 
             <div class="upload-box-wrapper">
@@ -584,7 +561,7 @@
 
             <div class="form-group">
               <label>Feature / Requirement / Workflow Explanation *</label>
-              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Explain workflow or change...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Added the "Principal" designation in the Employee (Type & Designation) column, allowed selecting attendance status (On Duty / Present / Absent), entering Reason for On Duty, and confirming attendance via the Confirm button.</textarea>
+              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Explain workflow or change...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
             </div>
 
             <div class="upload-box-wrapper">
@@ -766,23 +743,16 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'jnb_unified_qa_suite_v11';
+    const STORAGE_KEY = 'jnb_unified_qa_suite_v12';
     const PROJECTS_KEY = 'qa_projects_list_v7';
     const MODULES_MAP_KEY = 'qa_project_modules_map_v3';
     const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
 
     const defaultProjects = ["JNB-Nivas Web Application.", "JNB-Hostel Application", "APCFSS Portal"];
     const defaultModulesMap = {
-      "JNB-Nivas Web Application.": ["Staff Management  Staff Attendance Confirmation.", "Reports New --> Item Wise Purchase report"],
+      "JNB-Nivas Web Application.": ["Staff Management --> Staff Attendance Confirmation", "Reports New --> Item Wise Purchase report"],
       "JNB-Hostel Application": ["Student Registration & Allocation", "Biometric Attendance Tracking"],
       "APCFSS Portal": ["User Access Management", "Role Based Service Allocation"]
-    };
-
-    // Advanced Auto-Correction Dictionary (Typo -> Correct word)
-    const typoCorrections = {
-      "teh": "the", "recieve": "receive", "recieved": "received", "Wich": "Which", "wich": "which",
-      "seperate": "separate", "definately": "definitely", "occured": "occurred", "untill": "until",
-      "sucess": "success", "functionning": "functioning", "navidate": "navigate", "loging": "login"
     };
 
     let currentMode = 'report';
@@ -797,8 +767,6 @@
 
     let isDirty = false;
     let autoSaveTimer = null;
-    let activeInputForFix = null;
-    let targetTypoWord = '';
 
     function scrollToCard(cardId) {
       const el = document.getElementById(cardId);
@@ -875,6 +843,21 @@
       isDirty = true;
       setBadgeState('pending');
       if (!autoSaveTimer) autoSaveTimer = setTimeout(performSaveNow, 30000);
+    }
+
+    function copySelectedModule() {
+      const modSelect = document.getElementById('moduleSelect');
+      const val = modSelect.value;
+      if (!val) {
+        alert('No module selected to copy!');
+        return;
+      }
+      const cleanVal = val.replace(/-->/g, '→');
+      navigator.clipboard.writeText(cleanVal).then(() => {
+        alert(`Copied to clipboard: "${cleanVal}"`);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
     }
 
     function performSaveNow() {
@@ -964,7 +947,9 @@
       } else {
         modules.forEach(m => {
           const opt = document.createElement('option');
-          opt.value = m; opt.textContent = m; select.appendChild(opt);
+          opt.value = m; 
+          opt.textContent = m.replace(/-->/g, '→'); 
+          select.appendChild(opt);
         });
         select.value = (selected && modules.includes(selected)) ? selected : modules[0];
       }
@@ -1105,56 +1090,6 @@
     function openZoom(src) {
       document.getElementById('zoomOverlayImg').src = src;
       document.getElementById('zoomOverlay').classList.add('active');
-    }
-
-    // Grammarly & Word style interactive Auto-Correction Engine
-    function setupAutoCorrect() {
-      const textareas = document.querySelectorAll('textarea, input[type="text"]');
-      const card = document.getElementById('grammarlyCard');
-      const suggestionBtn = document.getElementById('grammarlySuggestionText');
-
-      textareas.forEach(el => {
-        el.addEventListener('keyup', (e) => {
-          let val = el.value;
-          let words = val.split(/\s+/);
-          let currentWord = words[words.length - 1];
-
-          if (typoCorrections[currentWord]) {
-            activeInputForFix = el;
-            targetTypoWord = currentWord;
-            suggestionBtn.textContent = `Change to "${typoCorrections[currentWord]}"`;
-            
-            // Position suggestion card near the input
-            const rect = el.getBoundingClientRect();
-            card.style.top = `${rect.bottom + window.scrollY + 4}px`;
-            card.style.left = `${rect.left + window.scrollX}px`;
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-
-          if (e.key === ' ' || e.key === '.' || e.key === ',') {
-            if (typoCorrections[currentWord]) {
-              el.value = val.replace(new RegExp(`\\b${currentWord}\\b$`), typoCorrections[currentWord]);
-              card.style.display = 'none';
-            }
-          }
-          markUnsaved();
-        });
-
-        el.addEventListener('blur', () => {
-          setTimeout(() => { card.style.display = 'none'; }, 200);
-        });
-      });
-    }
-
-    function applyGrammarlyFix() {
-      if (activeInputForFix && targetTypoWord && typoCorrections[targetTypoWord]) {
-        let val = activeInputForFix.value;
-        activeInputForFix.value = val.replace(new RegExp(`\\b${targetTypoWord}\\b$`), typoCorrections[targetTypoWord]);
-        document.getElementById('grammarlyCard').style.display = 'none';
-        markUnsaved();
-      }
     }
 
     async function runFunctionalAgents() {
@@ -1384,15 +1319,21 @@
       if (!skipDirty) markUnsaved();
     }
 
+    function formatTextForExport(text) {
+      if (!text) return '';
+      return text.replace(/-->/g, '→');
+    }
+
     function buildReportDocHtml() {
       const p = document.getElementById('projectSelect').value;
-      const mod = document.getElementById('moduleSelect').value;
+      const rawMod = document.getElementById('moduleSelect').value;
+      const mod = formatTextForExport(rawMod);
       const url = document.getElementById('testUrl').value;
       const creds = document.getElementById('loginRef').value;
-      const desc = document.getElementById('featureDesc').value;
-      const correction = document.getElementById('correctionNotes').value.trim();
-      const steps = document.getElementById('execSteps').value;
-      const res = document.getElementById('actualResult').value;
+      const desc = formatTextForExport(document.getElementById('featureDesc').value);
+      const correction = formatTextForExport(document.getElementById('correctionNotes').value.trim());
+      const steps = formatTextForExport(document.getElementById('execSteps').value);
+      const res = formatTextForExport(document.getElementById('actualResult').value);
 
       let prodSectionHtml = prodImages.length ? `<div class="doc-section-heading">Production Screenshot reference:-</div>` + prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('') : '';
       let correctionHtml = correction ? `<div class="doc-section-heading">Correction / Rework Notes:</div><div class="doc-text">${correction}</div>` : '';
@@ -1421,19 +1362,20 @@
     function buildStudioDocHtml() {
       syncStudioTableEditsFromDOM();
       const p = document.getElementById('projectSelect').value;
-      const mod = document.getElementById('moduleSelect').value;
+      const rawMod = document.getElementById('moduleSelect').value;
+      const mod = formatTextForExport(rawMod);
       const scopeType = document.getElementById('studioScopeType').value;
       const url = document.getElementById('testUrl').value;
       const creds = document.getElementById('loginRef').value;
-      const summary = document.getElementById('studioChangeSummary').value;
+      const summary = formatTextForExport(document.getElementById('studioChangeSummary').value);
 
       const rowsHtml = studioTestCases.map(tc => `
         <tr>
           <td style="border:1px solid #000; padding:4px;"><strong>${tc.id}</strong></td>
           <td style="border:1px solid #000; padding:4px;">${tc.type}</td>
-          <td style="border:1px solid #000; padding:4px;">${tc.scenario}</td>
-          <td style="border:1px solid #000; padding:4px; white-space:pre-wrap;">${tc.steps}</td>
-          <td style="border:1px solid #000; padding:4px;">${tc.expected}</td>
+          <td style="border:1px solid #000; padding:4px;">${formatTextForExport(tc.scenario)}</td>
+          <td style="border:1px solid #000; padding:4px; white-space:pre-wrap;">${formatTextForExport(tc.steps)}</td>
+          <td style="border:1px solid #000; padding:4px;">${formatTextForExport(tc.expected)}</td>
           <td style="border:1px solid #000; padding:4px; font-weight:bold;">${tc.status}</td>
         </tr>
       `).join('');
@@ -1487,16 +1429,17 @@
 
     async function exportActiveToWord() {
       const p = document.getElementById('projectSelect').value;
-      const mod = document.getElementById('moduleSelect').value;
+      const rawMod = document.getElementById('moduleSelect').value;
+      const mod = formatTextForExport(rawMod);
       const url = document.getElementById('testUrl').value;
       const creds = document.getElementById('loginRef').value;
       let bodyInnerHtml = '';
 
       if (currentMode === 'report') {
-        const desc = document.getElementById('featureDesc').value;
-        const correction = document.getElementById('correctionNotes').value.trim();
-        const steps = document.getElementById('execSteps').value;
-        const res = document.getElementById('actualResult').value;
+        const desc = formatTextForExport(document.getElementById('featureDesc').value);
+        const correction = formatTextForExport(document.getElementById('correctionNotes').value.trim());
+        const steps = formatTextForExport(document.getElementById('execSteps').value);
+        const res = formatTextForExport(document.getElementById('actualResult').value);
         const sizedProd = await Promise.all(prodImages.map(src => resizeImageForWord(src, 600)));
         const sizedExec = await Promise.all(execImages.map(src => resizeImageForWord(src, 600)));
 
@@ -1523,16 +1466,16 @@
       } else {
         syncStudioTableEditsFromDOM();
         const scopeType = document.getElementById('studioScopeType').value;
-        const summary = document.getElementById('studioChangeSummary').value;
+        const summary = formatTextForExport(document.getElementById('studioChangeSummary').value);
         const sizedStudio = await Promise.all(studioImages.map(src => resizeImageForWord(src, 600)));
 
         const rowsHtml = studioTestCases.map(tc => `
           <tr>
             <td style="border:1pt solid #000; padding:4pt;"><strong>${tc.id}</strong></td>
             <td style="border:1pt solid #000; padding:4pt;">${tc.type}</td>
-            <td style="border:1pt solid #000; padding:4pt;">${tc.scenario}</td>
-            <td style="border:1pt solid #000; padding:4pt;">${tc.steps.replace(/\n/g, '<br>')}</td>
-            <td style="border:1pt solid #000; padding:4pt;">${tc.expected}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${formatTextForExport(tc.scenario)}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${formatTextForExport(tc.steps).replace(/\n/g, '<br>')}</td>
+            <td style="border:1pt solid #000; padding:4pt;">${formatTextForExport(tc.expected)}</td>
             <td style="border:1pt solid #000; padding:4pt;"><strong>${tc.status}</strong></td>
           </tr>
         `).join('');
@@ -1651,7 +1594,6 @@
       }
 
       checkDefectCount(true);
-      setupAutoCorrect();
 
       document.querySelectorAll('#mantisId, #buildVersion, #testUrl, #loginRef, #featureDesc, #correctionNotes, #actualResult, #execSteps, #studioUiElements, #studioImpactedAreas, #studioChangeSummary').forEach(el => {
         el.addEventListener('input', markUnsaved);
