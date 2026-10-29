@@ -12,271 +12,303 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
     
-    html, body { height: 100%; overflow: hidden; background-color: #f8f9fa; color: #202124; -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; overflow: hidden; background-color: #f0f4f8; color: #1f2937; -webkit-font-smoothing: antialiased; }
     
-    .app-shell { display: flex; flex-direction: column; height: 100vh; width: 100vw; background: #f8f9fa; }
+    .app-shell { display: flex; flex-direction: column; height: 100vh; width: 100vw; background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%); }
 
     .material-symbols-rounded {
-      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
       vertical-align: middle;
       display: inline-block;
       line-height: 1;
     }
 
-    /* Google Material Animations */
-    @keyframes googleScale {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.18); }
+    @keyframes bouncyPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.15); }
+      60% { transform: scale(0.92); }
+      80% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
-    @keyframes googleSpin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    @keyframes smoothSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
-    @keyframes googlePulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4); }
+      50% { opacity: 0.7; transform: scale(0.96); box-shadow: 0 0 0 8px rgba(26, 115, 232, 0); }
+    }
+    @keyframes slideDownFade {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Google Style Tooltips */
+    /* Grammarly Style Suggestion Popup Card */
+    #grammarlyCard {
+      position: absolute; display: none; background: #ffffff; border: 1px solid #d1d5db;
+      border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); padding: 8px 12px;
+      z-index: 999999; font-size: 0.75rem; max-width: 220px; animation: slideDownFade 0.15s ease;
+    }
+    #grammarlyCard .g-title { font-weight: 700; color: #4b5563; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    #grammarlyCard .g-suggestion {
+      background: #eff6ff; color: #1d4ed8; padding: 4px 8px; border-radius: 4px; cursor: pointer;
+      font-weight: 600; border: 1px solid #bfdbfe; display: inline-block; transition: background 0.1s;
+    }
+    #grammarlyCard .g-suggestion:hover { background: #dbeafe; }
+
     [data-tooltip] { position: relative; }
     [data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
-      bottom: calc(100 + 8px);
+      bottom: calc(100% + 8px);
       left: 50%;
       transform: translateX(-50%) translateY(4px);
-      background: #3c4043;
+      background: #111827;
       color: #ffffff;
       font-size: 0.7rem;
       font-weight: 500;
-      padding: 5px 10px;
-      border-radius: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
       white-space: nowrap;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.15s ease, transform 0.15s ease;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
       z-index: 99999;
     }
     [data-tooltip]:hover::after { opacity: 1; transform: translateX(-50%) translateY(0); }
     .tooltip-bottom[data-tooltip]::after { bottom: auto; top: calc(100% + 8px); transform: translateX(-50%) translateY(-4px); }
     .tooltip-bottom[data-tooltip]:hover::after { transform: translateX(-50%) translateY(0); }
 
-    /* Google Cloud Style Header */
     header { 
-      background: #ffffff; 
-      border-bottom: 1px solid #dadce0; 
+      background: rgba(255, 255, 255, 0.9); 
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e5e7eb; 
       flex-shrink: 0; 
       z-index: 60; 
-      box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
     .header-top {
-      max-width: 1280px; margin: 0 auto; padding: 10px 24px;
+      max-width: 1280px; margin: 0 auto; padding: 12px 24px;
       display: flex; justify-content: space-between; align-items: center; gap: 16px;
     }
     
     .brand-wrap { display: flex; align-items: center; gap: 12px; }
     .brand-avatar {
-      width: 38px; height: 38px; border-radius: 8px;
-      background: #1a73e8; color: #ffffff;
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 3px rgba(26,115,232,0.3);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
     }
-    .brand-avatar.studio-mode { background: #9333ea; box-shadow: 0 1px 3px rgba(147,51,234,0.3); }
-    .brand-avatar .material-symbols-rounded { font-size: 22px; }
+    .brand-avatar.studio-mode {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .brand-avatar .material-symbols-rounded { font-size: 24px; }
     
-    .title-area h1 { font-size: 1.05rem; font-weight: 500; color: #202124; letter-spacing: -0.1px; }
-    .title-area p { font-size: 0.7rem; color: #5f6368; }
+    .title-area h1 { font-size: 1.1rem; font-weight: 700; color: #111827; letter-spacing: -0.3px; }
+    .title-area p { font-size: 0.72rem; color: #4b5563; font-weight: 500; }
 
-    /* Google Segmented Switcher */
     .mode-switch-pill {
-      display: inline-flex; background: #f1f3f4; padding: 3px; border-radius: 24px; border: 1px solid #dadce0; gap: 2px;
+      display: inline-flex; background: #f3f4f6; padding: 4px; border-radius: 30px; border: 1px solid #e5e7eb; gap: 4px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
     }
     .mode-btn {
-      padding: 6px 16px; border-radius: 20px; border: none; font-size: 0.75rem; font-weight: 500;
-      color: #5f6368; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+      padding: 7px 18px; border-radius: 24px; border: none; font-size: 0.76rem; font-weight: 600;
+      color: #4b5563; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .mode-btn .material-symbols-rounded { font-size: 18px; }
-    .mode-btn.active-report { background: #1a73e8; color: #ffffff; box-shadow: 0 1px 3px rgba(26,115,232,0.3); font-weight: 500; }
-    .mode-btn.active-studio { background: #9333ea; color: #ffffff; box-shadow: 0 1px 3px rgba(147,51,234,0.3); font-weight: 500; }
+    .mode-btn.active-report { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); font-weight: 700; }
+    .mode-btn.active-studio { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #ffffff; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35); font-weight: 700; }
 
-    /* Google Material Icon Buttons */
     .btn-group { display: flex; gap: 8px; align-items: center; }
     .btn-icon { 
-      width: 36px; height: 36px; border-radius: 50%; cursor: pointer; 
-      border: 1px solid #dadce0; background: #ffffff; color: #3c4043;
-      transition: all 0.15s ease; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      width: 38px; height: 38px; border-radius: 12px; cursor: pointer; 
+      border: 1px solid #e5e7eb; background: #ffffff; color: #374151;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .btn-icon .material-symbols-rounded { font-size: 19px; }
-    .btn-icon:hover { background: #f8f9fa; border-color: #bdc1c6; color: #202124; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .btn-icon .material-symbols-rounded { font-size: 20px; }
+    .btn-icon:hover { background: #f9fafb; border-color: #9ca3af; color: #111827; box-shadow: 0 6px 15px -3px rgba(0,0,0,0.1); transform: translateY(-2px); }
 
-    .btn-teal { background: #1a73e8; color: #ffffff; border-color: #1a73e8; }
-    .btn-teal:hover { background: #1557b0; color: #ffffff; }
-    .btn-blue { background: #1967d2; color: #ffffff; border-color: #1967d2; }
-    .btn-blue:hover { background: #135ba1; color: #ffffff; }
-    .btn-indigo { background: #9333ea; color: #ffffff; border-color: #9333ea; }
-    .btn-indigo:hover { background: #7e22ce; color: #ffffff; }
-    .btn-emerald { background: #137333; color: #ffffff; border-color: #137333; }
-    .btn-emerald:hover { background: #0d5325; color: #ffffff; }
-    .btn-amber { background: #fef7e0; color: #b06000; border-color: #fce8e6; }
-    .btn-amber:hover { background: #fef0cd; color: #8f4d00; }
-    .btn-danger { background: #fce8e6; color: #c5221f; border-color: #fad2cf; }
-    .btn-danger:hover { background: #fad2cf; color: #a50e0e; }
+    .btn-teal { background: #2563eb; color: #ffffff; border-color: #2563eb; }
+    .btn-teal:hover { background: #1d4ed8; color: #ffffff; }
+    .btn-blue { background: #0284c7; color: #ffffff; border-color: #0284c7; }
+    .btn-blue:hover { background: #0369a1; color: #ffffff; }
+    .btn-indigo { background: #7c3aed; color: #ffffff; border-color: #7c3aed; }
+    .btn-indigo:hover { background: #6d28d9; color: #ffffff; }
+    .btn-emerald { background: #059669; color: #ffffff; border-color: #059669; }
+    .btn-emerald:hover { background: #047857; color: #ffffff; }
+    .btn-amber { background: #fef3c7; color: #d97706; border-color: #fde68a; }
+    .btn-amber:hover { background: #fde68a; color: #b45309; }
+    .btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+    .btn-danger:hover { background: #fecaca; color: #b91c1c; }
 
-    /* Google Spinner / Status Badge */
-    .status-badge { width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #dadce0; background: #fff; }
-    .status-badge .material-symbols-rounded { font-size: 19px; }
-    .status-pending { background: #fef7e0; border-color: #fce8e6; }
-    .status-pending .material-symbols-rounded { color: #b06000; animation: googlePulse 1s infinite ease-in-out; }
-    .status-saving { background: #e8f0fe; border-color: #d2e3fc; }
-    .status-saving .material-symbols-rounded { color: #1a73e8; animation: googleSpin 0.8s infinite linear; }
-    .status-saved { background: #e6f4ea; border-color: #ceead6; }
-    .status-saved .material-symbols-rounded { color: #137333; animation: googleScale 0.4s ease; }
+    .status-badge { 
+      width: 38px; height: 38px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; 
+      border: 1px solid #e5e7eb; background: #fff; transition: transform 0.2s ease; 
+    }
+    .status-badge:hover { transform: scale(1.08); }
+    .status-badge .material-symbols-rounded { font-size: 20px; }
+    .status-pending { background: #fef3c7; border-color: #fde68a; }
+    .status-pending .material-symbols-rounded { color: #d97706; animation: pulseGlow 1.5s infinite ease-in-out; }
+    .status-saving { background: #e0f2fe; border-color: #bae6fd; }
+    .status-saving .material-symbols-rounded { color: #0284c7; animation: smoothSpin 0.8s infinite linear; }
+    .status-saved { background: #ecfdf5; border-color: #a7f3d0; }
+    .status-saved .material-symbols-rounded { color: #059669; animation: bouncyPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-    /* Sub Navigation Quick Jump Bar */
-    .sub-nav-bar { background: #ffffff; border-top: 1px solid #f1f3f4; padding: 6px 24px; }
+    .sub-nav-bar { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); border-top: 1px solid #e5e7eb; padding: 8px 24px; }
     .sub-nav-container { max-width: 1280px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .jump-pills { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-    .jump-label { font-size: 0.68rem; font-weight: 700; color: #5f6368; text-transform: uppercase; margin-right: 4px; }
+    .jump-label { font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-right: 4px; }
     .jump-pill {
-      padding: 4px 12px; border-radius: 16px; font-size: 0.72rem; font-weight: 500; color: #3c4043;
-      background: #f1f3f4; border: 1px solid #dadce0; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.12s;
+      padding: 5px 12px; border-radius: 20px; font-size: 0.74rem; font-weight: 600; color: #374151;
+      background: #ffffff; border: 1px solid #e5e7eb; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
-    .jump-pill:hover { background: #e8eaed; color: #1a73e8; border-color: #1a73e8; }
+    .jump-pill:hover { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15); }
     .jump-pill .material-symbols-rounded { font-size: 15px; }
 
-    /* Workspace Body */
     .workspace-scroll { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; }
-    .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 50px; display: flex; flex-direction: column; gap: 20px; }
-    .view-section { display: none; flex-direction: column; gap: 20px; }
+    .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 60px; display: flex; flex-direction: column; gap: 20px; }
+    .view-section { display: none; flex-direction: column; gap: 20px; animation: slideDownFade 0.3s ease; }
     .view-section.active { display: flex; }
 
-    /* Google Material Cards */
-    .card { background: #ffffff; border: 1px solid #dadce0; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3); transition: box-shadow 0.2s; }
-    .card:hover { box-shadow: 0 1px 3px 1px rgba(60,64,67,0.15); }
+    .card { 
+      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 22px 26px; 
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04); 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    }
+    .card:hover { box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.08); transform: translateY(-2px); }
     
     .card-title { 
-      font-size: 0.88rem; font-weight: 500; color: #202124; padding-bottom: 10px; margin-bottom: 16px;
-      border-bottom: 1px solid #f1f3f4; display: flex; justify-content: space-between; align-items: center; 
+      font-size: 0.92rem; font-weight: 700; color: #111827; padding-bottom: 12px; margin-bottom: 18px;
+      border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; 
     }
-    .card-title .heading-label { display: flex; align-items: center; gap: 8px; }
+    .card-title .heading-label { display: flex; align-items: center; gap: 10px; }
     .card-title .heading-icon {
-      width: 28px; height: 28px; border-radius: 50%; background: #e8f0fe; color: #1a73e8;
-      display: inline-flex; align-items: center; justify-content: center; font-size: 16px;
+      width: 32px; height: 32px; border-radius: 10px; background: #eff6ff; color: #2563eb;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 18px;
+      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
     }
-    .card-title.indigo-accent .heading-icon { background: #f3e8ff; color: #9333ea; }
+    .card-title.indigo-accent .heading-icon { background: #f3e8ff; color: #7c3aed; box-shadow: 0 2px 5px rgba(124, 58, 237, 0.15); }
 
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 0.74rem; font-weight: 500; color: #5f6368; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+    label { font-size: 0.76rem; font-weight: 700; color: #374151; }
     
-    /* Google Outlined Text Fields */
     input[type="text"], input[type="password"], select, textarea {
-      width: 100%; padding: 9px 12px; font-size: 0.82rem; 
-      border: 1px solid #dadce0; border-radius: 6px; outline: none; background: #ffffff; color: #202124; transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%; padding: 10px 14px; font-size: 0.85rem; 
+      border: 1.5px solid #d1d5db; border-radius: 10px; outline: none; background: #ffffff; color: #1f2937; 
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     select {
       appearance: none; -webkit-appearance: none;
-      background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="14"%20height="14"%20viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-      background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; padding-right: 32px; cursor: pointer;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns="http://www.w3.org/2000/svg"%20width="16"%20height="16"%20viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+      background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; cursor: pointer;
     }
-    input:focus, select:focus, textarea:focus { border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
+    input:focus, select:focus, textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); background: #fff; }
     textarea { resize: vertical; line-height: 1.5; }
-    .input-action-row { display: flex; gap: 6px; align-items: center; }
+    .input-action-row { display: flex; gap: 8px; align-items: center; }
 
-    /* Upload Zones */
-    .upload-box-wrapper { margin-top: 14px; padding: 14px; background: #f8f9fa; border-radius: 8px; border: 1px solid #f1f3f4; }
+    .autocorrect-hint {
+      position: absolute; right: 10px; top: 32px; background: #eff6ff; color: #1d4ed8; font-size: 0.68rem;
+      font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; pointer-events: none;
+      display: none;
+    }
+
+    .upload-box-wrapper { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
     .drop-zone {
-      border: 2px dashed #bdc1c6; border-radius: 8px; padding: 14px; 
+      border: 2px dashed #cbd5e1; border-radius: 10px; padding: 18px; 
       text-align: center; background: #ffffff; cursor: pointer; 
-      transition: all 0.15s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
     }
-    .drop-zone:hover, .drop-zone.dragover { border-color: #1a73e8; background: #e8f0fe; }
-    .drop-zone.indigo-zone:hover, .drop-zone.indigo-zone.dragover { border-color: #9333ea; background: #f3e8ff; }
-    .drop-zone .upload-icon { font-size: 24px; color: #1a73e8; }
-    .drop-zone.indigo-zone .upload-icon { color: #9333ea; }
-    .drop-zone p { font-size: 0.78rem; color: #5f6368; pointer-events: none; }
-    .drop-zone span { font-size: 0.78rem; color: #1a73e8; font-weight: 500; pointer-events: none; }
-    .drop-zone.indigo-zone span { color: #9333ea; }
+    .drop-zone:hover, .drop-zone.dragover { border-color: #2563eb; background: #eff6ff; }
+    .drop-zone.indigo-zone:hover, .drop-zone.indigo-zone.dragover { border-color: #7c3aed; background: #f5f3ff; }
+    .drop-zone .upload-icon { font-size: 28px; color: #2563eb; }
+    .drop-zone.indigo-zone .upload-icon { color: #7c3aed; }
+    .drop-zone p { font-size: 0.81rem; color: #4b5563; pointer-events: none; font-weight: 500; }
+    .drop-zone span { font-size: 0.81rem; color: #2563eb; font-weight: 700; pointer-events: none; }
+    .drop-zone.indigo-zone span { color: #7c3aed; }
     
-    .image-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .image-preview { position: relative; width: 120px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #dadce0; background: #f1f3f4; cursor: pointer; }
-    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .image-preview .order-badge { position: absolute; top: 3px; left: 3px; background: rgba(32, 33, 36, 0.8); color: #fff; font-size: 9px; font-weight: 500; padding: 1px 5px; border-radius: 3px; z-index: 2; }
-    .image-preview button { position: absolute; top: 3px; right: 3px; background: #d93025; color: white; border: none; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
-    .image-preview button .material-symbols-rounded { font-size: 12px; }
-
-    /* Studio Pipeline */
-    .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-    .agent-node { border: 1px solid #f1f3f4; background: #f8f9fa; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
-    .agent-node.done { border-color: #ceead6; background: #e6f4ea; }
-    .agent-avatar { width: 32px; height: 32px; border-radius: 50%; background: #137333; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .agent-info h4 { font-size: 0.76rem; font-weight: 500; color: #202124; }
-    .agent-info p { font-size: 0.68rem; color: #5f6368; }
-
-    .agent-tabs { display: flex; gap: 6px; border-bottom: 1px solid #f1f3f4; padding-bottom: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-    .tab-btn {
-      padding: 6px 14px; border-radius: 18px; font-size: 0.74rem; font-weight: 500;
-      cursor: pointer; border: 1px solid #dadce0; background: #ffffff; color: #3c4043; display: flex; align-items: center; gap: 6px;
+    .image-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .image-preview { 
+      position: relative; width: 130px; height: 86px; border-radius: 10px; overflow: hidden; 
+      border: 1px solid #cbd5e1; background: #f1f5f9; cursor: pointer; 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); 
     }
-    .tab-btn.active { background: #9333ea; color: #ffffff; border-color: #9333ea; font-weight: 500; box-shadow: 0 1px 3px rgba(147,51,234,0.3); }
+    .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .image-preview .order-badge { position: absolute; top: 4px; left: 4px; background: rgba(17, 24, 39, 0.85); color: #fff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; z-index: 2; }
+    .image-preview button { position: absolute; top: 4px; right: 4px; background: #dc2626; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; }
+    .image-preview button .material-symbols-rounded { font-size: 13px; }
+
+    .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .agent-node { border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+    .agent-node.done { border-color: #a7f3d0; background: #ecfdf5; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08); }
+    .agent-avatar { width: 36px; height: 36px; border-radius: 10px; background: #059669; color: #ffffff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .agent-info h4 { font-size: 0.8rem; font-weight: 700; color: #111827; }
+    .agent-info p { font-size: 0.7rem; color: #4b5563; font-weight: 500; }
+
+    .agent-tabs { display: flex; gap: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 16px; border-radius: 20px; font-size: 0.76rem; font-weight: 600;
+      cursor: pointer; border: 1px solid #e5e7eb; background: #ffffff; color: #4b5563; display: flex; align-items: center; gap: 6px;
+    }
+    .tab-btn.active { background: #7c3aed; color: #ffffff; border-color: #7c3aed; font-weight: 700; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* Tables */
-    table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
-    th { background: #f8f9fa; color: #3c4043; font-weight: 500; text-align: left; padding: 9px 10px; border: 1px solid #dadce0; }
-    td { padding: 8px 10px; border: 1px solid #f1f3f4; vertical-align: top; }
-    .delete-btn { color: #d93025; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th { background: #f9fafb; color: #374151; font-weight: 700; text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; }
+    td { padding: 9px 12px; border: 1px solid #f3f4f6; vertical-align: top; }
+    .delete-btn { color: #dc2626; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; }
 
-    .badge-type { padding: 3px 8px; border-radius: 12px; font-size: 0.68rem; font-weight: 500; display: inline-block; }
-    .type-func { background: #e6f4ea; color: #137333; border: 1px solid #ceead6; }
-    .type-retest { background: #e8f0fe; color: #1a73e8; border: 1px solid #d2e3fc; }
-    .type-neg { background: #fce8e6; color: #c5221f; border: 1px solid #fad2cf; }
-    .type-expl { background: #fef7e0; color: #b06000; border: 1px solid #fce8e6; }
-    .type-reg { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+    .badge-type { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-block; }
+    .type-func { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .type-retest { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .type-neg { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .type-expl { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .type-reg { background: #f3e8ff; color: #6d28d9; border: 1px solid #ddd6fe; }
 
-    .guard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-    .guard-box { border: 1px solid #dadce0; border-radius: 8px; padding: 14px; background: #f8f9fa; }
-    .guard-box h4 { font-size: 0.78rem; font-weight: 500; color: #202124; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .guard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+    .guard-box { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: #f8fafc; }
+    .guard-box h4 { font-size: 0.82rem; font-weight: 700; color: #111827; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .check-item {
-      display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px;
-      background: #ffffff; border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 6px;
-      font-size: 0.74rem; color: #202124; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+      background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 8px;
+      font-size: 0.76rem; color: #1f2937; cursor: pointer;
     }
-    .check-item input[type="checkbox"] { margin-top: 2px; accent-color: #137333; width: 15px; height: 15px; }
-    .check-item.checked span { text-decoration: line-through; color: #9aa0a6; }
+    .check-item input[type="checkbox"] { margin-top: 2px; accent-color: #059669; width: 16px; height: 16px; }
+    .check-item.checked span { text-decoration: line-through; color: #9ca3af; }
 
-    /* Google Material Dialog Modals */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(32, 33, 36, 0.6); backdrop-filter: blur(2px); z-index: 99999; align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(17, 24, 39, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
-    .modal-card { background: #ffffff; border-radius: 8px; padding: 24px; width: 90%; max-width: 440px; box-shadow: 0 24px 48px rgba(0,0,0,0.2); border: 1px solid #dadce0; }
+    .modal-card { background: #ffffff; border-radius: 16px; padding: 26px; width: 90%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
     
     .preview-modal-card {
-      background: #ffffff; width: 92%; max-width: 900px; max-height: 90vh;
-      border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 24px 48px rgba(0,0,0,0.25); overflow: hidden;
+      background: #ffffff; width: 94%; max-width: 940px; max-height: 90vh;
+      border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); overflow: hidden;
     }
-    .preview-header { padding: 12px 20px; border-bottom: 1px solid #dadce0; display: flex; justify-content: space-between; align-items: center; background: #ffffff; }
-    .preview-body { padding: 24px; overflow-y: auto; background: #f1f3f4; display: flex; justify-content: center; }
+    .preview-header { padding: 14px 22px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: #ffffff; }
+    .preview-body { padding: 24px; overflow-y: auto; background: #e2e8f0; display: flex; justify-content: center; }
 
     .doc-page {
-      background: #ffffff; width: 100%; max-width: 800px; padding: 40px 48px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1); border-radius: 4px;
+      background: #ffffff; width: 100%; max-width: 820px; padding: 44px 52px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-radius: 6px;
       font-family: Arial, sans-serif; color: #000000; font-size: 11pt; line-height: 1.5; box-sizing: border-box;
     }
-    .doc-page .doc-main-title { font-size: 16pt; font-weight: 700; color: #000000; text-align: center; margin-bottom: 20px; }
+    .doc-page .doc-main-title { font-size: 17pt; font-weight: 700; color: #000000; text-align: center; margin-bottom: 22px; }
     .doc-page .doc-header-field { margin-bottom: 4px; font-size: 11pt; color: #000000; }
-    .doc-page .doc-section-heading { font-weight: 700; color: #000000; margin-top: 18px; margin-bottom: 6px; font-size: 11pt; }
-    .doc-page .doc-text { color: #000000; white-space: pre-wrap; margin-bottom: 12px; font-size: 11pt; line-height: 1.5; }
+    .doc-page .doc-section-heading { font-weight: 700; color: #000000; margin-top: 20px; margin-bottom: 6px; font-size: 11pt; }
+    .doc-page .doc-text { color: #000000; white-space: pre-wrap; margin-bottom: 14px; font-size: 11pt; line-height: 1.5; }
     .doc-page .doc-img-item {
-      margin-top: 8px; margin-bottom: 18px; width: 100%; box-sizing: border-box;
+      margin-top: 10px; margin-bottom: 20px; width: 100%; box-sizing: border-box;
       overflow: hidden; border: 1px solid #000000; background: #ffffff; page-break-inside: avoid;
     }
     .doc-page .doc-img-item img { width: 100%; max-width: 100%; height: auto; display: block; }
 
-    .zoom-overlay { display: none; position: fixed; inset: 0; background: rgba(32, 33, 36, 0.95); z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; }
+    .zoom-overlay { display: none; position: fixed; inset: 0; background: rgba(11, 15, 25, 0.95); backdrop-filter: blur(8px); z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; }
     .zoom-overlay.active { display: flex; }
     .zoom-overlay img { max-width: 95vw; max-height: 95vh; border-radius: 8px; }
 
@@ -292,6 +324,12 @@
 </head>
 <body>
 
+  <!-- Grammarly Style Interactive Card -->
+  <div id="grammarlyCard">
+    <div class="g-title"><span class="material-symbols-rounded" style="font-size:15px; color:#2563eb;">auto_fix_high</span> Suggestion</div>
+    <div id="grammarlySuggestionText" class="g-suggestion" onclick="applyGrammarlyFix()"></div>
+  </div>
+
   <div id="printableDocArea" style="display:none;"></div>
 
   <div class="app-shell">
@@ -303,7 +341,7 @@
           </div>
           <div class="title-area">
             <h1 id="appMainTitle">Test Execution Report</h1>
-            <p id="appSubTitle">Google Material UI Workspace & Documentation</p>
+            <p id="appSubTitle">QA Documentation & Studio Workspace</p>
           </div>
         </div>
 
@@ -317,7 +355,6 @@
         </div>
         
         <div class="btn-group">
-          <!-- Google Style Loader / Status Badge -->
           <span id="saveStatus" class="status-badge status-saved tooltip-bottom" onclick="performSaveNow()" data-tooltip="Auto-saved (Click to save now)">
             <span class="material-symbols-rounded">check_circle</span>
           </span>
@@ -354,31 +391,17 @@
         <div class="sub-nav-container">
           <div class="jump-pills" id="reportJumpPills">
             <span class="jump-label"><span class="material-symbols-rounded" style="font-size:14px;">near_me</span> Quick Jump:</span>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')">
-              <span class="material-symbols-rounded">folder_copy</span> 1. Project & Module
-            </button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secDescProd')">
-              <span class="material-symbols-rounded">notes</span> 2. Description & Prod SS
-            </button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStepsExec')">
-              <span class="material-symbols-rounded">checklist</span> 3. Steps & Evidence
-            </button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secDefects')">
-              <span class="material-symbols-rounded">bug_report</span> 4. Defects
-            </button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secDescProd')"><span class="material-symbols-rounded">notes</span> 2. Description & Prod SS</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStepsExec')"><span class="material-symbols-rounded">checklist</span> 3. Steps & Evidence</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secDefects')"><span class="material-symbols-rounded">bug_report</span> 4. Defects</button>
           </div>
 
           <div class="jump-pills" id="studioJumpPills" style="display:none;">
             <span class="jump-label"><span class="material-symbols-rounded" style="font-size:14px;">near_me</span> Quick Jump:</span>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')">
-              <span class="material-symbols-rounded">folder_copy</span> 1. Project & Module
-            </button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioInput')">
-              <span class="material-symbols-rounded">edit_note</span> 2. Requirement Details
-            </button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioOutput')">
-              <span class="material-symbols-rounded">table_chart</span> 3. Generated Test Cases
-            </button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioInput')"><span class="material-symbols-rounded">edit_note</span> 2. Requirement Details</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioOutput')"><span class="material-symbols-rounded">table_chart</span> 3. Generated Test Cases</button>
           </div>
         </div>
       </div>
@@ -399,9 +422,7 @@
               <label>Project Name / Application Name *</label>
               <div class="input-action-row">
                 <select id="projectSelect" onchange="onProjectChange()"></select>
-                <button type="button" onclick="triggerAddProject()" class="btn-icon btn-slate" data-tooltip="Add New Project">
-                  <span class="material-symbols-rounded">add</span>
-                </button>
+                <button type="button" onclick="triggerAddProject()" class="btn-icon btn-slate" data-tooltip="Add New Project"><span class="material-symbols-rounded">add</span></button>
               </div>
             </div>
 
@@ -409,9 +430,7 @@
               <label>Tested Module / Feature Names *</label>
               <div class="input-action-row">
                 <select id="moduleSelect" onchange="markUnsaved()"></select>
-                <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module">
-                  <span class="material-symbols-rounded">add</span>
-                </button>
+                <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add New Module"><span class="material-symbols-rounded">add</span></button>
               </div>
             </div>
 
@@ -449,7 +468,8 @@
 
             <div class="form-group">
               <label>Detailed Description about Features/Services Tested *</label>
-              <textarea id="featureDesc" rows="3">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
+              <textarea id="featureDesc" rows="3" spellcheck="true" placeholder="Type here with automatic typo correction...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
+              <div id="descHint" class="autocorrect-hint">Auto-corrected</div>
             </div>
 
             <div class="upload-box-wrapper">
@@ -473,12 +493,17 @@
 
             <div class="form-group" style="margin-bottom: 12px;">
               <label>Actual Result *</label>
-              <input type="text" id="actualResult" value="Functioning as Expected." style="font-weight: 500;">
+              <input type="text" id="actualResult" value="Functioning as Expected." spellcheck="true" style="font-weight: 500;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label>Correction / Rework Notes (Optional)</label>
+              <textarea id="correctionNotes" rows="2" spellcheck="true" placeholder="Any corrections or rework details applied...">None required.</textarea>
             </div>
 
             <div class="form-group">
               <label>Execution Steps *</label>
-              <textarea id="execSteps" rows="3">1. Navigate to the URL: JNB - Nivas  Web Application
+              <textarea id="execSteps" rows="3" spellcheck="true">1. Navigate to the URL: JNB - Nivas  Web Application
 2. Login as mentioned user , navigate to “Staff Management Staff Attendance Confirmation” , verify the presence of the "Principal" designation , check the record , select values and click “Confirm”.</textarea>
             </div>
 
@@ -499,9 +524,7 @@
                 <span class="material-symbols-rounded heading-icon">bug_report</span>
                 4. MantisBT Defects Logged
               </span>
-              <button type="button" onclick="addDefectRow()" class="btn-icon btn-slate" data-tooltip="Add Defect Row">
-                <span class="material-symbols-rounded">add</span>
-              </button>
+              <button type="button" onclick="addDefectRow()" class="btn-icon btn-slate" data-tooltip="Add Defect Row"><span class="material-symbols-rounded">add</span></button>
             </div>
             <div style="overflow-x: auto;">
               <table>
@@ -532,12 +555,8 @@
                 2. Feature, Fresh Development, or Requirement Details & Screenshots
               </span>
               <div style="display:flex; gap:6px;">
-                <button type="button" onclick="openApiModal()" class="btn-icon btn-amber" data-tooltip="Optional Gemini Vision AI Key">
-                  <span class="material-symbols-rounded">vpn_key</span>
-                </button>
-                <button type="button" onclick="runFunctionalAgents()" class="btn-icon btn-indigo" data-tooltip="Generate Complete Scenarios & Test Cases">
-                  <span class="material-symbols-rounded">magic_button</span>
-                </button>
+                <button type="button" onclick="openApiModal()" class="btn-icon btn-amber" data-tooltip="Optional Gemini Vision AI Key"><span class="material-symbols-rounded">vpn_key</span></button>
+                <button type="button" onclick="runFunctionalAgents()" class="btn-icon btn-indigo" data-tooltip="Generate Complete Scenarios & Cases"><span class="material-symbols-rounded">magic_button</span></button>
               </div>
             </div>
 
@@ -554,18 +573,18 @@
 
               <div class="form-group">
                 <label>UI Screens / Fields Involved</label>
-                <input type="text" id="studioUiElements" value="Principal Designation Row, Checkbox, Attendance Dropdown, Reason Input, Confirm Button">
+                <input type="text" id="studioUiElements" spellcheck="true" value="Principal Designation Row, Checkbox, Attendance Dropdown, Reason Input, Confirm Button">
               </div>
 
               <div class="form-group">
                 <label>Connected Modules (Regression)</label>
-                <input type="text" id="studioImpactedAreas" value="Existing Staff Designations, Attendance Summary Report, Biometric Sync">
+                <input type="text" id="studioImpactedAreas" spellcheck="true" value="Existing Staff Designations, Attendance Summary Report, Biometric Sync">
               </div>
             </div>
 
             <div class="form-group">
-              <label>Feature / Requirement / Workflow Explanation (Works for Fresh Dev, New Features, CRs, or Bug Fixes) *</label>
-              <textarea id="studioChangeSummary" rows="3" placeholder="Explain workflow or change...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Per the latest department requirements, added the "Principal" designation and validated its presence and functionality on the attendance confirmation screen.</textarea>
+              <label>Feature / Requirement / Workflow Explanation *</label>
+              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Explain workflow or change...">Previously, the "Principal" designation was missing from the Staff Attendance Confirmation service in Production. Added the "Principal" designation in the Employee (Type & Designation) column, allowed selecting attendance status (On Duty / Present / Absent), entering Reason for On Duty, and confirming attendance via the Confirm button.</textarea>
             </div>
 
             <div class="upload-box-wrapper">
@@ -586,52 +605,31 @@
                 3. Generated Test Scenarios, Functional Cases & Verification Guard
               </span>
               <div style="display:flex; gap:6px;">
-                <button type="button" onclick="addCustomStudioTestCase()" class="btn-icon btn-slate" data-tooltip="Add Custom Test Case Row">
-                  <span class="material-symbols-rounded">add</span>
-                </button>
-                <button type="button" onclick="exportStudioToExcel()" class="btn-icon btn-emerald" data-tooltip="Download Excel (.csv)">
-                  <span class="material-symbols-rounded">grid_on</span>
-                </button>
-                <button type="button" onclick="pushStudioToExecutionReport()" class="btn-icon btn-amber" data-tooltip="Move Steps & Screenshots to Execution Report">
-                  <span class="material-symbols-rounded">send_and_archive</span>
-                </button>
+                <button type="button" onclick="addCustomStudioTestCase()" class="btn-icon btn-slate" data-tooltip="Add Custom Test Case Row"><span class="material-symbols-rounded">add</span></button>
+                <button type="button" onclick="exportStudioToExcel()" class="btn-icon btn-emerald" data-tooltip="Download Excel (.csv)"><span class="material-symbols-rounded">grid_on</span></button>
+                <button type="button" onclick="pushStudioToExecutionReport()" class="btn-icon btn-amber" data-tooltip="Move Steps & Screenshots to Execution Report"><span class="material-symbols-rounded">send_and_archive</span></button>
               </div>
             </div>
 
             <div class="agent-pipeline">
-              <div class="agent-node done" id="nodePlanner">
+              <div class="agent-node done">
                 <div class="agent-avatar"><span class="material-symbols-rounded" style="font-size:16px;">lightbulb</span></div>
-                <div class="agent-info">
-                  <h4>1. Scenario Planner</h4>
-                  <p id="statusPlanner">End-to-End Scenarios Ready</p>
-                </div>
+                <div class="agent-info"><h4>1. Scenario Planner</h4><p>End-to-End Scenarios Ready</p></div>
               </div>
-              <div class="agent-node done" id="nodeGenerator">
+              <div class="agent-node done">
                 <div class="agent-avatar"><span class="material-symbols-rounded" style="font-size:16px;">fact_check</span></div>
-                <div class="agent-info">
-                  <h4>2. Test Case Generator</h4>
-                  <p id="statusGenerator">Functional, Negative & Retest Cases</p>
-                </div>
+                <div class="agent-info"><h4>2. Test Case Generator</h4><p>Functional, Negative & Retest</p></div>
               </div>
-              <div class="agent-node done" id="nodeGuard">
+              <div class="agent-node done">
                 <div class="agent-avatar"><span class="material-symbols-rounded" style="font-size:16px;">verified_user</span></div>
-                <div class="agent-info">
-                  <h4>3. Requirement & Regression Guard</h4>
-                  <p id="statusGuard">Exploratory & Impact Checklists</p>
-                </div>
+                <div class="agent-info"><h4>3. Regression Guard</h4><p>Exploratory & Checklists</p></div>
               </div>
             </div>
 
             <div class="agent-tabs">
-              <button type="button" class="tab-btn active" onclick="switchStudioTab('tabFunctionalCases', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Test Cases (<span id="tcCount">0</span>)
-              </button>
-              <button type="button" class="tab-btn" onclick="switchStudioTab('tabScenarios', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">format_list_bulleted</span> Test Scenarios (<span id="scenarioCount">0</span>)
-              </button>
-              <button type="button" class="tab-btn" onclick="switchStudioTab('tabGuardChecklist', this)">
-                <span class="material-symbols-rounded" style="font-size:16px;">rule</span> Requirement, Exploratory & Regression Checklist
-              </button>
+              <button type="button" class="tab-btn active" onclick="switchStudioTab('tabFunctionalCases', this)"><span class="material-symbols-rounded" style="font-size:16px;">fact_check</span> Test Cases (<span id="tcCount">0</span>)</button>
+              <button type="button" class="tab-btn" onclick="switchStudioTab('tabScenarios', this)"><span class="material-symbols-rounded" style="font-size:16px;">format_list_bulleted</span> Test Scenarios (<span id="scenarioCount">0</span>)</button>
+              <button type="button" class="tab-btn" onclick="switchStudioTab('tabGuardChecklist', this)"><span class="material-symbols-rounded" style="font-size:16px;">rule</span> Checklist</button>
             </div>
 
             <div id="tabFunctionalCases" class="tab-panel active">
@@ -672,15 +670,15 @@
             <div id="tabGuardChecklist" class="tab-panel">
               <div class="guard-grid">
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#137333; font-size:16px;">task_alt</span> Requirement Match</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#059669; font-size:16px;">task_alt</span> Requirement Match</h4>
                   <div id="reqMatchChecklist"></div>
                 </div>
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#b06000; font-size:16px;">explore</span> Exploratory & Boundary</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#d97706; font-size:16px;">explore</span> Exploratory & Boundary</h4>
                   <div id="exploratoryChecklist"></div>
                 </div>
                 <div class="guard-box">
-                  <h4><span class="material-symbols-rounded" style="color:#9333ea; font-size:16px;">history</span> Regression Check</h4>
+                  <h4><span class="material-symbols-rounded" style="color:#7c3aed; font-size:16px;">history</span> Regression Check</h4>
                   <div id="regressionChecklist"></div>
                 </div>
               </div>
@@ -697,7 +695,7 @@
   <div class="modal-overlay" id="projectModal">
     <div class="modal-card">
       <h3 style="font-size: 1rem; font-weight: 500; color: #202124; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-        <span class="material-symbols-rounded" style="color:#1a73e8;">create_new_folder</span> Add New Project
+        <span class="material-symbols-rounded" style="color:#2563eb;">create_new_folder</span> Add New Project
       </h3>
       <div class="form-group">
         <label>Project Name *</label>
@@ -713,7 +711,7 @@
   <div class="modal-overlay" id="moduleModal">
     <div class="modal-card">
       <h3 style="font-size: 1rem; font-weight: 500; color: #202124; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-        <span class="material-symbols-rounded" style="color:#1a73e8;">post_add</span> Add New Module / Feature
+        <span class="material-symbols-rounded" style="color:#2563eb;">post_add</span> Add New Module / Feature
       </h3>
       <div class="form-group" style="margin-bottom: 8px;">
         <label>For Project:</label>
@@ -733,7 +731,7 @@
   <div class="modal-overlay" id="apiModal">
     <div class="modal-card">
       <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
-        <span class="material-symbols-rounded" style="color:#b06000;">vpn_key</span> Gemini Vision AI Key (Optional)
+        <span class="material-symbols-rounded" style="color:#d97706;">vpn_key</span> Gemini Vision AI Key (Optional)
       </h3>
       <p style="font-size: 0.74rem; color:#5f6368; margin-bottom: 10px;">Works offline automatically. Add key to read screenshots with AI.</p>
       <div class="form-group">
@@ -751,7 +749,7 @@
     <div class="preview-modal-card">
       <div class="preview-header">
         <h3 style="font-size: 0.9rem; font-weight: 500; color: #202124; display: flex; align-items: center; gap: 6px;">
-          <span class="material-symbols-rounded" style="color:#1a73e8; font-size:18px;">pageview</span> Document Preview
+          <span class="material-symbols-rounded" style="color:#2563eb; font-size:18px;">pageview</span> Document Preview
         </h3>
         <div style="display:flex; gap:6px;">
           <button type="button" onclick="exportActiveToWord()" class="btn-icon btn-blue tooltip-bottom" data-tooltip="Download Word (.doc)"><span class="material-symbols-rounded">download</span></button>
@@ -768,7 +766,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'jnb_unified_qa_suite_v7';
+    const STORAGE_KEY = 'jnb_unified_qa_suite_v11';
     const PROJECTS_KEY = 'qa_projects_list_v7';
     const MODULES_MAP_KEY = 'qa_project_modules_map_v3';
     const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
@@ -778,6 +776,13 @@
       "JNB-Nivas Web Application.": ["Staff Management  Staff Attendance Confirmation.", "Reports New --> Item Wise Purchase report"],
       "JNB-Hostel Application": ["Student Registration & Allocation", "Biometric Attendance Tracking"],
       "APCFSS Portal": ["User Access Management", "Role Based Service Allocation"]
+    };
+
+    // Advanced Auto-Correction Dictionary (Typo -> Correct word)
+    const typoCorrections = {
+      "teh": "the", "recieve": "receive", "recieved": "received", "Wich": "Which", "wich": "which",
+      "seperate": "separate", "definately": "definitely", "occured": "occurred", "untill": "until",
+      "sucess": "success", "functionning": "functioning", "navidate": "navigate", "loging": "login"
     };
 
     let currentMode = 'report';
@@ -792,6 +797,8 @@
 
     let isDirty = false;
     let autoSaveTimer = null;
+    let activeInputForFix = null;
+    let targetTypoWord = '';
 
     function scrollToCard(cardId) {
       const el = document.getElementById(cardId);
@@ -820,7 +827,7 @@
         avatar.classList.add('studio-mode');
         icon.textContent = 'auto_fix_high';
         mainTitle.textContent = 'Test Case & Scenario Studio';
-        subTitle.textContent = 'Google Material UI Workspace for Fresh Dev, CRs, Retesting & Regression';
+        subTitle.textContent = 'QA Studio Workspace for Fresh Dev, CRs, Retesting & Regression';
         sharedHeader.classList.add('indigo-accent');
         studioBtns.forEach(id => document.getElementById(id).style.display = 'inline-flex');
         document.getElementById('reportJumpPills').style.display = 'none';
@@ -834,7 +841,7 @@
         avatar.classList.remove('studio-mode');
         icon.textContent = 'assignment_turned_in';
         mainTitle.textContent = 'Test Execution Report';
-        subTitle.textContent = 'Google Material UI Workspace & Documentation';
+        subTitle.textContent = 'QA Documentation & Studio Workspace';
         sharedHeader.classList.remove('indigo-accent');
         studioBtns.forEach(id => document.getElementById(id).style.display = 'none');
         document.getElementById('studioJumpPills').style.display = 'none';
@@ -894,6 +901,7 @@
           url: document.getElementById('testUrl').value,
           login: document.getElementById('loginRef').value,
           desc: document.getElementById('featureDesc').value,
+          correction: document.getElementById('correctionNotes').value,
           steps: document.getElementById('execSteps').value,
           res: document.getElementById('actualResult').value,
           defects: defectRows,
@@ -1097,6 +1105,56 @@
     function openZoom(src) {
       document.getElementById('zoomOverlayImg').src = src;
       document.getElementById('zoomOverlay').classList.add('active');
+    }
+
+    // Grammarly & Word style interactive Auto-Correction Engine
+    function setupAutoCorrect() {
+      const textareas = document.querySelectorAll('textarea, input[type="text"]');
+      const card = document.getElementById('grammarlyCard');
+      const suggestionBtn = document.getElementById('grammarlySuggestionText');
+
+      textareas.forEach(el => {
+        el.addEventListener('keyup', (e) => {
+          let val = el.value;
+          let words = val.split(/\s+/);
+          let currentWord = words[words.length - 1];
+
+          if (typoCorrections[currentWord]) {
+            activeInputForFix = el;
+            targetTypoWord = currentWord;
+            suggestionBtn.textContent = `Change to "${typoCorrections[currentWord]}"`;
+            
+            // Position suggestion card near the input
+            const rect = el.getBoundingClientRect();
+            card.style.top = `${rect.bottom + window.scrollY + 4}px`;
+            card.style.left = `${rect.left + window.scrollX}px`;
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+
+          if (e.key === ' ' || e.key === '.' || e.key === ',') {
+            if (typoCorrections[currentWord]) {
+              el.value = val.replace(new RegExp(`\\b${currentWord}\\b$`), typoCorrections[currentWord]);
+              card.style.display = 'none';
+            }
+          }
+          markUnsaved();
+        });
+
+        el.addEventListener('blur', () => {
+          setTimeout(() => { card.style.display = 'none'; }, 200);
+        });
+      });
+    }
+
+    function applyGrammarlyFix() {
+      if (activeInputForFix && targetTypoWord && typoCorrections[targetTypoWord]) {
+        let val = activeInputForFix.value;
+        activeInputForFix.value = val.replace(new RegExp(`\\b${targetTypoWord}\\b$`), typoCorrections[targetTypoWord]);
+        document.getElementById('grammarlyCard').style.display = 'none';
+        markUnsaved();
+      }
     }
 
     async function runFunctionalAgents() {
@@ -1332,10 +1390,12 @@
       const url = document.getElementById('testUrl').value;
       const creds = document.getElementById('loginRef').value;
       const desc = document.getElementById('featureDesc').value;
+      const correction = document.getElementById('correctionNotes').value.trim();
       const steps = document.getElementById('execSteps').value;
       const res = document.getElementById('actualResult').value;
 
       let prodSectionHtml = prodImages.length ? `<div class="doc-section-heading">Production Screenshot reference:-</div>` + prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('') : '';
+      let correctionHtml = correction ? `<div class="doc-section-heading">Correction / Rework Notes:</div><div class="doc-text">${correction}</div>` : '';
       let execImgsHtml = execImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
 
       return `
@@ -1350,6 +1410,7 @@
           ${prodSectionHtml}
           <div class="doc-section-heading">Actual Result:</div>
           <div class="doc-text">${res}</div>
+          ${correctionHtml}
           <div class="doc-section-heading">Execution Steps:</div>
           <div class="doc-text">${steps}</div>
           ${execImgsHtml}
@@ -1433,12 +1494,14 @@
 
       if (currentMode === 'report') {
         const desc = document.getElementById('featureDesc').value;
+        const correction = document.getElementById('correctionNotes').value.trim();
         const steps = document.getElementById('execSteps').value;
         const res = document.getElementById('actualResult').value;
         const sizedProd = await Promise.all(prodImages.map(src => resizeImageForWord(src, 600)));
         const sizedExec = await Promise.all(execImages.map(src => resizeImageForWord(src, 600)));
 
         let prodHtml = sizedProd.length ? `<p class="heading">Production Screenshot reference:-</p>` + sizedProd.map(im => `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('') : '';
+        let correctionHtml = correction ? `<p class="heading">Correction / Rework Notes:</p><p>${correction.replace(/\n/g, '<br>')}</p>` : '';
         const execHtml = sizedExec.map(im => `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`).join('');
 
         bodyInnerHtml = `
@@ -1452,6 +1515,7 @@
           ${prodHtml}
           <p class="heading">Actual Result:</p>
           <p>${res}</p>
+          ${correctionHtml}
           <p class="heading">Execution Steps:</p>
           <p>${steps.replace(/\n/g, '<br>')}</p>
           ${execHtml}
@@ -1561,6 +1625,7 @@
         if (parsed.url) document.getElementById('testUrl').value = parsed.url;
         if (parsed.login) document.getElementById('loginRef').value = parsed.login;
         if (parsed.desc) document.getElementById('featureDesc').value = parsed.desc;
+        if (parsed.correction) document.getElementById('correctionNotes').value = parsed.correction;
         if (parsed.steps) document.getElementById('execSteps').value = parsed.steps;
         if (parsed.res) document.getElementById('actualResult').value = parsed.res;
         if (parsed.studioScopeType) document.getElementById('studioScopeType').value = parsed.studioScopeType;
@@ -1586,8 +1651,9 @@
       }
 
       checkDefectCount(true);
+      setupAutoCorrect();
 
-      document.querySelectorAll('#mantisId, #buildVersion, #testUrl, #loginRef, #featureDesc, #actualResult, #execSteps, #studioUiElements, #studioImpactedAreas, #studioChangeSummary').forEach(el => {
+      document.querySelectorAll('#mantisId, #buildVersion, #testUrl, #loginRef, #featureDesc, #correctionNotes, #actualResult, #execSteps, #studioUiElements, #studioImpactedAreas, #studioChangeSummary').forEach(el => {
         el.addEventListener('input', markUnsaved);
       });
     };
