@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>(function(){var t='dark';try{t=localStorage.getItem('qa_theme_v1')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');}catch(e){}document.documentElement.setAttribute('data-theme',t);})();</script>
-  <title>QA Workspace & Auth Studio</title>
+  <title>QA Workspace | Local-first Studio</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
@@ -349,6 +349,8 @@
       .doc-page { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
     }
   </style>
+  <link rel="stylesheet" href="workspace.css">
+  <script src="local-workspace.js"></script>
 </head>
 <body data-mode="report">
 
@@ -361,10 +363,12 @@
   <!-- LOGIN -->
   <div class="auth-overlay" id="authOverlay">
     <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-      <h2 id="authTitle">QA Workspace Login</h2>
-      <p>Enter your name and email to open your local workspace and activity history. Everything stays in this browser.</p>
+      <div class="auth-mark"><span class="material-symbols-rounded">space_dashboard</span></div>
+      <h2 id="authTitle">QA Workspace</h2>
+      <p>Enter your name and email.</p>
+      <p class="identity-note">Local profile only. No password protection.</p>
       <div class="form-group">
-        <label for="authUsername">Username *</label>
+        <label for="authUsername">Your name *</label>
         <input type="text" id="authUsername" placeholder="e.g. Shravan" autocomplete="name">
       </div>
       <div class="form-group">
@@ -381,23 +385,39 @@
   <div class="dashboard-select-overlay" id="dashboardSelectOverlay">
     <div class="dashboard-container">
       <h2 id="welcomeUserTitle">Welcome to QA Suite</h2>
-      <p>Choose your workspace destination to proceed:</p>
+      <p>Choose a workspace.</p>
+      <section class="storage-panel" id="folderPanel" aria-labelledby="folderTitle">
+        <h3 id="folderTitle"><span class="material-symbols-rounded">folder_open</span> Local workspace</h3>
+        <p id="folderDescription" role="status" aria-live="polite">Choose a folder for your projects.</p>
+        <div class="storage-actions">
+          <button type="button" class="btn-text btn-teal" id="connectFolderButton" onclick="connectLocalFolder()">Choose folder</button>
+          <button type="button" class="btn-text" id="disconnectFolderButton" onclick="disconnectLocalFolder()" disabled>Disconnect</button>
+          <button type="button" class="btn-text" onclick="importBrowserWorkspace()">Import browser data</button>
+          <button type="button" class="btn-text" onclick="document.getElementById('restoreInput').click()">Import backup</button>
+          <button type="button" class="btn-text" onclick="backupWorkspace()">Backup</button>
+        </div>
+        <details class="folder-help">
+          <summary>Folder help</summary>
+          <p>Use Chrome or Edge on localhost / HTTPS. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync. Disconnect keeps your edits in memory; back up before closing.</p>
+          <p id="connectedFolderName">No folder selected.</p>
+        </details>
+      </section>
       <div class="dash-cards-grid">
         <div class="dash-card" role="button" tabindex="0" onclick="selectWorkspaceMode('report')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectWorkspaceMode('report')}">
           <div class="dash-icon"><span class="material-symbols-rounded">fact_check</span></div>
           <h3>Test Execution Report</h3>
-          <span class="desc">Record execution results, live production references, test evidence screenshots, and MantisBT defects.</span>
+          <span class="desc">Results, evidence and defects.</span>
         </div>
         <div class="dash-card studio-dash" role="button" tabindex="0" onclick="selectWorkspaceMode('studio')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectWorkspaceMode('studio')}">
           <div class="dash-icon"><span class="material-symbols-rounded">auto_fix_high</span></div>
           <h3>Test Case & Scenario Studio</h3>
-          <span class="desc">Generate test scenarios, functional test cases, and regression verification checklists.</span>
+          <span class="desc">Scenarios, test cases and checklists.</span>
         </div>
       </div>
       <div class="dash-footer">
         <button type="button" class="btn-text" onclick="openHistoryModal()"><span class="material-symbols-rounded">history</span> Activity history</button>
         <button type="button" class="btn-text" onclick="toggleTheme()"><span class="material-symbols-rounded">contrast</span> Light / Dark</button>
-        <button type="button" class="btn-text" onclick="logoutUser()"><span class="material-symbols-rounded">logout</span> Sign out</button>
+        <button type="button" class="btn-text" onclick="logoutUser()"><span class="material-symbols-rounded">switch_account</span> Change profile</button>
       </div>
     </div>
   </div>
@@ -406,7 +426,7 @@
   <div class="modal-overlay" id="historyModal">
     <div class="modal-card" style="max-width: 540px;">
       <h3><span class="material-symbols-rounded" style="color:var(--info);">history</span> Activity & Project History</h3>
-      <p class="hint" style="margin-bottom: 12px;">Recent actions by the current user (last 50):</p>
+      <p class="hint" style="margin-bottom: 12px;">Recent actions in this local profile (last 100):</p>
       <div id="historyLogsContainer" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
       <div class="modal-actions">
         <button type="button" onclick="clearHistory()" class="btn-text btn-sm">Clear history</button>
@@ -435,8 +455,8 @@
         </div>
 
         <div class="btn-group">
-          <span id="saveStatus" class="status-badge status-saved tooltip-bottom" role="button" tabindex="0" onclick="performSaveNow(true)" onkeydown="if(event.key==='Enter')performSaveNow(true)" data-tooltip="Auto-saved (Ctrl+S to save now)" aria-label="Save status">
-            <span class="material-symbols-rounded">check_circle</span>
+          <span id="saveStatus" class="status-badge status-pending tooltip-bottom" role="button" tabindex="0" onclick="performSaveNow(true)" onkeydown="if(event.key==='Enter')performSaveNow(true)" data-tooltip="Connect a folder to save" aria-label="Connect a folder to save">
+            <span class="material-symbols-rounded">folder_off</span>
           </span>
 
           <button type="button" id="themeToggle" class="btn-icon tooltip-bottom" onclick="toggleTheme()" data-tooltip="Switch to light mode" aria-label="Switch to light mode"><span class="material-symbols-rounded">light_mode</span></button>
@@ -465,14 +485,15 @@
             <div class="menu" id="moreMenu" role="menu">
               <button type="button" class="menu-item studio-only" onclick="pushStudioToExecutionReport()"><span class="material-symbols-rounded">send_and_archive</span> Move steps to Execution Report</button>
               <button type="button" class="menu-item" onclick="openHistoryModal()"><span class="material-symbols-rounded">history</span> Activity history</button>
+              <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">folder_open</span> Local folder & migration</button>
               <button type="button" class="menu-item studio-only" onclick="openApiModal()"><span class="material-symbols-rounded">vpn_key</span> Gemini API key</button>
               <div class="menu-sep"></div>
               <button type="button" class="menu-item" onclick="backupWorkspace()"><span class="material-symbols-rounded">cloud_download</span> Backup workspace (JSON)</button>
               <button type="button" class="menu-item" onclick="document.getElementById('restoreInput').click()"><span class="material-symbols-rounded">cloud_upload</span> Restore from backup</button>
               <div class="menu-sep"></div>
               <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">dashboard</span> Switch workspace</button>
-              <button type="button" class="menu-item" onclick="logoutUser()"><span class="material-symbols-rounded">logout</span> Sign out</button>
-              <button type="button" class="menu-item danger" onclick="resetToDocDefaults()"><span class="material-symbols-rounded">restart_alt</span> Reset everything</button>
+              <button type="button" class="menu-item" onclick="logoutUser()"><span class="material-symbols-rounded">switch_account</span> Change profile</button>
+              <button type="button" class="menu-item danger" onclick="resetToDocDefaults()"><span class="material-symbols-rounded">restart_alt</span> Clear current module</button>
             </div>
           </div>
         </div>
@@ -495,12 +516,22 @@
           </div>
         </div>
       </div>
+      <div class="storage-banner" id="storageBanner" data-state="pending" role="status" aria-live="polite">
+        <span class="material-symbols-rounded" id="storageIcon">folder_off</span>
+        <span id="storageMessage">Choose a folder to save.</span>
+        <button type="button" class="btn-text" onclick="openDashboard()">Folder settings</button>
+      </div>
     </header>
 
     <div class="workspace-scroll" id="workspaceScroll">
       <main class="main-container">
+        <div class="workspace-hero">
+          <div><span class="eyebrow">QA workspace</span><h2>Your projects. All in one place.</h2><p>Tests, reports and evidence.</p></div>
+          <span class="local-chip"><span class="material-symbols-rounded">hard_drive</span><span id="profileChip">Local profile</span></span>
+        </div>
 
         <div class="card" id="secContext">
+          <p id="projectEmptyHint" class="hint" style="margin-bottom:16px;">Add a project to get started.</p>
           <div class="card-title" id="sharedCardHeader">
             <span class="heading-label"><span class="material-symbols-rounded heading-icon">folder_copy</span> 1. Project, Module & Test Credentials</span>
           </div>
@@ -515,13 +546,13 @@
             <div class="form-group">
               <label for="moduleSelect">Tested Module / Feature Names *</label>
               <div class="input-action-row">
-                <select id="moduleSelect" onchange="markUnsaved()"></select>
+                <select id="moduleSelect" onchange="onModuleChange()"></select>
                 <button type="button" onclick="copySelectedModule()" class="btn-icon btn-slate" data-tooltip="Copy module name"><span class="material-symbols-rounded" style="font-size:18px;">content_copy</span></button>
                 <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add new module"><span class="material-symbols-rounded">add</span></button>
               </div>
             </div>
             <div class="form-group">
-              <label for="loginRef">Test Credentials *</label>
+              <label for="loginRef">Test account reference (no passwords) *</label>
               <input type="text" id="loginRef" placeholder="e.g. Warden / 52">
               <span class="hint">Printed in exported reports.</span>
             </div>
@@ -849,7 +880,7 @@
       root.querySelectorAll('[data-tooltip]:not([aria-label])').forEach(el => el.setAttribute('aria-label', el.dataset.tooltip));
     }
 
-    /* IndexedDB for screenshots (so they survive refresh) */
+    /* Legacy screenshots are read only during an explicit browser-data import. */
     const IDB_NAME = 'qa_suite_db', IDB_STORE = 'kv';
     function idbOpen() {
       return new Promise((res, rej) => {
@@ -858,28 +889,13 @@
         r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
       });
     }
-    async function idbSet(k, v) {
-      try {
-        const db = await idbOpen();
-        await new Promise((res, rej) => { const tx = db.transaction(IDB_STORE, 'readwrite'); tx.objectStore(IDB_STORE).put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
-        db.close();
-      } catch (e) {}
-    }
     async function idbGet(k) {
+      const db = await idbOpen();
       try {
-        const db = await idbOpen();
         const v = await new Promise((res, rej) => { const r = db.transaction(IDB_STORE).objectStore(IDB_STORE).get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-        db.close(); return v;
-      } catch (e) { return undefined; }
+        return v;
+      } finally { db.close(); }
     }
-    async function idbClearAll() {
-      try {
-        const db = await idbOpen();
-        await new Promise((res, rej) => { const tx = db.transaction(IDB_STORE, 'readwrite'); tx.objectStore(IDB_STORE).clear(); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
-        db.close();
-      } catch (e) {}
-    }
-    function persistImages() { idbSet('prod', prodImages); idbSet('exec', execImages); idbSet('studio', studioImages); }
 
     /* ====================== THEME ====================== */
     const THEME_KEY = 'qa_theme_v1';
@@ -920,23 +936,27 @@
     window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
 
     /* ====================== AUTH / NAV ====================== */
-    function handleUserLogin() {
+    async function handleUserLogin() {
+      if (workspaceBusy || currentUser) return;
       const uname = $('authUsername').value.trim();
-      const uemail = $('authEmail').value.trim();
+      const uemail = $('authEmail').value.trim().toLowerCase();
       if (!uname || !uemail) { showToast('Please enter your name and email.', 'error'); return; }
       if (!/^\S+@\S+\.\S+$/.test(uemail)) { $('authEmail').classList.add('invalid'); showToast('Enter a valid email address.', 'error'); return; }
       currentUser = { username: uname, email: uemail };
-      localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(currentUser));
-      recordUserHistory('Logged into workspace');
+      try { localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(currentUser)); }
+      catch (error) { showToast('Profile cannot be remembered in this browser. You can still connect a folder.', 'error'); }
+      localState = LocalWorkspace.empty(currentUser);
+      applyWorkspaceState();
       $('authOverlay').style.display = 'none';
       $('welcomeUserTitle').textContent = `Welcome, ${uname}!`;
       $('dashboardSelectOverlay').classList.add('active');
+      setWorkspaceBusy(true);
+      try { await findRememberedFolder(); } finally { setWorkspaceBusy(false); }
     }
-    function logoutUser() {
-      if (isDirty) performSaveNow();
-      localStorage.removeItem(ACTIVE_USER_KEY);
-      isDirty = false;
-      location.reload();
+    async function logoutUser() {
+      if (isDirty && !await performSaveNow()) return;
+      try { localStorage.removeItem(ACTIVE_USER_KEY); location.reload(); }
+      catch (error) { showToast('Could not clear the remembered profile: ' + error.message, 'error'); }
     }
     function selectWorkspaceMode(mode) {
       $('dashboardSelectOverlay').classList.remove('active');
@@ -946,18 +966,14 @@
     function openDashboard() { $('mainAppShell').style.display = 'none'; $('dashboardSelectOverlay').classList.add('active'); }
 
     function recordUserHistory(actionText) {
-      if (!currentUser) return;
-      const key = `qa_history_${currentUser.email}`;
-      let logs = [];
-      try { logs = JSON.parse(localStorage.getItem(key)) || []; } catch (e) {}
-      logs.unshift({ time: new Date().toLocaleString(), action: actionText, project: $('projectSelect')?.value || 'General', module: $('moduleSelect')?.value || 'Dashboard' });
-      if (logs.length > 50) logs.length = 50;
-      try { localStorage.setItem(key, JSON.stringify(logs)); } catch (e) {}
+      if (!currentUser || !localState) return;
+      localState.history.unshift({ time: new Date().toISOString(), action: actionText, project: $('projectSelect')?.value || 'General', module: $('moduleSelect')?.value || 'Dashboard' });
+      localState.history.length = Math.min(localState.history.length, 100);
+      markUnsaved();
     }
     function openHistoryModal() {
       if (!currentUser) return;
-      let logs = [];
-      try { logs = JSON.parse(localStorage.getItem(`qa_history_${currentUser.email}`)) || []; } catch (e) {}
+      const logs = localState?.history || [];
       const c = $('historyLogsContainer');
       c.innerHTML = '';
       if (!logs.length) c.innerHTML = `<p class="hint" style="text-align:center; padding:20px;">No history recorded yet for ${esc(currentUser.username)}.</p>`;
@@ -972,7 +988,7 @@
     }
     function clearHistory() {
       if (!currentUser || !confirm('Clear your activity history?')) return;
-      localStorage.removeItem(`qa_history_${currentUser.email}`); openHistoryModal();
+      localState.history = []; markUnsaved(); openHistoryModal();
     }
 
     function scrollToCard(id) { $(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -1002,7 +1018,8 @@
       const map = {
         pending: ['status-pending', 'Unsaved changes (auto-saves in a few seconds)', 'pending'],
         saving: ['status-saving', 'Saving...', 'sync'],
-        saved: ['status-saved', 'All changes saved (Ctrl+S to save now)', 'check_circle']
+        saved: ['status-saved', 'All changes saved to the selected folder', 'check_circle'],
+        error: ['status-error', 'Not saved. Check folder status; download a backup to protect edits.', 'error']
       };
       const [cls, tip, icon] = map[state];
       void b.offsetWidth; b.classList.add(cls);
@@ -1011,6 +1028,8 @@
     }
     function markUnsaved() {
       isDirty = true; setBadgeState('pending');
+      editRevision++;
+      setStorageStatus('pending', folderStore ? 'Unsaved changes' : 'Not saved. Choose a folder or back up.');
       clearTimeout(autoSaveTimer);
       autoSaveTimer = setTimeout(() => performSaveNow(false), 3000);
     }
@@ -1030,21 +1049,9 @@
         studioScenarios, studioTestCases, guardChecklists
       };
     }
-    function performSaveNow(manual) {
-      clearTimeout(autoSaveTimer); autoSaveTimer = null;
-      setBadgeState('saving');
-      setTimeout(() => {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(collectData()));
-          isDirty = false; setBadgeState('saved');
-          if (manual === true) { showToast('Saved'); recordUserHistory('Saved workspace changes'); }
-        } catch (e) { setBadgeState('pending'); showToast('Could not save (browser storage full?)', 'error'); }
-      }, 150);
-    }
-
     /* ====================== PROJECTS / MODULES ====================== */
-    function getStoredProjects() { try { const s = JSON.parse(localStorage.getItem(PROJECTS_KEY)); if (Array.isArray(s) && s.length) return s; } catch (e) {} return [...defaultProjects]; }
-    function getStoredModulesMap() { try { const s = JSON.parse(localStorage.getItem(MODULES_MAP_KEY)); if (s && typeof s === 'object') return s; } catch (e) {} return JSON.parse(JSON.stringify(defaultModulesMap)); }
+    function getStoredProjects() { return localState?.projects || []; }
+    function getStoredModulesMap() { return localState?.modulesMap || {}; }
 
     function populateProjectDropdown(selected = null) {
       const projects = getStoredProjects(), sel = $('projectSelect');
@@ -1057,33 +1064,45 @@
       const modules = getStoredModulesMap()[$('projectSelect').value] || [];
       const sel = $('moduleSelect');
       sel.innerHTML = '';
-      if (!modules.length) { const o = document.createElement('option'); o.value = ''; o.textContent = '-- No modules added --'; sel.appendChild(o); return; }
+      const overview = document.createElement('option'); overview.value = ''; overview.textContent = 'Project overview'; sel.appendChild(overview);
       modules.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m.replace(/-->/g, '→'); sel.appendChild(o); });
-      sel.value = (selected && modules.includes(selected)) ? selected : modules[0];
+      sel.value = selected === '' ? '' : (selected && modules.includes(selected)) ? selected : (modules[0] || '');
     }
-    function onProjectChange() { populateModuleDropdown(); markUnsaved(); recordUserHistory('Switched Project'); }
+    function onProjectChange() { changeModule(true); }
+    function onModuleChange() { changeModule(false); }
     function triggerAddProject() { $('projectModal').classList.add('active'); setTimeout(() => $('newProjectInput').focus(), 60); }
     function closeProjectModal() { $('projectModal').classList.remove('active'); $('newProjectInput').value = ''; }
-    function saveNewProject() {
+    async function saveNewProject() {
+      if (workspaceBusy) return;
       const val = $('newProjectInput').value.trim();
-      if (!val) return;
+      if (!val || val.length > 500) { showToast('Enter a project name of 1-500 characters.', 'error'); return; }
+      setWorkspaceBusy(true);
+      try {
+      if (!await flushBeforeSwitch()) return;
       const projects = getStoredProjects();
-      if (!projects.includes(val)) { projects.push(val); localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects)); }
+      if (!projects.includes(val)) projects.push(val);
       const map = getStoredModulesMap();
-      if (!map[val]) { map[val] = []; localStorage.setItem(MODULES_MAP_KEY, JSON.stringify(map)); }
-      closeProjectModal(); populateProjectDropdown(val); populateModuleDropdown(); performSaveNow();
+      if (!Object.hasOwn(map, val)) Object.defineProperty(map, val, { value: [], writable: true, enumerable: true, configurable: true });
+      closeProjectModal(); populateProjectDropdown(val); populateModuleDropdown(''); loadActiveModule(val, '');
       recordUserHistory(`Created new project: ${val}`);
+      await performSaveNow();
+      } finally { setWorkspaceBusy(false); }
     }
     function triggerAddModule() { $('moduleModalProjectName').value = $('projectSelect').value; $('moduleModal').classList.add('active'); setTimeout(() => $('newModuleInput').focus(), 60); }
     function closeModuleModal() { $('moduleModal').classList.remove('active'); $('newModuleInput').value = ''; }
-    function saveNewModule() {
+    async function saveNewModule() {
+      if (workspaceBusy) return;
       const proj = $('projectSelect').value, val = $('newModuleInput').value.trim();
-      if (!val) return;
+      if (!proj || !val || val.length > 500) { showToast('Choose a project and enter a module name of 1-500 characters.', 'error'); return; }
+      setWorkspaceBusy(true);
+      try {
+      if (!await flushBeforeSwitch()) return;
       const map = getStoredModulesMap();
-      if (!map[proj]) map[proj] = [];
-      if (!map[proj].includes(val)) { map[proj].push(val); localStorage.setItem(MODULES_MAP_KEY, JSON.stringify(map)); }
-      closeModuleModal(); populateModuleDropdown(val); performSaveNow();
+      if (!map[proj].includes(val)) map[proj].push(val);
+      closeModuleModal(); populateModuleDropdown(val); loadActiveModule(proj, val);
       recordUserHistory(`Added new module: ${val}`);
+      await performSaveNow();
+      } finally { setWorkspaceBusy(false); }
     }
     function copySelectedModule() {
       const val = $('moduleSelect').value;
@@ -1103,16 +1122,20 @@
       });
     }
     async function processFiles(files, type) {
-      if (!files || !files.length) return;
-      const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
+      if (!files || !files.length || !activeContext || workspaceBusy) return;
+      setWorkspaceBusy(true);
+      try {
+      const valid = Array.from(files).filter(f => /^image\/(?:png|jpeg|gif|webp|bmp)$/i.test(f.type));
+      if (valid.length !== files.length) showToast('Only PNG, JPEG, GIF, WebP and BMP evidence is supported.', 'error');
       for (const file of valid) {
         const url = await readFileAsDataURL(file);
-        if (!url) continue;
+        if (!url) { showToast(`Could not read screenshot: ${file.name}`, 'error'); continue; }
         (type === 'prod' ? prodImages : type === 'studio' ? studioImages : execImages).push(url);
       }
       ['prod', 'exec', 'studio'].forEach(renderImages);
-      persistImages(); markUnsaved();
+      markUnsaved();
       recordUserHistory('Uploaded screenshot evidence');
+      } finally { setWorkspaceBusy(false); }
     }
     function bindDropZone(zoneId, inputId, type) {
       const zone = $(zoneId), input = $(inputId);
@@ -1132,7 +1155,7 @@
     window.addEventListener('paste', e => {
       const ae = document.activeElement, tag = ae?.tagName?.toLowerCase();
       if (tag === 'textarea' || (tag === 'input' && ['text', 'email', 'password', 'search'].includes(ae.type)) || ae?.isContentEditable) return;
-      if (!currentUser || $('mainAppShell').style.display === 'none') return;
+      if (!currentUser || !activeContext || workspaceBusy || $('mainAppShell').style.display === 'none') return;
       const items = (e.clipboardData || window.clipboardData)?.items || [], files = [];
       for (const it of items) if (it.type.indexOf('image') !== -1) { const f = it.getAsFile(); if (f) files.push(f); }
       if (files.length) { e.preventDefault(); processFiles(files, currentMode === 'studio' ? 'studio' : activeDropTarget); }
@@ -1155,7 +1178,7 @@
     function removeImage(type, idx, ev) {
       if (ev) ev.stopPropagation();
       (type === 'prod' ? prodImages : type === 'studio' ? studioImages : execImages).splice(idx, 1);
-      renderImages(type); persistImages(); markUnsaved();
+      renderImages(type); markUnsaved();
     }
     function openZoom(src) { $('zoomOverlayImg').src = src; $('zoomOverlay').classList.add('active'); }
 
@@ -1188,12 +1211,14 @@
 
     /* ====================== STUDIO GENERATION ====================== */
     function runFunctionalAgents() {
+      if (!activeContext) { showToast('Add or select a project before generating a test suite.', 'error'); return; }
       syncStudioTableEditsFromDOM();
       if (!validateRequired([['studioChangeSummary', 'Requirement explanation']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
       if (studioTestCases.length && !confirm('This will replace the current test cases, scenarios and checklists (including your edits). Continue?')) return;
       generateUniversalQaSuite($('projectSelect').value, $('moduleSelect').value, $('studioScopeType').value, $('testUrl').value, $('loginRef').value, $('studioUiElements').value, $('studioImpactedAreas').value, $('studioChangeSummary').value.trim());
-      renderStudioOutputs(); performSaveNow(); scrollToCard('secStudioOutput');
+      renderStudioOutputs(); markUnsaved(); scrollToCard('secStudioOutput');
       recordUserHistory('Generated test cases & scenarios');
+      performSaveNow();
       showToast(`Generated ${studioTestCases.length} test cases`);
     }
 
@@ -1394,7 +1419,7 @@
       if (summary) $('featureDesc').value = summary;
       const main = studioTestCases.find(t => t.type === 'Functional' && /positive/i.test(t.scenario)) || studioTestCases[1] || studioTestCases[0];
       $('execSteps').value = main.steps;
-      if (studioImages.length) { execImages = [...studioImages]; renderImages('exec'); persistImages(); }
+      if (studioImages.length) { execImages = [...studioImages]; renderImages('exec'); }
       switchWorkspaceMode('report'); performSaveNow();
       showToast('Steps moved to Execution Report');
     }
@@ -1544,30 +1569,6 @@
       recordUserHistory('Exported test cases to CSV'); showToast('CSV downloaded');
     }
 
-    /* ====================== BACKUP / RESTORE ====================== */
-    function backupWorkspace() {
-      const data = { version: 2, exportedAt: new Date().toISOString(), form: collectData(), projects: getStoredProjects(), modulesMap: getStoredModulesMap(), images: { prod: prodImages, exec: execImages, studio: studioImages } };
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `qa-workspace-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      showToast('Backup downloaded');
-    }
-    $('restoreInput').addEventListener('change', async e => {
-      const file = e.target.files[0]; e.target.value = '';
-      if (!file) return;
-      try {
-        const d = JSON.parse(await file.text());
-        if (!d || !d.form || !Array.isArray(d.projects)) throw new Error('bad');
-        if (!confirm('Restore this backup? Current workspace data will be replaced.')) return;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(d.form));
-        localStorage.setItem(PROJECTS_KEY, JSON.stringify(d.projects));
-        if (d.modulesMap) localStorage.setItem(MODULES_MAP_KEY, JSON.stringify(d.modulesMap));
-        await idbSet('prod', d.images?.prod || []); await idbSet('exec', d.images?.exec || []); await idbSet('studio', d.images?.studio || []);
-        isDirty = false; location.reload();
-      } catch (err) { showToast('That file is not a valid backup.', 'error'); }
-    });
-
     /* ====================== API KEY / RESET ====================== */
     function openApiModal() { $('geminiApiKeyInput').value = localStorage.getItem(GEMINI_KEY_STORAGE) || ''; $('apiModal').classList.add('active'); }
     function saveApiKey() {
@@ -1576,50 +1577,12 @@
       $('apiModal').classList.remove('active'); showToast(k ? 'Key saved' : 'Key removed');
     }
     async function resetToDocDefaults() {
-      if (!confirm('Reset the form, test cases and saved screenshots? Projects, modules and history are kept.')) return;
-      localStorage.removeItem(STORAGE_KEY); await idbClearAll(); isDirty = false; location.reload();
+      if (!activeContext || !confirm('Clear only this module form, generated cases and screenshots? Download a backup first if you need them. Other modules are kept.')) return;
+      loadActiveModule(activeContext.project, activeContext.module, true);
+      recordUserHistory('Cleared current module');
+      await performSaveNow();
     }
-
-    /* ====================== INIT ====================== */
-    window.onload = async function () {
-      applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
-      try {
-        const s = localStorage.getItem(ACTIVE_USER_KEY);
-        if (s) {
-          currentUser = JSON.parse(s);
-          $('authOverlay').style.display = 'none';
-          $('welcomeUserTitle').textContent = `Welcome back, ${currentUser.username}!`;
-          $('dashboardSelectOverlay').classList.add('active');
-        }
-      } catch (e) {}
-
-      let parsed = null;
-      try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) parsed = JSON.parse(saved); } catch (e) {}
-
-      populateProjectDropdown(parsed?.project || null);
-      populateModuleDropdown(parsed?.module || null);
-
-      if (parsed) {
-        const set = (id, v) => { if (v !== undefined && v !== null && $(id)) $(id).value = v; };
-        set('mantisId', parsed.mantisId); set('buildVersion', parsed.build); set('testUrl', parsed.url); set('loginRef', parsed.login);
-        set('featureDesc', parsed.desc); set('correctionNotes', parsed.correction); set('execSteps', parsed.steps); set('actualResult', parsed.res);
-        set('studioScopeType', parsed.studioScopeType); set('studioUiElements', parsed.studioUiElements);
-        set('studioImpactedAreas', parsed.studioImpactedAreas); set('studioChangeSummary', parsed.studioChangeSummary);
-        if (Array.isArray(parsed.defects)) parsed.defects.forEach(df => addDefectRow(df, true));
-        studioScenarios = Array.isArray(parsed.studioScenarios) ? parsed.studioScenarios : [];
-        studioTestCases = (Array.isArray(parsed.studioTestCases) ? parsed.studioTestCases : []).map(t => ({ pri: 'Medium', ...t }));
-        guardChecklists = parsed.guardChecklists || { reqMatch: [], exploratory: [], regression: [] };
-      }
-
-      prodImages = (await idbGet('prod')) || []; execImages = (await idbGet('exec')) || []; studioImages = (await idbGet('studio')) || [];
-      ['prod', 'exec', 'studio'].forEach(renderImages);
-
-      renderStudioOutputs();
-      checkDefectCount(true);
-      applyAria();
-
-      document.querySelectorAll('#mantisId, #buildVersion, #testUrl, #loginRef, #featureDesc, #correctionNotes, #actualResult, #execSteps, #studioUiElements, #studioImpactedAreas, #studioChangeSummary').forEach(el => el.addEventListener('input', markUnsaved));
-    };
   </script>
+  <script src="workspace-ui.js"></script>
 </body>
 </html>
