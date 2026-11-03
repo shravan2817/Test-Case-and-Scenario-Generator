@@ -6,9 +6,28 @@
   <script>(function(){var t='dark';try{t=localStorage.getItem('qa_theme_v1')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');}catch(e){}document.documentElement.setAttribute('data-theme',t);})();</script>
   <title>QA Workspace | Local-first Studio</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link id="materialIconStylesheet" rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script defer src="ui-bootstrap.js"></script>
+  <script>
+    window.qaBootstrapTimer=setTimeout(function(){
+      if(document.documentElement.dataset.uiReady)return;
+      var panel=document.getElementById('appBootstrap');
+      if(panel){panel.replaceChildren();panel.append(document.createTextNode('Could not finish loading. Your stored data is unchanged.'));var retry=document.createElement('button');retry.textContent='Reload';retry.onclick=function(){location.reload();};panel.append(retry);}
+    },8000);
+  </script>
+  <style>
+    html:not([data-ui-ready]) body > :not(.app-bootstrap):not(noscript) { visibility:hidden; }
+    html:not([data-icons="ready"]) .material-symbols-rounded { visibility:hidden; }
+    html[data-icons="fallback"] .material-symbols-rounded[data-fallback-icon] { visibility:visible; font-size:0 !important; }
+    .material-symbols-rounded[data-fallback-icon]::before { content:""; display:block; width:var(--fallback-size,24px); height:var(--fallback-size,24px); background:currentColor; mask:var(--fallback-icon) center/contain no-repeat; }
+    .app-bootstrap { position:fixed; inset:0; z-index:10000002; background:var(--bg,#111318); color:var(--text,#e5e9f2); display:grid; place-content:center; justify-items:center; gap:20px; font:14px system-ui,sans-serif; }
+    .app-bootstrap[hidden] { display:none; }
+    .app-bootstrap .m3-loader { width:48px; height:48px; color:var(--primary,#abc7ff); }
+    .app-bootstrap .m3-loader::before { width:48px; height:48px; }
+    .bootstrap-notice { position:fixed; bottom:12px; left:12px; right:12px; z-index:10000003; padding:12px 16px; border-radius:16px; background:var(--surface-2); color:var(--text); box-shadow:0 4px 16px #0003; font:12px system-ui,sans-serif; }
+    .bootstrap-notice[hidden] { display:none; }
+    .bootstrap-notice button { margin-left:12px; padding:8px 12px; border:1px solid currentColor; border-radius:16px; background:transparent; color:inherit; cursor:pointer; }
+  </style>
 
   <style>
         :root, [data-theme="dark"] {
@@ -37,7 +56,7 @@
       --primary: #2563eb; --primary-d: #2563eb; --accent: #7c3aed; --accent-d: #7c3aed;
       --ok: #047857; --warn: #b45309; --bad: #b91c1c; --info: #0369a1;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     html, body { height: 100%; overflow: hidden; background-color: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
     button { font-family: inherit; }
     :focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
@@ -60,17 +79,14 @@
     @keyframes slideDownFade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
-    /* Tooltips (side by default, .tooltip-bottom for header) */
-    [data-tooltip] { position: relative; }
-    [data-tooltip]::after {
-      content: attr(data-tooltip); position: absolute; top: 50%; left: calc(100% + 10px); transform: translateY(-50%);
-      background: #1f2937; color: #fff; font-size: .7rem; font-weight: 500; padding: 5px 10px; border-radius: 6px; white-space: nowrap;
-      opacity: 0; pointer-events: none; transition: opacity .2s ease .35s; box-shadow: 0 10px 25px rgba(0,0,0,.4); z-index: 99999; border: 1px solid var(--border);
+    .workspace-tooltip {
+      position: fixed; inset: auto; margin: 0; width: max-content;
+      max-width: min(260px, calc(100vw - 24px)); overflow-wrap: anywhere;
+      background: var(--menu-bg); color: var(--text); font-size: .72rem;
+      line-height: 1.4; font-weight: 500; padding: 8px 12px; border-radius: 10px;
+      pointer-events: none; box-shadow: 0 6px 18px rgba(0,0,0,.2);
+      border: 1px solid var(--border-strong); z-index: 10000000;
     }
-    [data-tooltip]:hover::after { opacity: 1; }
-    .tooltip-bottom[data-tooltip]::after { top: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
-    .tooltip-left[data-tooltip]::after { top: 50%; left: auto; right: calc(100% + 10px); transform: translateY(-50%); }
-    @media (hover: none) { [data-tooltip]::after { display: none; } }
 
     /* Toast */
     #copyToast { position: fixed; bottom: 20px; right: 20px; max-width: 360px; background: rgba(31,41,55,.97); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: .8rem; font-weight: 600;
@@ -152,7 +168,7 @@
     .menu-wrap { position: relative; }
     .menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 230px; background: var(--menu-bg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 6px; box-shadow: 0 20px 40px rgba(0,0,0,.6); z-index: 100; }
     .menu.open { display: block; animation: slideDownFade .15s ease; }
-    .menu-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; color: var(--text-2); font-size: .8rem; font-weight: 500; border-radius: 8px; cursor: pointer; text-align: left; }
+    .menu-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; color: var(--text-2); font-size: .8rem; font-weight: 500; border-radius: 8px; cursor: pointer; text-align: left; text-decoration: none; }
     .menu-item:hover { background: var(--hover); }
     .menu-item.danger { color: #fca5a5; }
     .menu-item .material-symbols-rounded { font-size: 18px; color: var(--muted); }
@@ -351,32 +367,47 @@
   </style>
   <link rel="stylesheet" href="workspace.css">
   <script src="local-workspace.js"></script>
+  <script src="email-validation.js"></script>
 </head>
-<body data-mode="report">
+<body data-mode="report" aria-busy="true">
+  <div id="appBootstrap" class="app-bootstrap" role="status" aria-live="polite"><span class="m3-loader" aria-hidden="true"></span><span>Opening workspace...</span></div>
+  <div id="bootstrapNotice" class="bootstrap-notice" role="status" hidden><span></span><button type="button" onclick="location.reload()">Reload</button><button type="button" onclick="this.parentElement.hidden=true">Dismiss</button></div>
+  <noscript>JavaScript is required to open this local QA workspace.</noscript>
+  <div id="workspaceBusyIndicator" class="workspace-busy-indicator" role="status" aria-live="polite" hidden>
+    <span class="m3-loader" aria-hidden="true"></span><span>Working...</span>
+  </div>
 
   <div class="aurora-bg" aria-hidden="true">
     <div class="aurora-orb orb-1"></div><div class="aurora-orb orb-2"></div><div class="aurora-orb orb-3"></div>
   </div>
 
   <div id="copyToast" role="status" aria-live="polite">Done</div>
+  <div id="workspaceTooltip" class="workspace-tooltip" role="tooltip" popover="manual" hidden></div>
 
   <!-- LOGIN -->
   <div class="auth-overlay" id="authOverlay">
-    <div class="auth-card" role="dialog" aria-labelledby="authTitle">
-      <div class="auth-mark"><span class="material-symbols-rounded">space_dashboard</span></div>
+    <div class="auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authDescription">
+      <div class="auth-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32" fill="none">
+          <rect x="4" y="4" width="10" height="10" rx="3" fill="currentColor" opacity=".55"/>
+          <rect x="18" y="4" width="10" height="10" rx="3" fill="currentColor" opacity=".8"/>
+          <rect x="4" y="18" width="10" height="10" rx="3" fill="currentColor" opacity=".8"/>
+          <path d="m19 23 3 3 6-7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <h2 id="authTitle">QA Workspace</h2>
-      <p>Enter your name and email.</p>
-      <p class="identity-note">Local profile only. No password protection.</p>
+      <p id="authDescription">Your next quality release starts here.</p>
       <div class="form-group">
         <label for="authUsername">Your name *</label>
-        <input type="text" id="authUsername" placeholder="e.g. Shravan" autocomplete="name">
+        <input type="text" id="authUsername" placeholder="Your name" autocomplete="name">
       </div>
       <div class="form-group">
-        <label for="authEmail">Email Address *</label>
-        <input type="email" id="authEmail" placeholder="e.g. shravan@apcfss.in" autocomplete="email">
+        <label for="authEmail">Email address *</label>
+        <input type="email" id="authEmail" placeholder="Your email" autocomplete="email" required maxlength="254">
       </div>
-      <button type="button" onclick="handleUserLogin()" class="btn-text btn-teal" style="width:100%; height:42px; margin-top:6px; font-size:.85rem;">
-        Start Workspace
+      <button type="button" id="authStartButton" onclick="handleUserLogin()" class="btn-text btn-teal auth-start">
+        <span id="authStartLabel">Start workspace</span>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
   </div>
@@ -400,9 +431,15 @@
           <summary>Folder help</summary>
           <p>Use Chrome or Edge on localhost / HTTPS. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync. Disconnect keeps your edits in memory; back up before closing.</p>
           <p id="connectedFolderName">No folder selected.</p>
+          <p>Project files: projects / project folder / modules. Each module has screenshots, mantisreport and test-cases. QA metrics is inside the project folder. Full names are in project.json / module.json.</p>
         </details>
       </section>
       <div class="dash-cards-grid">
+        <div class="dash-card" role="button" tabindex="0" onclick="openQualityMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openQualityMetrics()}">
+          <div class="dash-icon"><span class="material-symbols-rounded">table_chart</span></div>
+          <h3>Quality Metrics</h3>
+          <span class="desc">Project metrics. Save & download Excel.</span>
+        </div>
         <div class="dash-card" role="button" tabindex="0" onclick="selectWorkspaceMode('report')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectWorkspaceMode('report')}">
           <div class="dash-icon"><span class="material-symbols-rounded">fact_check</span></div>
           <h3>Test Execution Report</h3>
@@ -436,6 +473,22 @@
   </div>
 
   <div id="printableDocArea" style="display:none;"></div>
+  <div id="workspaceSearchPanel" class="workspace-search-panel" popover="manual" hidden>
+    <p id="workspaceSearchStatus" role="status" aria-live="polite">Search projects, modules, test cases and scenarios.</p>
+    <div id="workspaceSearchResults" role="listbox" aria-label="Workspace search results"></div>
+    <span class="search-hint">↑ ↓ to browse · Enter to open · Esc to close</span>
+  </div>
+  <section id="qualityMetricsModule" hidden role="dialog" aria-modal="true" aria-label="Quality Metrics" style="position:fixed;inset:0;z-index:888889;background:var(--bg);display:flex;flex-direction:column">
+    <div class="metrics-shell-bar">
+      <nav class="mode-switch-pill" aria-label="QA workspaces">
+        <button type="button" class="mode-btn" onclick="openWorkspaceFromMetrics('report')">Execution Report</button>
+        <button type="button" class="mode-btn" onclick="openWorkspaceFromMetrics('studio')">Test Studio</button>
+        <span class="mode-btn active-studio" aria-current="page">Quality Metrics</span>
+      </nav>
+      <button type="button" class="btn-text" onclick="closeQualityMetrics()" id="closeMetricsButton"><span class="material-symbols-rounded">arrow_back</span> Back to workspace</button>
+    </div>
+    <iframe id="qualityMetricsFrame" title="Quality Metrics entry and Excel export" style="width:100%;flex:1;min-height:0;border:0"></iframe>
+  </section>
   <input type="file" id="restoreInput" accept="application/json,.json" style="display:none">
 
   <div class="app-shell" style="display:none;" id="mainAppShell">
@@ -452,9 +505,17 @@
         <div class="mode-switch-pill" role="tablist">
           <button type="button" id="btnModeReport" class="mode-btn active-report" onclick="switchWorkspaceMode('report')"><span class="material-symbols-rounded">fact_check</span> Execution Report</button>
           <button type="button" id="btnModeStudio" class="mode-btn" onclick="switchWorkspaceMode('studio')"><span class="material-symbols-rounded">auto_fix_high</span> Test Studio</button>
+          <button type="button" id="btnModeMetrics" class="mode-btn" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
         </div>
 
         <div class="btn-group">
+          <div class="workspace-search" id="workspaceSearch">
+            <button type="button" class="search-lens" id="workspaceSearchToggle" aria-label="Search workspace (Ctrl or Command K)" aria-expanded="false" aria-controls="workspaceSearchPanel">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+            </button>
+            <input id="workspaceSearchInput" type="search" maxlength="200" placeholder="Search workspace" aria-label="Search projects, modules, test cases and scenarios" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workspaceSearchResults" autocomplete="off" disabled>
+            <button type="button" class="search-close" id="workspaceSearchClose" aria-label="Close search" hidden>&times;</button>
+          </div>
           <span id="saveStatus" class="status-badge status-pending tooltip-bottom" role="button" tabindex="0" onclick="performSaveNow(true)" onkeydown="if(event.key==='Enter')performSaveNow(true)" data-tooltip="Connect a folder to save" aria-label="Connect a folder to save">
             <span class="material-symbols-rounded">folder_off</span>
           </span>
@@ -492,6 +553,7 @@
               <button type="button" class="menu-item" onclick="document.getElementById('restoreInput').click()"><span class="material-symbols-rounded">cloud_upload</span> Restore from backup</button>
               <div class="menu-sep"></div>
               <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">dashboard</span> Switch workspace</button>
+              <button type="button" class="menu-item" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
               <button type="button" class="menu-item" onclick="logoutUser()"><span class="material-symbols-rounded">switch_account</span> Change profile</button>
               <button type="button" class="menu-item danger" onclick="resetToDocDefaults()"><span class="material-symbols-rounded">restart_alt</span> Clear current module</button>
             </div>
@@ -521,6 +583,7 @@
         <span id="storageMessage">Choose a folder to save.</span>
         <button type="button" class="btn-text" onclick="openDashboard()">Folder settings</button>
       </div>
+      <div id="saveProgress" class="m3-linear-progress" role="progressbar" aria-label="Saving workspace" hidden></div>
     </header>
 
     <div class="workspace-scroll" id="workspaceScroll">
@@ -533,40 +596,42 @@
         <div class="card" id="secContext">
           <p id="projectEmptyHint" class="hint" style="margin-bottom:16px;">Add a project to get started.</p>
           <div class="card-title" id="sharedCardHeader">
-            <span class="heading-label"><span class="material-symbols-rounded heading-icon">folder_copy</span> 1. Project, Module & Test Credentials</span>
+            <span class="heading-label"><span class="material-symbols-rounded heading-icon">folder_copy</span> 1. Project & Module</span>
           </div>
           <div class="grid-3">
             <div class="form-group">
-              <label for="projectSelect">Project Name / Application Name *</label>
-              <div class="input-action-row">
-                <select id="projectSelect" onchange="onProjectChange()"></select>
-                <button type="button" onclick="triggerAddProject()" class="btn-icon btn-slate" data-tooltip="Add new project"><span class="material-symbols-rounded">add</span></button>
+              <div class="module-label-row">
+                <label for="projectSelect">Project Name / Application Name *</label>
+                <button type="button" onclick="triggerAddProject()" class="btn-icon module-add" data-tooltip="Add new project"><span class="material-symbols-rounded" aria-hidden="true">add</span></button>
               </div>
+              <select id="projectSelect" onchange="onProjectChange()"></select>
             </div>
             <div class="form-group">
-              <label for="moduleSelect">Tested Module / Feature Names *</label>
-              <div class="input-action-row">
-                <select id="moduleSelect" onchange="onModuleChange()"></select>
-                <button type="button" onclick="copySelectedModule()" class="btn-icon btn-slate" data-tooltip="Copy module name"><span class="material-symbols-rounded" style="font-size:18px;">content_copy</span></button>
-                <button type="button" onclick="triggerAddModule()" class="btn-icon btn-slate" data-tooltip="Add new module"><span class="material-symbols-rounded">add</span></button>
+              <div class="module-label-row">
+                <label id="moduleLabel" for="modulePickerButton">Tested Module / Feature Names *</label>
+                <button type="button" onclick="triggerAddModule()" class="btn-icon module-add" data-tooltip="Add module"><span class="material-symbols-rounded">add</span></button>
               </div>
+              <select id="moduleSelect" onchange="onModuleChange()" hidden aria-hidden="true" tabindex="-1"></select>
+              <div class="module-selected-control">
+              <button type="button" id="modulePickerButton" class="module-picker-button" aria-haspopup="dialog" aria-expanded="false" aria-controls="modulePicker" aria-labelledby="moduleLabel modulePickerValue" onclick="toggleModulePicker()">
+                <span id="modulePickerValue">Choose module</span><span class="material-symbols-rounded" aria-hidden="true">expand_more</span>
+              </button>
+              <button type="button" class="module-copy selected-module-copy" id="selectedModuleCopy" aria-label="Copy selected module" onclick="copyCurrentModule()"><span class="material-symbols-rounded" aria-hidden="true">content_copy</span></button>
+              </div>
+              <div id="modulePicker" class="module-picker" popover="manual" role="dialog" aria-label="Choose module" hidden></div>
             </div>
-            <div class="form-group">
-              <label for="loginRef">Test account reference (no passwords) *</label>
-              <input type="text" id="loginRef" placeholder="e.g. Warden / 52">
-              <span class="hint">Printed in exported reports.</span>
-            </div>
+            <input type="hidden" id="loginRef">
             <div class="form-group">
               <label for="testUrl">Test URL</label>
-              <input type="text" id="testUrl" placeholder="e.g. jnbnivas.dev.nidhi.apcfss.in">
+              <input type="text" id="testUrl" placeholder="Application URL">
             </div>
             <div class="form-group">
-              <label for="mantisId">MantisBT Issue ID / Ticket</label>
-              <input type="text" id="mantisId" placeholder="e.g. #001248">
+              <label for="mantisId">Ticket</label>
+              <input type="text" id="mantisId" placeholder="Ticket ID">
             </div>
             <div class="form-group">
               <label for="buildVersion">Build Version</label>
-              <input type="text" id="buildVersion" placeholder="e.g. Release-52">
+              <input type="text" id="buildVersion" placeholder="Build version">
             </div>
           </div>
         </div>
@@ -598,15 +663,15 @@
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="actualResult">Actual Result *</label>
-              <input type="text" id="actualResult" value="Functioning as Expected." spellcheck="true">
+              <input type="text" id="actualResult" placeholder="Observed result" spellcheck="true">
             </div>
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="correctionNotes">Correction / Rework Notes (Optional)</label>
-              <textarea id="correctionNotes" rows="2" spellcheck="true" placeholder="Any corrections or rework details applied...">None required.</textarea>
+              <textarea id="correctionNotes" rows="2" spellcheck="true" placeholder="Corrections or rework notes"></textarea>
             </div>
             <div class="form-group">
               <label for="execSteps">Execution Steps *</label>
-              <textarea id="execSteps" rows="4" spellcheck="true" placeholder="1. Navigate to the URL&#10;2. Login --> open module --> perform action --> verify result"></textarea>
+              <textarea id="execSteps" rows="4" spellcheck="true" placeholder="Steps performed"></textarea>
             </div>
             <div class="upload-box-wrapper">
               <label style="display:block; margin-bottom:6px;">Test Execution Screenshots / Verified Evidence</label>
@@ -651,25 +716,26 @@
               <div class="form-group">
                 <label for="studioScopeType">Testing Scope / Development Type *</label>
                 <select id="studioScopeType" onchange="markUnsaved()">
-                  <option value="New Feature / Fresh Development">✨ New Feature / Fresh Development</option>
-                  <option value="Change Request (CR) / Enhancement" selected>🔄 Change Request (CR) / Enhancement</option>
-                  <option value="Bug Fix / Defect Retesting">🐞 Bug Fix / Defect Retesting</option>
-                  <option value="Existing / Legacy Module Verification">🏛️ Existing / Legacy Module Verification</option>
+                  <option value="" selected>Choose testing scope</option>
+                  <option value="New Feature / Fresh Development">New Feature / Fresh Development</option>
+                  <option value="Change Request (CR) / Enhancement">Change Request / Enhancement</option>
+                  <option value="Bug Fix / Defect Retesting">Bug Fix / Defect Retesting</option>
+                  <option value="Existing / Legacy Module Verification">Existing / Legacy Module Verification</option>
                 </select>
               </div>
               <div class="form-group">
                 <label for="studioUiElements">UI Screens / Fields Involved</label>
-                <input type="text" id="studioUiElements" spellcheck="true" placeholder="Comma separated, e.g. Designation Row, Attendance Dropdown, Confirm Button">
+                <input type="text" id="studioUiElements" spellcheck="true" placeholder="Screens or fields, separated by commas">
               </div>
               <div class="form-group">
                 <label for="studioImpactedAreas">Connected Modules (Regression)</label>
-                <input type="text" id="studioImpactedAreas" spellcheck="true" placeholder="Comma separated, e.g. Attendance Summary Report, Biometric Sync">
+                <input type="text" id="studioImpactedAreas" spellcheck="true" placeholder="Related modules, separated by commas">
               </div>
             </div>
 
             <div class="form-group">
               <label for="studioChangeSummary">Feature / Requirement / Workflow Explanation *</label>
-              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder='Explain the workflow or change. Tip: put names in "quotes" (e.g. the "Principal" designation, the "Confirm" button) and they are used in the generated cases.'></textarea>
+              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Describe the workflow or change"></textarea>
             </div>
 
             <div class="upload-box-wrapper">
@@ -775,7 +841,7 @@
       <h3><span class="material-symbols-rounded" style="color:var(--info);">create_new_folder</span> Add New Project</h3>
       <div class="form-group">
         <label for="newProjectInput">Project Name *</label>
-        <input type="text" id="newProjectInput" placeholder="e.g. JNB-Hostel Application" onkeydown="if(event.key==='Enter') saveNewProject();">
+        <input type="text" id="newProjectInput" placeholder="Project name" onkeydown="if(event.key==='Enter') saveNewProject();">
       </div>
       <div class="modal-actions">
         <button type="button" onclick="closeProjectModal()" class="btn-text btn-sm">Cancel</button>
@@ -793,7 +859,7 @@
       </div>
       <div class="form-group">
         <label for="newModuleInput">Module Name *</label>
-        <input type="text" id="newModuleInput" placeholder="e.g. Attendance Confirmation" onkeydown="if(event.key==='Enter') saveNewModule();">
+        <input type="text" id="newModuleInput" placeholder="Module name" onkeydown="if(event.key==='Enter') saveNewModule();">
       </div>
       <div class="modal-actions">
         <button type="button" onclick="closeModuleModal()" class="btn-text btn-sm">Cancel</button>
@@ -808,7 +874,7 @@
       <p class="hint" style="margin-bottom: 10px; line-height:1.5;">Saved only in this browser. Screenshot reading with AI is not wired up in this version, so the key is stored for future use.</p>
       <div class="form-group">
         <label for="geminiApiKeyInput">Gemini API Key</label>
-        <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." autocomplete="off">
+        <input type="password" id="geminiApiKeyInput" placeholder="API key" autocomplete="off">
       </div>
       <div class="modal-actions">
         <button type="button" onclick="document.getElementById('apiModal').classList.remove('active')" class="btn-text btn-sm">Close</button>
@@ -843,12 +909,8 @@
     const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
     const ACTIVE_USER_KEY = 'qa_active_user_session_v1';
 
-    const defaultProjects = ["JNB-Nivas Web Application.", "JNB-Hostel Application", "APCFSS Portal"];
-    const defaultModulesMap = {
-      "JNB-Nivas Web Application.": ["Staff Management --> Staff Attendance Confirmation", "Reports New --> Item Wise Purchase report"],
-      "JNB-Hostel Application": ["Student Registration & Allocation", "Biometric Attendance Tracking"],
-      "APCFSS Portal": ["User Access Management", "Role Based Service Allocation"]
-    };
+    const defaultProjects = [];
+    const defaultModulesMap = {};
 
     const STATUSES = ['Not Run', 'Pass', 'Fail', 'Blocked', 'Retest'];
     const CATEGORIES = ['Functional', 'Retesting', 'Negative', 'Boundary', 'Security', 'UI', 'Exploratory', 'Regression'];
@@ -933,7 +995,7 @@
     document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
     document.addEventListener('input', e => { if (e.target.classList?.contains('invalid')) e.target.classList.remove('invalid'); });
 
-    window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
+    window.addEventListener('beforeunload', e => { if (isDirty || $('qualityMetricsFrame').contentWindow?.qualityMetricsHasPendingChanges?.()) { e.preventDefault(); e.returnValue = ''; } });
 
     /* ====================== AUTH / NAV ====================== */
     async function handleUserLogin() {
@@ -941,7 +1003,7 @@
       const uname = $('authUsername').value.trim();
       const uemail = $('authEmail').value.trim().toLowerCase();
       if (!uname || !uemail) { showToast('Please enter your name and email.', 'error'); return; }
-      if (!/^\S+@\S+\.\S+$/.test(uemail)) { $('authEmail').classList.add('invalid'); showToast('Enter a valid email address.', 'error'); return; }
+      if (!WorkspaceEmail.validEmail(uemail)) { $('authEmail').classList.add('invalid'); $('authEmail').focus(); showToast('Enter a complete email address.', 'error'); return; }
       currentUser = { username: uname, email: uemail };
       try { localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(currentUser)); }
       catch (error) { showToast('Profile cannot be remembered in this browser. You can still connect a folder.', 'error'); }
@@ -952,6 +1014,7 @@
       $('dashboardSelectOverlay').classList.add('active');
       setWorkspaceBusy(true);
       try { await findRememberedFolder(); } finally { setWorkspaceBusy(false); }
+      openRequestedWorkspace();
     }
     async function logoutUser() {
       if (isDirty && !await performSaveNow()) return;
@@ -964,6 +1027,42 @@
       switchWorkspaceMode(mode);
     }
     function openDashboard() { $('mainAppShell').style.display = 'none'; $('dashboardSelectOverlay').classList.add('active'); }
+    function openRequestedWorkspace() {
+      const requested = new URLSearchParams(location.search).get('workspace');
+      if (currentUser && ['report','studio'].includes(requested)) selectWorkspaceMode(requested);
+    }
+    let metricsReturnFocus = null;
+    function getMetricsProjects() { return [...(localState?.projects || [])]; }
+    function openQualityMetrics() {
+      metricsReturnFocus = document.activeElement;
+      const frame = $('qualityMetricsFrame');
+      if (!frame.getAttribute('src')) frame.src = 'quality-metrics.html?embedded';
+      $('qualityMetricsModule').hidden = false;
+      $('mainAppShell').inert = true;
+      $('dashboardSelectOverlay').inert = true;
+      document.querySelectorAll('.menu.open').forEach(menu => menu.classList.remove('open'));
+      $('closeMetricsButton').focus();
+    }
+    function closeQualityMetrics() {
+      $('qualityMetricsModule').hidden = true;
+      $('mainAppShell').inert = false;
+      $('dashboardSelectOverlay').inert = false;
+      metricsReturnFocus?.focus();
+    }
+    function openWorkspaceFromMetrics(mode) {
+      if (!['report','studio'].includes(mode)) return;
+      closeQualityMetrics();
+      if (currentUser) {
+        selectWorkspaceMode(mode);
+        $(mode === 'report' ? 'btnModeReport' : 'btnModeStudio').focus();
+      }
+    }
+    $('qualityMetricsModule').addEventListener('keydown', event => {
+      if (event.key === 'Escape') {event.preventDefault();closeQualityMetrics();}
+      if (event.key === 'Tab' && event.shiftKey && event.target === $('qualityMetricsModule').querySelector('.mode-btn')) {
+        event.preventDefault();$('qualityMetricsFrame').focus();
+      }
+    });
 
     function recordUserHistory(actionText) {
       if (!currentUser || !localState) return;
@@ -991,7 +1090,7 @@
       localState.history = []; markUnsaved(); openHistoryModal();
     }
 
-    function scrollToCard(id) { $(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    function scrollToCard(id) { navigateWorkspaceSection(id); }
 
     function switchWorkspaceMode(mode) {
       currentMode = mode;
@@ -1008,13 +1107,16 @@
       $('sharedCardHeader').classList.toggle('indigo-accent', studio);
       activeDropTarget = studio ? 'studio' : 'exec';
       $('workspaceScroll').scrollTop = 0;
+      closeModulePicker();
+      requestAnimationFrame(updateSectionNavigation);
       recordUserHistory(studio ? 'Switched to Test Case Studio' : 'Switched to Execution Report');
     }
 
     /* ====================== SAVE ====================== */
     function setBadgeState(state) {
       const b = $('saveStatus');
-      b.className = 'status-badge tooltip-bottom';
+      b.className = 'status-badge tooltip-bottom action-pill';
+      b.dataset.label = 'Save';
       const map = {
         pending: ['status-pending', 'Unsaved changes (auto-saves in a few seconds)', 'pending'],
         saving: ['status-saving', 'Saving...', 'sync'],
@@ -1067,6 +1169,7 @@
       const overview = document.createElement('option'); overview.value = ''; overview.textContent = 'Project overview'; sel.appendChild(overview);
       modules.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m.replace(/-->/g, '→'); sel.appendChild(o); });
       sel.value = selected === '' ? '' : (selected && modules.includes(selected)) ? selected : (modules[0] || '');
+      renderModulePicker();
     }
     function onProjectChange() { changeModule(true); }
     function onModuleChange() { changeModule(false); }
@@ -1104,13 +1207,6 @@
       await performSaveNow();
       } finally { setWorkspaceBusy(false); }
     }
-    function copySelectedModule() {
-      const val = $('moduleSelect').value;
-      if (!val) { showToast('No module selected to copy.', 'error'); return; }
-      const clean = val.replace(/-->/g, '→');
-      navigator.clipboard.writeText(clean).then(() => showToast(`Copied: "${clean}"`)).catch(() => showToast('Copy failed', 'error'));
-    }
-
     /* ====================== IMAGES ====================== */
     function readFileAsDataURL(file) { return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => res(null); r.readAsDataURL(file); }); }
     function resizeImageForWord(dataUrl, maxWidth = 600) {
@@ -1199,7 +1295,7 @@
       return !missing.length;
     }
     function validateForExport() {
-      const base = [['projectSelect', 'Project'], ['moduleSelect', 'Module'], ['loginRef', 'Test Credentials']];
+      const base = [['projectSelect', 'Project'], ['moduleSelect', 'Module']];
       if (currentMode === 'studio') {
         syncStudioTableEditsFromDOM();
         if (!validateRequired([...base, ['studioChangeSummary', 'Requirement explanation']])) return false;
@@ -1213,7 +1309,7 @@
     function runFunctionalAgents() {
       if (!activeContext) { showToast('Add or select a project before generating a test suite.', 'error'); return; }
       syncStudioTableEditsFromDOM();
-      if (!validateRequired([['studioChangeSummary', 'Requirement explanation']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
+      if (!validateRequired([['studioScopeType', 'Testing scope'], ['studioChangeSummary', 'Requirement explanation']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
       if (studioTestCases.length && !confirm('This will replace the current test cases, scenarios and checklists (including your edits). Continue?')) return;
       generateUniversalQaSuite($('projectSelect').value, $('moduleSelect').value, $('studioScopeType').value, $('testUrl').value, $('loginRef').value, $('studioUiElements').value, $('studioImpactedAreas').value, $('studioChangeSummary').value.trim());
       renderStudioOutputs(); markUnsaved(); scrollToCard('secStudioOutput');
@@ -1429,7 +1525,7 @@
       $('noDefectsNotice').style.display = 'none';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><input type="text" class="d-id" placeholder="#00142" value="${esc(data.id || '')}"></td>
+        <td><input type="text" class="d-id" placeholder="Ticket ID" value="${esc(data.id || '')}"></td>
         <td><select class="d-sev">${opts(['minor', 'major', 'block', 'crash'], data.sev || 'minor')}</select></td>
         <td><select class="d-pri">${opts(['normal', 'high', 'urgent'], data.pri || 'normal')}</select></td>
         <td><input type="text" class="d-desc" placeholder="Summary..." value="${esc(data.desc || '')}"></td>
@@ -1462,7 +1558,7 @@
         <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</div>
         <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</div>
         <div class="doc-header-field"><strong>Test URL:</strong> ${esc($('testUrl').value)}</div>
-        <div class="doc-header-field"><strong>Test Credentials :-</strong> ${esc($('loginRef').value)}</div>
+        ${$('loginRef').value ? `<div class="doc-header-field"><strong>Test account reference:</strong> ${esc($('loginRef').value)}</div>` : ''}
         <div class="doc-section-heading">Detailed Description about Features/Services Tested:</div>
         <div class="doc-text">${fx($('featureDesc').value)}</div>
         ${prodHtml}
@@ -1494,7 +1590,7 @@
         <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</div>
         <div class="doc-header-field"><strong>Testing Scope:</strong> ${esc($('studioScopeType').value)}</div>
         <div class="doc-header-field"><strong>Test URL:</strong> ${esc($('testUrl').value)}</div>
-        <div class="doc-header-field"><strong>Test Credentials :-</strong> ${esc($('loginRef').value)}</div>
+        ${$('loginRef').value ? `<div class="doc-header-field"><strong>Test account reference:</strong> ${esc($('loginRef').value)}</div>` : ''}
         <div class="doc-section-heading">Feature / Requirement Summary:</div>
         <div class="doc-text">${fx($('studioChangeSummary').value)}</div>
         <div class="doc-section-heading">Test Cases (${studioTestCases.length}) &nbsp; <span style="font-weight:normal;">${esc(statusSummaryText())}</span></div>
@@ -1518,7 +1614,7 @@
       const imgTable = im => `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`;
       const head = `<p><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</p>
         <p><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</p>`;
-      const tail = `<p><strong>Test URL:</strong> ${esc($('testUrl').value)}</p><p><strong>Test Credentials :-</strong> ${esc($('loginRef').value)}</p>`;
+      const tail = `<p><strong>Test URL:</strong> ${esc($('testUrl').value)}</p>${$('loginRef').value ? `<p><strong>Test account reference:</strong> ${esc($('loginRef').value)}</p>` : ''}`;
       const br = s => fx(s).replace(/\n/g, '<br>');
       let body = '';
 

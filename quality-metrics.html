@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quality Metrics | QA Workspace</title>
+  <style>
+    html:not([data-ui-ready]) body > :not(.app-bootstrap):not(noscript) { visibility:hidden; }
+    .app-bootstrap { position:fixed; inset:0; z-index:10000002; background:var(--bg,#111318); color:var(--text,#e5e9f2); display:grid; place-content:center; justify-items:center; gap:20px; font:14px system-ui,sans-serif; }
+    .app-bootstrap[hidden],.bootstrap-notice[hidden] { display:none; }
+    .bootstrap-circle { width:48px; height:48px; border:4px solid var(--secondary-container,#3e3852); border-top-color:var(--primary,#abc7ff); border-right-color:var(--primary,#abc7ff); border-radius:50%; animation:materialCircular 1s linear infinite; }
+    .bootstrap-notice { position:fixed; bottom:12px; left:12px; right:12px; z-index:10000003; padding:12px 16px; border-radius:16px; background:var(--surface); color:var(--text); box-shadow:0 4px 16px #0003; font:12px system-ui,sans-serif; }
+    .bootstrap-notice button { margin-left:12px; }
+  </style>
+  <link rel="stylesheet" href="quality-metrics.css">
+  <script defer src="ui-bootstrap.js"></script>
+  <script>
+    window.qaBootstrapTimer=setTimeout(function(){
+      if(document.documentElement.dataset.uiReady)return;
+      var panel=document.getElementById('appBootstrap');
+      if(panel){panel.replaceChildren();panel.append(document.createTextNode('Could not finish loading. Reload to try again.'));var retry=document.createElement('button');retry.textContent='Reload';retry.onclick=function(){location.reload();};panel.append(retry);}
+    },8000);
+  </script>
+  <script defer src="quality-metrics-template.js"></script>
+  <script defer src="quality-metrics.js"></script>
+  <script defer src="quality-metrics-ui.js"></script>
+</head>
+<body aria-busy="true">
+  <div id="appBootstrap" class="app-bootstrap" role="status" aria-live="polite"><span class="bootstrap-circle" aria-hidden="true"></span><span>Opening metrics...</span></div>
+  <div id="bootstrapNotice" class="bootstrap-notice" role="status" hidden><span></span><button type="button" onclick="location.reload()">Reload</button><button type="button" onclick="this.parentElement.hidden=true">Dismiss</button></div>
+  <noscript>JavaScript is required to open Quality Metrics.</noscript>
+  <header class="metrics-header">
+    <div><a href="index.html" id="backLink">QA Workspace</a><h1>Quality Metrics</h1><p>Enter metrics. Download Excel.</p></div>
+    <div class="actions">
+      <button type="button" id="themeButton" aria-label="Change theme">Theme</button>
+      <button type="button" id="clearButton">Clear</button>
+      <button type="button" class="primary" id="downloadButton">Download .xlsx</button>
+    </div>
+  </header>
+  <nav class="workspace-nav" aria-label="QA workspaces">
+    <a href="index.html?workspace=report" target="_blank" rel="noopener" data-workspace="report">Execution Report</a>
+    <a href="index.html?workspace=studio" target="_blank" rel="noopener" data-workspace="studio">Test Studio</a>
+    <span aria-current="page">Quality Metrics</span>
+  </nav>
+  <main>
+    <section class="context" aria-label="Workbook details">
+      <label>Month &amp; year<input id="metricsMonth" type="month" min="1900-03" max="9999-12" required></label>
+      <label>Project name<input id="metricsProject" type="text" maxlength="200" placeholder="Project name" list="metricsProjects" required><datalist id="metricsProjects"></datalist></label>
+      <p class="memory-note" id="draftStatus">Not stored. Download before closing.</p>
+    </section>
+    <div class="sheet-toolbar">
+      <div class="tabs" role="tablist" aria-label="Worksheets">
+        <button type="button" role="tab" id="engineeringTab" aria-selected="true" aria-controls="sheetPanel" data-sheet="engineering">Engineering Metrics</button>
+        <button type="button" role="tab" id="operationsTab" aria-selected="false" aria-controls="sheetPanel" data-sheet="operations" tabindex="-1">Operations Metrics</button>
+        <button type="button" role="tab" id="formulasTab" aria-selected="false" aria-controls="sheetPanel" data-sheet="formulas" tabindex="-1">Formulas</button>
+      </div>
+      <nav class="week-jumps" aria-label="Jump to week" id="weekJumps">
+        <button type="button" data-row="3">Week 1</button><button type="button" data-row="42">Week 2</button><button type="button" data-row="49">Week 3</button><button type="button" data-row="60">Week 4</button>
+      </nav>
+    </div>
+    <div class="row-toolbar" id="rowToolbar">
+      <span>Use + beside any row to insert above or below.</span>
+      <span id="rowCount" role="status" aria-live="polite"></span>
+    </div>
+    <p class="sheet-note" id="sheetNote">Inserted rows stay in the same week. Dates follow their merged group; calculations update automatically.</p>
+    <div id="metricsError" role="alert" hidden></div>
+    <p id="metricsSavedPath" class="footer-note" role="status" style="overflow-wrap:anywhere" hidden></p>
+    <section id="sheetPanel" role="tabpanel" aria-labelledby="engineeringTab" tabindex="0">
+      <div class="sheet-scroll" id="sheetScroll" tabindex="0" aria-label="Metrics spreadsheet. Scroll horizontally for more columns.">
+        <table id="metricsTable"><caption id="tableCaption">Engineering Metrics</caption><colgroup id="metricsColumns"></colgroup><thead id="metricsHead"></thead><tbody id="metricsBody"></tbody></table>
+      </div>
+      <div id="formulasPanel" hidden></div>
+    </section>
+    <p class="footer-note">Excel keeps the original merged cells, borders, alignment, column widths and row heights. Blank divisions stay blank.</p>
+  </main>
+</body>
+</html>
