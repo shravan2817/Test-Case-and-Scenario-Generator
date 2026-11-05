@@ -2,9 +2,15 @@
   'use strict';
   const clone = value => JSON.parse(JSON.stringify(value));
   const recordKey = (project, module) => JSON.stringify([project, module]);
-  const htmlText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const htmlText = value => String(value ?? '').replace(/-->/g, '\u2192').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  function executionEvidenceRows(form, images) {
+    const groups = images.execEvidence || {};
+    return (form.execEvidenceRows || []).map(row => ({
+      id: row.id, path: row.path, images: [...(groups[row.id] || [])]
+    }));
+  }
   function documentHtml(title, content) {
-    return `<!DOCTYPE html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${htmlText(title)}</title><style>body{font:15px system-ui,sans-serif;margin:32px;color:#172033}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #abb5c4;padding:8px;text-align:left;white-space:pre-wrap}th{background:#edf1f8}p{white-space:pre-wrap}img{max-width:100%}</style><h1>${htmlText(title)}</h1>${content}</html>`;
+    return `<!DOCTYPE html><html lang="en"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${htmlText(title)}</title><style>body{font:15px system-ui,sans-serif;margin:32px;color:#172033}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border:1px solid #abb5c4;padding:8px;text-align:left;white-space:pre-wrap}th{background:#edf1f8}p{white-space:pre-wrap;margin:0 0 6px}.evidence-path{font-weight:400;margin:4px 0 2px;break-after:avoid;page-break-after:avoid}img{max-width:100%;height:auto;break-inside:avoid;page-break-inside:avoid}</style><h1>${htmlText(title)}</h1>${content}</html>`;
   }
   function htmlTable(items) {
     const fields = [...new Set(items.flatMap(item=>Object.keys(item)))];
@@ -40,6 +46,18 @@
     if (data.active !== null && (!object(data.active) || !data.projects.includes(data.active.project) ||
         (data.active.module !== '' && !data.modulesMap[data.active.project].includes(data.active.module)))) throw new Error('Invalid active module.');
     for (const [key, record] of Object.entries(data.records)) {
+      const evidenceRows = record?.form?.execEvidenceRows;
+      const evidenceImages = record?.images?.execEvidence;
+      const validEvidenceImages = evidenceImages === undefined || (object(evidenceImages) &&
+        Object.values(evidenceImages).every(images => Array.isArray(images) &&
+          images.every(src => typeof src === 'string' && /^data:image\/(?:png|jpeg|gif|webp|bmp);base64,/i.test(src))));
+      const validEvidenceRows = evidenceRows === undefined
+        ? evidenceImages === undefined || (object(evidenceImages) && Object.keys(evidenceImages).length === 0)
+        : (Array.isArray(evidenceRows) &&
+        evidenceRows.every(row => object(row) && typeof row.id === 'string' && !!row.id && typeof row.path === 'string') &&
+        new Set(evidenceRows.map(row => row.id)).size === evidenceRows.length &&
+        (evidenceImages === undefined || (object(evidenceImages) &&
+          Object.keys(evidenceImages).every(id => evidenceRows.some(row => row.id === id)))));
       if (!object(record) || !object(record.form) || !object(record.images) ||
           !data.projects.includes(record.form.project) ||
           (record.form.module !== '' && !data.modulesMap[record.form.project].includes(record.form.module)) ||
@@ -47,6 +65,7 @@
           !object(record.owner) || typeof record.owner.email !== 'string' ||
           !['prod', 'exec', 'studio'].every(type => Array.isArray(record.images[type]) &&
             record.images[type].every(src => typeof src === 'string' && /^data:image\/(?:png|jpeg|gif|webp|bmp);base64,/i.test(src))) ||
+          !validEvidenceImages || !validEvidenceRows ||
           !['studioScenarios', 'studioTestCases', 'defects'].every(field => record.form[field] === undefined || Array.isArray(record.form[field])) ||
           (record.form.guardChecklists !== undefined && (!object(record.form.guardChecklists) ||
             !['reqMatch', 'exploratory', 'regression'].every(field => Array.isArray(record.form.guardChecklists[field]))))) {
@@ -191,13 +210,21 @@
         const organizedFiles = { screenshots: `screenshots/${revision}`, mantisreport: `mantisreport/${revision}`, testCases: `test-cases/${revision}` };
         const screenshotDir = await directory(moduleDir, ['screenshots', revision]);
         const screenshotLinks = [];
-        for (const [type, sources] of Object.entries(images)) for (const [index, src] of sources.entries()) {
+        const addScreenshot = async (type, index, src, alt = `${type} screenshot ${index + 1}`) => {
           const [, format, encoded] = src.match(/^data:image\/(png|jpeg|gif|webp|bmp);base64,(.*)$/is);
           const bytes = Uint8Array.from(atob(encoded), char => char.charCodeAt(0));
           const filename = `${type}-${index + 1}.${format === 'jpeg' ? 'jpg' : format}`;
           await writeFile(screenshotDir, filename, bytes);
-          screenshotLinks.push(`<p><a href="${filename}">${filename}</a></p><img src="${filename}" alt="${type} screenshot ${index+1}">`);
+          screenshotLinks.push(`<p><a href="${filename}">${filename}</a></p><img src="${filename}" alt="${htmlText(alt)}">`);
+        };
+        for (const [index, src] of images.prod.entries()) await addScreenshot('prod', index, src);
+        let stepImageIndex = 0;
+        for (const row of executionEvidenceRows(record.form, images)) {
+          if (row.path.trim()) screenshotLinks.push(`<p class="evidence-path">${htmlText(row.path)}</p>`);
+          for (const src of row.images) await addScreenshot('step', stepImageIndex++, src, `Execution screenshot for ${row.path || 'unlabeled step'}`);
         }
+        for (const [index, src] of images.exec.entries()) await addScreenshot('exec', index, src);
+        for (const [index, src] of images.studio.entries()) await addScreenshot('studio', index, src);
         await writeFile(screenshotDir, 'screenshots.html', documentHtml(`${record.form.project} / ${record.form.module} - Screenshots`, screenshotLinks.join('') || '<p>No screenshots.</p>'));
         const mantisDir = await directory(moduleDir, ['mantisreport', revision]);
         await writeJson(mantisDir, 'report.json', {
@@ -242,7 +269,7 @@
       return `qa-workspace/users/${dir.name}/projects/${projectPart}/QA metrics/${revision}/${filename}`;
     }
   }
-  const api = { empty, validate, segment, recordKey, FolderStore };
+  const api = { empty, validate, segment, recordKey, executionEvidenceRows, FolderStore };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.LocalWorkspace = api;
 })(globalThis);

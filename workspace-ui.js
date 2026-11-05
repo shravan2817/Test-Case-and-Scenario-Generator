@@ -67,7 +67,10 @@ function captureModule() {
   const form = collectData();
   form.project = activeContext.project; form.module = activeContext.module;
   const key = LocalWorkspace.recordKey(form.project, form.module);
-  const images = { prod: [...prodImages], exec: [...execImages], studio: [...studioImages] };
+  const images = {
+    prod: [...prodImages], exec: [...execImages], studio: [...studioImages],
+    execEvidence: copy(execEvidenceImages)
+  };
   const previous = localState.records[key];
   if (previous && JSON.stringify(previous.form) === JSON.stringify(form) && JSON.stringify(previous.images) === JSON.stringify(images)) return;
   localState.records[key] = { form: copy(form), images, owner: copy(currentUser), updatedAt: new Date().toISOString() };
@@ -89,7 +92,13 @@ function loadActiveModule(project, module, cleared = false) {
   studioTestCases = copy(form.studioTestCases || []);
   guardChecklists = copy(form.guardChecklists || { reqMatch: [], exploratory: [], regression: [] });
   prodImages = [...(record?.images.prod || [])]; execImages = [...(record?.images.exec || [])]; studioImages = [...(record?.images.studio || [])];
+  execEvidenceRows = Array.isArray(form.execEvidenceRows)
+    ? form.execEvidenceRows.map(row => ({ id: row.id, path: row.path }))
+    : [];
+  execEvidenceImages = copy(record?.images.execEvidence || {});
+  activeEvidenceRowId = null;
   ['prod', 'exec', 'studio'].forEach(renderImages);
+  renderExecutionEvidenceRows();
   renderStudioOutputs(); checkDefectCount(true); applyAria();
   $('viewReport').inert = !activeContext;
   $('viewStudio').inert = !activeContext;
@@ -432,13 +441,53 @@ document.addEventListener('scroll', event => {
   if (!event.target.closest?.('#modulePicker')) closeModulePicker();
 }, true);
 
-const sectionNavigation = document.querySelector('.sub-nav-bar');
+function initializeCardAccordions() {
+  const cards = document.querySelectorAll('#secContext, #viewReport > .card, #viewStudio > .card');
+  cards.forEach(card => {
+    const header = [...card.children].find(child => child.classList.contains('card-title'));
+    const label = header?.querySelector('.heading-label');
+    if (!header || !label) return;
+
+    const content = document.createElement('div');
+    content.className = 'card-content';
+    content.id = `${card.id}Content`;
+    content.setAttribute('aria-hidden', 'false');
+    const inner = document.createElement('div');
+    inner.className = 'card-content-inner';
+    [...card.children].filter(child => child !== header).forEach(child => inner.append(child));
+    content.append(inner);
+    card.append(content);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'card-accordion-toggle';
+    toggle.setAttribute('aria-expanded', 'true');
+    toggle.setAttribute('aria-controls', content.id);
+    toggle.append(label);
+    const chevron = document.createElement('span');
+    chevron.className = 'material-symbols-rounded';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.textContent = 'expand_less';
+    toggle.append(chevron);
+    header.prepend(toggle);
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+      if (!expanded && content.contains(document.activeElement)) toggle.focus({ preventScroll: true });
+      toggle.setAttribute('aria-expanded', String(expanded));
+      content.setAttribute('aria-hidden', String(!expanded));
+      content.toggleAttribute('inert', !expanded);
+      card.classList.toggle('is-collapsed', !expanded);
+    });
+  });
+}
+initializeCardAccordions();
+
+const sectionNavigation = document.querySelector('.section-jump-nav');
 if (sectionNavigation) {
   const indicator=document.createElement('span');indicator.className='dock-indicator';indicator.hidden=true;indicator.setAttribute('aria-hidden','true');
   sectionNavigation.prepend(indicator);
   sectionNavigation.setAttribute('aria-label', 'Workspace sections');
   sectionNavigation.setAttribute('role', 'navigation');
-  $('workspaceScroll').prepend(sectionNavigation);
   sectionNavigation.querySelectorAll('.jump-pill').forEach(button => {
     const id = button.getAttribute('onclick').match(/'([^']+)'/)[1];
     button.dataset.section = id; button.setAttribute('aria-controls', id);
@@ -448,7 +497,7 @@ function updateSectionNavigation() {
   if (!sectionNavigation) return;
   const scroll = $('workspaceScroll'), rootRect = scroll.getBoundingClientRect();
   const buttons = Array.from(sectionNavigation.querySelectorAll(`.${currentMode === 'studio' ? 'studio-only' : 'report-only'} .jump-pill`));
-  const threshold = rootRect.top + sectionNavigation.offsetHeight + 32;
+  const threshold = rootRect.top + 32;
   let active = buttons[0];
   for (const button of buttons) {
     if ($(button.dataset.section).getBoundingClientRect().top <= threshold) active = button;
@@ -462,6 +511,7 @@ function updateSectionNavigation() {
   });
   if(active) {
     const indicator=sectionNavigation.querySelector('.dock-indicator');
+    if (!active.getClientRects().length) { indicator.hidden = true; return; }
     const rect=active.getBoundingClientRect(),bar=sectionNavigation.getBoundingClientRect();
     indicator.style.width=`${rect.width}px`;indicator.style.height=`${rect.height}px`;
     indicator.style.transform=`translate(${rect.left-bar.left+sectionNavigation.scrollLeft}px,${rect.top-bar.top+sectionNavigation.scrollTop}px)`;
@@ -472,8 +522,10 @@ function navigateWorkspaceSection(id) {
   const section = $(id);
   if (!section || !sectionNavigation) return;
   closeModulePicker();
+  const toggle = section.querySelector('.card-accordion-toggle');
+  if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
   const scroll = $('workspaceScroll');
-  const top = section.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop - sectionNavigation.offsetHeight - 16;
+  const top = section.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop - 16;
   scroll.scrollTo({ top: Math.max(0, top), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
 }
 let navigationFrame = null;
@@ -643,7 +695,7 @@ async function openWorkspaceSearchResult(result) {
   const row = document.querySelectorAll(scenario ? '#studioScenarioBody tr' : '#studioTestCaseBody tr')[result.index];
   if (row) {
     const scroll=$('workspaceScroll');
-    const top=row.getBoundingClientRect().top-scroll.getBoundingClientRect().top+scroll.scrollTop-(sectionNavigation?.offsetHeight || 0)-24;
+    const top=row.getBoundingClientRect().top-scroll.getBoundingClientRect().top+scroll.scrollTop-24;
     scroll.scrollTo({top:Math.max(0,top),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
     row.tabIndex = -1; row.focus({ preventScroll: true });
     row.classList.add('search-result-target');
@@ -765,9 +817,10 @@ class MagnifyingDock {
        the effect correct when labels wrap or the viewport changes. */
     bar.addEventListener('pointermove',event => {
       if (event.pointerType!=='mouse' || this.motion.matches) return;
-      const buttons=this.buttons();
+      const buttons=this.buttons(), vertical=false;
+      const coordinate=vertical?event.clientY:event.clientX;
       let nearest=0,gap=Infinity;
-      buttons.forEach((button,index)=>{const rect=button.getBoundingClientRect(),distance=Math.abs(event.clientX-rect.left-rect.width/2);if(distance<gap){gap=distance;nearest=index;}});
+      buttons.forEach((button,index)=>{const rect=button.getBoundingClientRect(),distance=Math.abs(coordinate-(vertical?rect.top+rect.height/2:rect.left+rect.width/2));if(distance<gap){gap=distance;nearest=index;}});
       this.magnify(nearest);
     });
     bar.addEventListener('pointerleave',()=>this.reset());

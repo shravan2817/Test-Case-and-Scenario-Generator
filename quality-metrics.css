@@ -4,7 +4,9 @@
 [data-theme="light"] { --container:#edf1fa; --secondary-container:#e8def8; --on-secondary-container:#332d41; --outline:#747e8e; --menu-shadow:0 6px 20px #20263220; }
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
-body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui,sans-serif; }
+body { position:relative; isolation:isolate; margin:0; background:var(--bg); color:var(--text); font:14px/1.5 system-ui,sans-serif; }
+body::before { content:""; position:fixed; inset:0; z-index:0; pointer-events:none; background:url("assets/apcfss-watermark.png") center 42% / min(42vw,460px) auto no-repeat; }
+body > :not(.app-bootstrap):not(.bootstrap-notice):not(noscript) { position:relative; z-index:1; }
 button,input { font:inherit; }
 button,a,input { -webkit-tap-highlight-color:transparent; }
 button { cursor:pointer; min-height:40px; padding:10px 20px; border:1px solid var(--outline); border-radius:24px; color:var(--primary); background:transparent; font-weight:550; transition:background .18s ease,box-shadow .18s ease; }

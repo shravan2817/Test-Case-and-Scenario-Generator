@@ -15,7 +15,8 @@ function ui() {
     $, LocalWorkspace, currentUser: { username: 'QA', email: 'qa@example.com' },
     document: { addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; } }, window: { addEventListener() {} }, navigator: {},
     console: { error() {} }, clearTimeout, setTimeout, autoSaveTimer: null,
-    isDirty: true, prodImages: [], execImages: [], studioImages: [],
+    isDirty: true, prodImages: [], execImages: [], studioImages: [], execEvidenceRows: [], execEvidenceImages: {}, activeEvidenceRowId: null,
+    renderExecutionEvidenceRows() {},
     collectData: () => ({ project: 'Project', module: 'Login', desc: 'Retain this edit' }),
     populateProjectDropdown() {}, populateModuleDropdown() {}, markUnsaved() { context.isDirty = true; },
     setBadgeState(state) { context.badge = state; }, showToast() {}
@@ -59,6 +60,18 @@ test('a recovered save reports success only after the save promise completes', a
   assert.equal(await saving, true);
   assert.equal(context.isDirty, false);
   assert.equal(context.badge, 'saved');
+});
+test('edits made during an in-flight save remain pending instead of reporting saved', async () => {
+  const { context, run } = ui();
+  run('editRevision = 1; folderStore = { save: () => new Promise(resolve => { window.completeSave = resolve; }) };');
+  const saving = run('performSaveNow()');
+  await Promise.resolve();
+  assert.equal(context.badge, 'saving');
+  run('editRevision++;');
+  context.window.completeSave();
+  assert.equal(await saving, true);
+  assert.equal(context.isDirty, true);
+  assert.equal(context.badge, 'pending');
 });
 test('selected-module copy is globally callable and leaves the selection unchanged', async () => {
   const { context, $, run } = ui();

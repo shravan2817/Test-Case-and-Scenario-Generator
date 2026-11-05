@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { empty, validate, segment, recordKey, FolderStore } = require('../local-workspace.js');
+const { empty, validate, segment, recordKey, executionEvidenceRows, FolderStore } = require('../local-workspace.js');
 
 class Directory {
   constructor(name = 'QA', root = null) {
@@ -100,6 +100,50 @@ test('module folders expose real screenshots and readable reports/test cases wit
   const tests=dir.directories.get('test-cases').directories.get(revision);
   assert.match(tests.files.get('test-cases.html'),/TC_1/);
   assert.deepEqual(await new FolderStore(root,owner).load(),data);
+});
+test('execution screenshot paths stay paired and legacy uncaptioned images survive round trips', async () => {
+  const root = new Directory(), store = new FolderStore(root, owner), data = sample();
+  const groupedKey = recordKey(data.projects[0], 'Login');
+  const legacyKey = recordKey(data.projects[0], 'Reports');
+  data.records[groupedKey].form.execEvidenceRows = [
+    { id: 'step-1', path: 'AE010101 --> Beneficiary Registrations' },
+    { id: 'step-2', path: 'AE010101 --> Beneficiary Registrations --> Aadhaar <Verification & Update>' }
+  ];
+  data.records[groupedKey].images.execEvidence = {
+    'step-1': [image, image],
+    'step-2': [image]
+  };
+  data.records[legacyKey].images.exec = [image];
+  assert.deepEqual(executionEvidenceRows(data.records[groupedKey].form, data.records[groupedKey].images), [
+    { id: 'step-1', path: 'AE010101 --> Beneficiary Registrations', images: [image, image] },
+    { id: 'step-2', path: 'AE010101 --> Beneficiary Registrations --> Aadhaar <Verification & Update>', images: [image] }
+  ]);
+  assert.deepEqual(executionEvidenceRows(data.records[legacyKey].form, data.records[legacyKey].images), []);
+  const orphanedImages = structuredClone(data);
+  delete orphanedImages.records[groupedKey].form.execEvidenceRows;
+  assert.throws(() => validate(orphanedImages), /Invalid module record or evidence/);
+  await store.load();
+  await store.save(data);
+  assert.deepEqual(await new FolderStore(root, owner).load(), data);
+
+  const userDir = await store.userDirectory();
+  const manifest = JSON.parse(userDir.files.get('workspace.json'));
+  const parts = manifest.files[groupedKey];
+  let moduleDir = userDir;
+  for (const part of parts.slice(0, -1)) moduleDir = moduleDir.directories.get(part);
+  const screenshots = moduleDir.directories.get('screenshots').directories.get(parts[4].replace('.json', ''));
+  const gallery = screenshots.files.get('screenshots.html');
+  assert.ok(gallery.indexOf('<p class="evidence-path">AE010101 → Beneficiary Registrations</p>') < gallery.indexOf('step-1.png'));
+  assert.match(gallery, /AE010101 → Beneficiary Registrations → Aadhaar &lt;Verification &amp; Update&gt;/);
+  assert.doesNotMatch(gallery, /Navigation path:/);
+  assert.doesNotMatch(gallery, /<p class="evidence-path"><strong>/);
+  assert.ok(gallery.indexOf('Aadhaar Verification') < gallery.indexOf('step-3.png'));
+
+  const legacyParts = manifest.files[legacyKey];
+  let legacyDir = userDir;
+  for (const part of legacyParts.slice(0, -1)) legacyDir = legacyDir.directories.get(part);
+  const legacyGallery = legacyDir.directories.get('screenshots').directories.get(legacyParts[4].replace('.json', ''));
+  assert.ok(legacyGallery.files.has('exec-1.png'));
 });
 test('organized export write failure keeps previous committed module and all user edits remain available',async()=>{
   const root=new Directory(),store=new FolderStore(root,owner),data=sample();

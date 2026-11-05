@@ -95,7 +95,9 @@
 
     /* Auth */
     .auth-overlay { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(12px); z-index: 9999999; display: flex; align-items: center; justify-content: center; }
+    .auth-overlay::before, .dashboard-select-overlay::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: url("assets/apcfss-watermark.png") center / min(46vw, 460px) auto no-repeat; }
     .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 34px; width: 90%; max-width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 14px; }
+    .auth-card, .dashboard-container { position: relative; z-index: 1; }
     .auth-card h2 { font-size: 1.35rem; font-weight: 700; text-align: center; }
     .auth-card p { font-size: .78rem; color: var(--muted); text-align: center; margin-bottom: 6px; line-height: 1.5; }
 
@@ -156,13 +158,21 @@
     .btn-amber:hover { background: #92400e; color: #fde68a; border-color: #b45309; }
     .btn-danger:hover { background: #991b1b; color: #fecaca; border-color: #b91c1c; }
 
-    .status-badge { width: 38px; height: 38px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); }
+    .status-badge { width: auto; min-width: 38px; height: 38px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; }
     .status-pending { background: rgba(120,53,15,.4); border-color: rgba(245,158,11,.4); }
-    .status-pending .material-symbols-rounded { color: var(--warn); animation: pulseGlow 1.5s infinite; }
     .status-saving { background: rgba(3,105,161,.4); border-color: rgba(56,189,248,.4); }
-    .status-saving .material-symbols-rounded { color: var(--info); animation: smoothSpin .8s infinite linear; }
     .status-saved { background: rgba(6,78,59,.4); border-color: rgba(52,211,153,.4); }
-    .status-saved .material-symbols-rounded { color: var(--ok); animation: bouncyPop .5s; }
+    .status-error { border-color: var(--bad); color: var(--bad); }
+    .save-status-text { font-size: .72rem; font-weight: 600; white-space: nowrap; }
+    .save-status-dots { display: inline-flex; align-items: center; gap: 3px; height: 14px; }
+    .save-status-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .35; animation: saveDotPulse 1s infinite ease-in-out; }
+    .save-status-dots i:nth-child(2) { animation-delay: .16s; }
+    .save-status-dots i:nth-child(3) { animation-delay: .32s; }
+    .save-status-icon { font-size: 18px; }
+    @keyframes saveDotPulse { 0%, 60%, 100% { opacity: .35; transform: scale(.85); } 30% { opacity: 1; transform: scale(1.15); } }
+    .status-pending .save-status-dots, .status-saving .save-status-dots { display: inline-flex; }
+    .status-saved .save-status-dots, .status-error .save-status-dots { display: none; }
+    .status-saved .save-status-icon { color: var(--ok); }
 
     /* Dropdown menus */
     .menu-wrap { position: relative; }
@@ -193,6 +203,23 @@
     .view-section.active { display: flex; }
 
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 26px; box-shadow: 0 10px 30px rgba(0,0,0,.3); scroll-margin-top: 12px; }
+    .card { transition: transform .18s ease, box-shadow .18s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(0,0,0,.24); }
+    .card-title .card-accordion-toggle { display: inline-flex; align-items: center; gap: 10px; min-width: 0; border: 0; padding: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .card-accordion-toggle .heading-label { min-width: 0; }
+    .card-accordion-toggle > .material-symbols-rounded { color: var(--muted); font-size: 20px; transition: transform .2s ease; }
+    .card-accordion-toggle[aria-expanded="false"] > .material-symbols-rounded { transform: rotate(180deg); }
+    .card-accordion-toggle:focus-visible { outline: 2px solid var(--info); outline-offset: 4px; border-radius: 6px; }
+    .card-content { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .24s ease; }
+    .card-content[aria-hidden="true"] { grid-template-rows: 0fr; }
+    .card-content-inner { min-height: 0; overflow: hidden; }
+    .section-jump-nav { position: sticky; top: 0; z-index: 20; padding: 8px 0; background: var(--bg); }
+    .section-jump-nav .jump-pills { overflow-x: auto; flex-wrap: nowrap; }
+    .section-jump-nav .jump-pill { flex-shrink: 0; min-height: 40px; }
+    @media (prefers-reduced-motion: reduce) {
+      .save-status-dots i, .card, .card-content, .card-accordion-toggle > .material-symbols-rounded { animation: none !important; transition: none !important; }
+      .card:hover { transform: none; }
+    }
     .card-title { font-size: .92rem; font-weight: 700; padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
     .card-title .heading-label { display: flex; align-items: center; gap: 10px; }
     .card-title .heading-icon { width: 32px; height: 32px; border-radius: 10px; background: rgba(37,99,235,.2); color: var(--info); display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(56,189,248,.3); }
@@ -301,9 +328,12 @@
 
     .preview-modal-card { background: #fff; width: 94%; max-width: 940px; max-height: 90vh; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 25px 50px rgba(0,0,0,.6); overflow: hidden; color: #1f2937; }
     .preview-header { padding: 12px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-    .preview-body { padding: 24px; overflow-y: auto; background: #94a3b8; display: flex; justify-content: center; }
+    .preview-body { flex: 1 1 auto; min-height: 0; padding: 24px; overflow-y: auto; background: #94a3b8; display: flex; justify-content: center; align-items: flex-start; }
 
-    .doc-page { background: #fff; width: 100%; max-width: 820px; padding: 44px 52px; box-shadow: 0 10px 25px rgba(0,0,0,.3); border-radius: 6px; font-family: Arial, sans-serif; color: #000; font-size: 11pt; line-height: 1.5; }
+    .doc-page { box-sizing: border-box; position: relative; isolation: isolate; flex: 0 0 auto; min-height: 100%; background: #fff; width: 100%; max-width: 816px; padding: 19px 22px 96px 38px; box-shadow: 0 10px 25px rgba(0,0,0,.3); border-radius: 6px; font-family: Arial, sans-serif; color: #000; font-size: 12pt; line-height: 1.15; }
+    .doc-page[data-doc-kind="report"] { padding: 19px 22px 96px 38px; }
+    .doc-page[data-doc-kind="report"] > :not(.doc-watermark) { position: relative; z-index: 1; }
+    .doc-page .doc-watermark { position: absolute; z-index: 0; top: 50%; left: 50%; width: min(58%, 440px); max-width: 100%; height: auto; transform: translate(-50%, -50%); pointer-events: none; user-select: none; }
     .doc-page * { font-family: Arial, sans-serif; }
     .doc-page .doc-main-title { font-size: 17pt; font-weight: 700; text-align: center; margin-bottom: 22px; }
     .doc-page .doc-header-field { margin-bottom: 4px; }
@@ -311,6 +341,16 @@
     .doc-page .doc-text { white-space: pre-wrap; margin-bottom: 14px; line-height: 1.5; }
     .doc-page .doc-img-item { margin: 10px 0 20px; width: 100%; overflow: hidden; border: 1px solid #000; background: #fff; page-break-inside: avoid; }
     .doc-page .doc-img-item img { width: 100%; height: auto; display: block; }
+    .doc-page[data-doc-kind="report"] .doc-main-title { font-size: 14pt; color: #538135; margin: 0 0 8px; }
+    .doc-page[data-doc-kind="report"] .doc-header-field { margin: 0; line-height: 1.35; }
+    .doc-page[data-doc-kind="report"] .doc-section-heading { margin: 8px 0 2px; line-height: 1.15; }
+    .doc-page[data-doc-kind="report"] .doc-text { margin: 0 0 8px; line-height: 1.15; }
+    .doc-page[data-doc-kind="report"] .doc-execution-steps { line-height: 1; }
+    .doc-page[data-doc-kind="report"] .doc-evidence-path { margin: 4px 0; font-weight: 400; line-height: 1.15; break-after: avoid; page-break-after: avoid; }
+    .doc-page[data-doc-kind="report"] .doc-evidence-row { margin-bottom: 8px; break-inside: auto; page-break-inside: auto; }
+    .doc-page[data-doc-kind="report"] .doc-evidence-images { display: grid; justify-items: start; gap: 8px; }
+    .doc-page[data-doc-kind="report"] .doc-img-item { display: block; width: fit-content; max-width: 100%; margin: 0; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
+    .doc-page[data-doc-kind="report"] .doc-img-item img { display: block; width: auto; max-width: 100%; max-height: 3.5in; height: auto; object-fit: contain; }
 
     .zoom-overlay { display: none; position: fixed; inset: 0; background: rgba(11,15,25,.95); backdrop-filter: blur(8px); z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; }
     .zoom-overlay.active { display: flex; }
@@ -362,7 +402,18 @@
       body * { visibility: hidden; }
       #printableDocArea, #printableDocArea * { visibility: visible; }
       #printableDocArea { position: absolute; left: 0; top: 0; width: 100% !important; display: block !important; }
-      .doc-page { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; }
+      #printableDocArea .doc-page { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; height: auto !important; min-height: 0 !important; margin: 0 !important; overflow: visible !important; break-inside: auto; page-break-inside: auto; }
+      #printableDocArea .doc-text { overflow: visible !important; overflow-wrap: anywhere; }
+      #printableDocArea table { width: 100% !important; table-layout: fixed; border-collapse: collapse; }
+      #printableDocArea tr, #printableDocArea .doc-header-field { break-inside: avoid; page-break-inside: avoid; }
+      #printableDocArea .doc-section-heading { break-after: avoid; page-break-after: avoid; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-row { break-inside: auto; page-break-inside: auto; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-path { break-after: avoid; page-break-after: avoid; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-img-item { width: fit-content !important; max-width: 100% !important; break-inside: avoid; page-break-inside: avoid; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-img-item img { width: auto !important; max-width: 100% !important; max-height: 3.5in !important; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-images { break-inside: auto; page-break-inside: auto; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(58%, 4.58in); max-width: 100%; height: auto; }
+      #printableDocArea img { max-width: 100% !important; height: auto !important; }
     }
   </style>
   <link rel="stylesheet" href="workspace.css">
@@ -516,9 +567,10 @@
             <input id="workspaceSearchInput" type="search" maxlength="200" placeholder="Search workspace" aria-label="Search projects, modules, test cases and scenarios" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workspaceSearchResults" autocomplete="off" disabled>
             <button type="button" class="search-close" id="workspaceSearchClose" aria-label="Close search" hidden>&times;</button>
           </div>
-          <span id="saveStatus" class="status-badge status-pending tooltip-bottom" role="button" tabindex="0" onclick="performSaveNow(true)" onkeydown="if(event.key==='Enter')performSaveNow(true)" data-tooltip="Connect a folder to save" aria-label="Connect a folder to save">
-            <span class="material-symbols-rounded">folder_off</span>
-          </span>
+          <button type="button" id="saveStatus" class="status-badge status-pending" onclick="performSaveNow(true)" aria-label="Auto save pending" title="Save now">
+            <span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="save-status-text" role="status" aria-live="polite" aria-atomic="true">Auto save pending</span>
+          </button>
 
           <button type="button" id="themeToggle" class="btn-icon tooltip-bottom" onclick="toggleTheme()" data-tooltip="Switch to light mode" aria-label="Switch to light mode"><span class="material-symbols-rounded">light_mode</span></button>
 
@@ -561,23 +613,6 @@
         </div>
       </div>
 
-      <div class="sub-nav-bar">
-        <div class="sub-nav-container">
-          <div class="jump-pills report-only">
-            <span class="jump-label">Jump to</span>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secDescProd')"><span class="material-symbols-rounded">notes</span> 2. Description</button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStepsExec')"><span class="material-symbols-rounded">checklist</span> 3. Steps & Evidence</button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secDefects')"><span class="material-symbols-rounded">bug_report</span> 4. Defects</button>
-          </div>
-          <div class="jump-pills studio-only">
-            <span class="jump-label">Jump to</span>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioInput')"><span class="material-symbols-rounded">edit_note</span> 2. Requirement Details</button>
-            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioOutput')"><span class="material-symbols-rounded">table_chart</span> 3. Generated Test Cases</button>
-          </div>
-        </div>
-      </div>
       <div class="storage-banner" id="storageBanner" data-state="pending" role="status" aria-live="polite">
         <span class="material-symbols-rounded" id="storageIcon">folder_off</span>
         <span id="storageMessage">Choose a folder to save.</span>
@@ -592,6 +627,21 @@
           <div><span class="eyebrow">QA workspace</span><h2>Your projects. All in one place.</h2><p>Tests, reports and evidence.</p></div>
           <span class="local-chip"><span class="material-symbols-rounded">hard_drive</span><span id="profileChip">Local profile</span></span>
         </div>
+        <nav class="section-jump-nav" aria-label="Workspace sections">
+          <div class="jump-pills report-only">
+            <span class="jump-label">Jump to</span>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secDescProd')"><span class="material-symbols-rounded">notes</span> 2. Description</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStepsExec')"><span class="material-symbols-rounded">checklist</span> 3. Steps & Evidence</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secDefects')"><span class="material-symbols-rounded">bug_report</span> 4. Defects</button>
+          </div>
+          <div class="jump-pills studio-only">
+            <span class="jump-label">Jump to</span>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secContext')"><span class="material-symbols-rounded">folder_copy</span> 1. Project & Module</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioInput')"><span class="material-symbols-rounded">edit_note</span> 2. Requirement Details</button>
+            <button type="button" class="jump-pill" onclick="scrollToCard('secStudioOutput')"><span class="material-symbols-rounded">table_chart</span> 3. Generated Test Cases</button>
+          </div>
+        </nav>
 
         <div class="card" id="secContext">
           <p id="projectEmptyHint" class="hint" style="margin-bottom:16px;">Add a project to get started.</p>
@@ -674,13 +724,23 @@
               <textarea id="execSteps" rows="4" spellcheck="true" placeholder="Steps performed"></textarea>
             </div>
             <div class="upload-box-wrapper">
-              <label style="display:block; margin-bottom:6px;">Test Execution Screenshots / Verified Evidence</label>
+              <div class="evidence-heading">
+                <div>
+                  <label style="display:block;">Steps and screenshots</label>
+                  <p class="hint">Add a navigation path and its screenshots together for each step.</p>
+                </div>
+                <button type="button" class="btn-text btn-sm" onclick="addExecutionEvidenceRow()"><span class="material-symbols-rounded" aria-hidden="true">add</span> Add row</button>
+              </div>
+              <div id="executionEvidenceRows" class="execution-evidence-rows" aria-live="polite"></div>
+              <div class="legacy-evidence">
+              <label style="display:block; margin-bottom:6px;">Older screenshots without a saved path</label>
               <div class="drop-zone" id="execDropZone" tabindex="0" role="button" aria-label="Upload execution screenshots">
                 <span class="material-symbols-rounded upload-icon">collections</span>
-                <p>Click to browse or <span>drag & drop / paste (Ctrl+V)</span> execution evidence</p>
+                <p>Click to browse or <span>drag & drop / paste (Ctrl+V)</span> older execution screenshots</p>
                 <input type="file" id="execFileInput" accept="image/*" multiple style="display:none">
               </div>
               <div class="image-grid" id="execImageGrid"></div>
+              </div>
             </div>
           </div>
 
@@ -919,7 +979,10 @@
     let currentUser = null;
     let currentMode = 'report';
     let prodImages = [], execImages = [], studioImages = [];
+    let execEvidenceRows = [], execEvidenceImages = {};
+    let evidenceRowSequence = 0;
     let activeDropTarget = 'exec';
+    let activeEvidenceRowId = null;
     let studioScenarios = [], studioTestCases = [];
     let guardChecklists = { reqMatch: [], exploratory: [], regression: [] };
     let isDirty = false;
@@ -931,6 +994,28 @@
     const $ = id => document.getElementById(id);
     const fx = t => esc(formatTextForExport(t));
     function formatTextForExport(text) { return text ? String(text).replace(/-->/g, '→') : ''; }
+    function formatExecutionEvidencePath(path) { return fx(path); }
+    let reportWatermarkDataUrlPromise = null;
+    function reportWatermarkDataUrl() {
+      if (!reportWatermarkDataUrlPromise) {
+        reportWatermarkDataUrlPromise = fetch(new URL('assets/apcfss-watermark.png', document.baseURI))
+          .then(response => {
+            if (!response.ok) throw new Error(`Could not load report watermark (${response.status}).`);
+            return response.blob();
+          })
+          .then(blob => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Could not read report watermark.'));
+            reader.readAsDataURL(blob);
+          }))
+          .catch(error => {
+            reportWatermarkDataUrlPromise = null;
+            throw error;
+          });
+      }
+      return reportWatermarkDataUrlPromise;
+    }
     function opts(list, sel) { return list.map(v => `<option value="${esc(v)}" ${v === sel ? 'selected' : ''}>${esc(v)}</option>`).join(''); }
 
     function showToast(msg, type = 'ok') {
@@ -1023,7 +1108,7 @@
     }
     function selectWorkspaceMode(mode) {
       $('dashboardSelectOverlay').classList.remove('active');
-      $('mainAppShell').style.display = 'flex';
+      $('mainAppShell').style.display = '';
       switchWorkspaceMode(mode);
     }
     function openDashboard() { $('mainAppShell').style.display = 'none'; $('dashboardSelectOverlay').classList.add('active'); }
@@ -1115,18 +1200,16 @@
     /* ====================== SAVE ====================== */
     function setBadgeState(state) {
       const b = $('saveStatus');
-      b.className = 'status-badge tooltip-bottom action-pill';
-      b.dataset.label = 'Save';
       const map = {
-        pending: ['status-pending', 'Unsaved changes (auto-saves in a few seconds)', 'pending'],
-        saving: ['status-saving', 'Saving...', 'sync'],
-        saved: ['status-saved', 'All changes saved to the selected folder', 'check_circle'],
-        error: ['status-error', 'Not saved. Check folder status; download a backup to protect edits.', 'error']
+        pending: ['status-pending', 'Auto save pending', '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'],
+        saving: ['status-saving', 'Auto save pending', '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'],
+        saved: ['status-saved', 'Auto saved', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">check_circle</span>'],
+        error: ['status-error', 'Auto save failed', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">error</span>']
       };
-      const [cls, tip, icon] = map[state];
-      void b.offsetWidth; b.classList.add(cls);
-      b.setAttribute('data-tooltip', tip); b.setAttribute('aria-label', tip);
-      b.innerHTML = `<span class="material-symbols-rounded">${icon}</span>`;
+      const [cls, message, indicator] = map[state];
+      b.className = `status-badge ${cls}`;
+      b.setAttribute('aria-label', message);
+      b.innerHTML = `${indicator}<span class="save-status-text" role="status" aria-live="polite" aria-atomic="true">${message}</span>`;
     }
     function markUnsaved() {
       isDirty = true; setBadgeState('pending');
@@ -1146,6 +1229,7 @@
         project: $('projectSelect').value, module: $('moduleSelect').value, mantisId: $('mantisId').value, build: $('buildVersion').value,
         url: $('testUrl').value, login: $('loginRef').value, desc: $('featureDesc').value, correction: $('correctionNotes').value,
         steps: $('execSteps').value, res: $('actualResult').value, defects,
+        execEvidenceRows: execEvidenceRows.map(({ id, path }) => ({ id, path })),
         studioScopeType: $('studioScopeType').value, studioUiElements: $('studioUiElements').value,
         studioImpactedAreas: $('studioImpactedAreas').value, studioChangeSummary: $('studioChangeSummary').value,
         studioScenarios, studioTestCases, guardChecklists
@@ -1209,16 +1293,20 @@
     }
     /* ====================== IMAGES ====================== */
     function readFileAsDataURL(file) { return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => res(null); r.readAsDataURL(file); }); }
-    function resizeImageForWord(dataUrl, maxWidth = 600) {
+    function resizeImageForWord(dataUrl, maxWidth = 600, maxHeight = Infinity) {
       return new Promise(resolve => {
         const img = new Image();
-        img.onload = () => { const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; const tw = w > maxWidth ? maxWidth : w; resolve({ src: dataUrl, width: tw, height: Math.round(h * (tw / w)) }); };
+        img.onload = () => { const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; const scale = Math.min(1, maxWidth / w, maxHeight / h); resolve({ src: dataUrl, width: Math.round(w * scale), height: Math.round(h * scale) }); };
         img.onerror = () => resolve({ src: dataUrl, width: 580, height: 320 });
         img.src = dataUrl;
       });
     }
-    async function processFiles(files, type) {
+    async function processFiles(files, type, evidenceRowId = null) {
       if (!files || !files.length || !activeContext || workspaceBusy) return;
+      if (type === 'execEvidence' && !execEvidenceRows.some(row => row.id === evidenceRowId)) {
+        showToast('Add an evidence row before choosing its screenshots.', 'error');
+        return;
+      }
       setWorkspaceBusy(true);
       try {
       const valid = Array.from(files).filter(f => /^image\/(?:png|jpeg|gif|webp|bmp)$/i.test(f.type));
@@ -1226,35 +1314,184 @@
       for (const file of valid) {
         const url = await readFileAsDataURL(file);
         if (!url) { showToast(`Could not read screenshot: ${file.name}`, 'error'); continue; }
-        (type === 'prod' ? prodImages : type === 'studio' ? studioImages : execImages).push(url);
+        if (type === 'execEvidence') (execEvidenceImages[evidenceRowId] ||= []).push(url);
+        else (type === 'prod' ? prodImages : type === 'studio' ? studioImages : execImages).push(url);
       }
       ['prod', 'exec', 'studio'].forEach(renderImages);
+      if (type === 'execEvidence') renderExecutionEvidenceRows();
       markUnsaved();
       recordUserHistory('Uploaded screenshot evidence');
       } finally { setWorkspaceBusy(false); }
     }
     function bindDropZone(zoneId, inputId, type) {
       const zone = $(zoneId), input = $(inputId);
-      const open = () => { activeDropTarget = type; input.click(); };
+      const open = () => { activeDropTarget = type; if (type === 'exec') activeEvidenceRowId = null; input.click(); };
       zone.addEventListener('click', open);
       zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
       input.addEventListener('change', e => { processFiles(e.target.files, type); input.value = ''; });
       zone.addEventListener('dragenter', e => { e.preventDefault(); zone.classList.add('dragover'); activeDropTarget = type; });
       zone.addEventListener('dragover', e => e.preventDefault());
       zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-      zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); activeDropTarget = type; if (e.dataTransfer?.files) processFiles(e.dataTransfer.files, type); });
+      zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); activeDropTarget = type; if (type === 'exec') activeEvidenceRowId = null; if (e.dataTransfer?.files) processFiles(e.dataTransfer.files, type); });
     }
     bindDropZone('prodDropZone', 'prodFileInput', 'prod');
     bindDropZone('execDropZone', 'execFileInput', 'exec');
     bindDropZone('studioDropZone', 'studioFileInput', 'studio');
 
+    function createExecutionEvidenceRowId() {
+      evidenceRowSequence += 1;
+      return `evidence-${Date.now()}-${evidenceRowSequence}`;
+    }
+    function addExecutionEvidenceRow(data = {}) {
+      const row = { id: data.id || createExecutionEvidenceRowId(), path: String(data.path || '') };
+      if (execEvidenceRows.some(existing => existing.id === row.id)) row.id = createExecutionEvidenceRowId();
+      execEvidenceRows.push(row);
+      execEvidenceImages[row.id] = Array.isArray(data.images) ? [...data.images] : [];
+      renderExecutionEvidenceRows();
+      markUnsaved();
+      document.querySelector(`[data-evidence-id="${CSS.escape(row.id)}"] .evidence-path`)?.focus();
+    }
+    function renderExecutionEvidenceRows() {
+      const container = $('executionEvidenceRows');
+      container.replaceChildren();
+      execEvidenceRows.forEach((row, index) => {
+        const article = document.createElement('article');
+        article.className = 'execution-evidence-row';
+        article.dataset.evidenceId = row.id;
+
+        const pathGroup = document.createElement('div');
+        pathGroup.className = 'form-group';
+        const label = document.createElement('label');
+        label.htmlFor = `evidencePath${index}`;
+        label.textContent = 'Navigation path';
+        const pathInput = document.createElement('input');
+        pathInput.type = 'text';
+        pathInput.id = label.htmlFor;
+        pathInput.className = 'evidence-path';
+        pathInput.placeholder = 'e.g. Dashboard > Reports > Weekly';
+        pathInput.value = row.path;
+        pathInput.addEventListener('focus', () => { activeEvidenceRowId = row.id; activeDropTarget = 'exec'; });
+        pathInput.addEventListener('input', () => { row.path = pathInput.value; markUnsaved(); });
+        pathGroup.append(label, pathInput);
+
+        const screenshotGroup = document.createElement('div');
+        screenshotGroup.className = 'form-group';
+        const screenshotLabel = document.createElement('label');
+        screenshotLabel.textContent = 'Screenshots';
+        const zone = document.createElement('div');
+        zone.className = 'drop-zone evidence-drop-zone';
+        zone.tabIndex = 0;
+        zone.setAttribute('role', 'button');
+        zone.setAttribute('aria-label', `Add screenshots for navigation path ${index + 1}`);
+        const upload = document.createElement('span');
+        upload.className = 'material-symbols-rounded upload-icon';
+        upload.textContent = 'collections';
+        const instructions = document.createElement('p');
+        instructions.innerHTML = 'Click to browse or <span>drag & drop</span> screenshots';
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.multiple = true;
+        fileInput.hidden = true;
+        fileInput.setAttribute('aria-label', `Choose screenshots for navigation path ${index + 1}`);
+        const open = () => { activeEvidenceRowId = row.id; activeDropTarget = 'exec'; fileInput.click(); };
+        zone.addEventListener('click', event => { if (event.target !== fileInput) open(); });
+        zone.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+        fileInput.addEventListener('change', event => { processFiles(event.target.files, 'execEvidence', row.id); fileInput.value = ''; });
+        zone.addEventListener('dragenter', event => { event.preventDefault(); zone.classList.add('dragover'); activeEvidenceRowId = row.id; });
+        zone.addEventListener('dragover', event => event.preventDefault());
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', event => {
+          event.preventDefault(); zone.classList.remove('dragover'); activeEvidenceRowId = row.id;
+          if (event.dataTransfer?.files) processFiles(event.dataTransfer.files, 'execEvidence', row.id);
+        });
+        zone.append(upload, instructions, fileInput);
+
+        const imageGrid = document.createElement('div');
+        imageGrid.className = 'image-grid';
+        (execEvidenceImages[row.id] || []).forEach((src, imageIndex) => {
+          const preview = document.createElement('div');
+          preview.className = 'image-preview';
+          const badge = document.createElement('span');
+          badge.className = 'order-badge';
+          badge.textContent = `#${imageIndex + 1}`;
+          const image = document.createElement('img');
+          image.src = src;
+          image.loading = 'lazy';
+          image.alt = `Screenshot ${imageIndex + 1} for ${row.path || `execution step ${index + 1}`}`;
+          image.addEventListener('click', () => openZoom(src));
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.setAttribute('aria-label', `Remove screenshot ${imageIndex + 1} from row ${index + 1}`);
+          remove.innerHTML = '<span class="material-symbols-rounded">close</span>';
+          remove.addEventListener('click', event => { event.stopPropagation(); removeExecutionEvidenceImage(row.id, imageIndex); });
+          preview.append(badge, image, remove);
+          imageGrid.appendChild(preview);
+        });
+        const uploadGroup = document.createElement('div');
+        uploadGroup.className = 'evidence-upload-group';
+        uploadGroup.append(zone, imageGrid);
+
+        const removeRow = document.createElement('button');
+        removeRow.type = 'button';
+        removeRow.className = 'btn-text btn-danger btn-sm evidence-remove-row';
+        removeRow.setAttribute('aria-label', `Remove evidence row ${index + 1}`);
+        removeRow.textContent = 'Remove row';
+        removeRow.addEventListener('click', () => removeExecutionEvidenceRow(row.id));
+        article.append(pathGroup, uploadGroup, removeRow);
+        container.appendChild(article);
+      });
+    }
+    function removeExecutionEvidenceImage(rowId, imageIndex) {
+      const images = execEvidenceImages[rowId];
+      if (!images?.[imageIndex]) return;
+      images.splice(imageIndex, 1);
+      renderExecutionEvidenceRows();
+      markUnsaved();
+    }
+    function removeExecutionEvidenceRow(rowId) {
+      execEvidenceRows = execEvidenceRows.filter(row => row.id !== rowId);
+      delete execEvidenceImages[rowId];
+      if (activeEvidenceRowId === rowId) activeEvidenceRowId = null;
+      renderExecutionEvidenceRows();
+      markUnsaved();
+    }
+    function validateExecutionEvidenceRows() {
+      const incomplete = execEvidenceRows.find(row => !!row.path.trim() !== !!execEvidenceImages[row.id]?.length);
+      if (!incomplete) return true;
+      const element = document.querySelector(`[data-evidence-id="${CSS.escape(incomplete.id)}"]`);
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!incomplete.path.trim()) element?.querySelector('.evidence-path')?.focus();
+      else element?.querySelector('input[type="file"]')?.click();
+      showToast('Each started row needs a navigation path and at least one screenshot.', 'error');
+      return false;
+    }
+    function buildExecutionEvidenceHtml() {
+      return execEvidenceRows.map((row, index) => {
+        const images = execEvidenceImages[row.id] || [];
+        if (!row.path.trim() && !images.length) return '';
+        const path = row.path.trim()
+          ? `<div class="doc-evidence-path">${formatExecutionEvidencePath(row.path)}</div>`
+          : `<div class="doc-evidence-path">Path not entered (row ${index + 1})</div>`;
+        const screenshots = images.length
+          ? `<div class="doc-evidence-images">${images.map((src, imageIndex) => `<div class="doc-img-item"><img src="${src}" alt="Screenshot ${imageIndex + 1} for ${esc(row.path || `execution step ${index + 1}`)}"></div>`).join('')}</div>`
+          : '<p class="doc-text">Screenshot not uploaded</p>';
+        return `<div class="doc-evidence-row">${path}${screenshots}</div>`;
+      }).join('');
+    }
+
     window.addEventListener('paste', e => {
       const ae = document.activeElement, tag = ae?.tagName?.toLowerCase();
-      if (tag === 'textarea' || (tag === 'input' && ['text', 'email', 'password', 'search'].includes(ae.type)) || ae?.isContentEditable) return;
+      const evidencePathFocused = ae?.classList?.contains('evidence-path');
+      if (tag === 'textarea' || (tag === 'input' && ['text', 'email', 'password', 'search'].includes(ae.type) && !evidencePathFocused) || ae?.isContentEditable) return;
       if (!currentUser || !activeContext || workspaceBusy || $('mainAppShell').style.display === 'none') return;
       const items = (e.clipboardData || window.clipboardData)?.items || [], files = [];
       for (const it of items) if (it.type.indexOf('image') !== -1) { const f = it.getAsFile(); if (f) files.push(f); }
-      if (files.length) { e.preventDefault(); processFiles(files, currentMode === 'studio' ? 'studio' : activeDropTarget); }
+      if (files.length) {
+        e.preventDefault();
+        if (currentMode !== 'studio' && activeEvidenceRowId) processFiles(files, 'execEvidence', activeEvidenceRowId);
+        else processFiles(files, currentMode === 'studio' ? 'studio' : activeDropTarget);
+      }
     });
 
     function renderImages(type) {
@@ -1302,7 +1539,8 @@
         if (!studioTestCases.length) { showToast('Generate or add at least one test case first.', 'error'); return false; }
         return true;
       }
-      return validateRequired([...base, ['featureDesc', 'Description'], ['actualResult', 'Actual Result'], ['execSteps', 'Execution Steps']]);
+      return validateRequired([...base, ['featureDesc', 'Description'], ['actualResult', 'Actual Result'], ['execSteps', 'Execution Steps']]) &&
+        validateExecutionEvidenceRows();
     }
 
     /* ====================== STUDIO GENERATION ====================== */
@@ -1548,25 +1786,26 @@
 
     function buildReportDocHtml() {
       const correction = $('correctionNotes').value.trim();
-      const prodHtml = prodImages.length ? `<div class="doc-section-heading">Production Screenshot reference:-</div>` + prodImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('') : '';
-      const corrHtml = correction ? `<div class="doc-section-heading">Correction / Rework Notes:</div><div class="doc-text">${fx(correction)}</div>` : '';
+      const prodHtml = prodImages.length ? `<div class="doc-section-heading">Production Screenshot reference:-</div>` + prodImages.map(img => `<div class="doc-img-item"><img src="${img}" alt="Production screenshot"></div>`).join('') : '';
+      const corrHtml = correction ? `<div class="doc-text"><strong>Correction / Rework Notes:</strong><br>${fx(correction)}</div>` : '';
       const defects = [...document.querySelectorAll('#defectTableBody tr')].map(tr => ({ id: tr.querySelector('.d-id').value, sev: tr.querySelector('.d-sev').value, pri: tr.querySelector('.d-pri').value, desc: tr.querySelector('.d-desc').value, st: tr.querySelector('.d-status').value })).filter(d => d.id || d.desc);
       const defHtml = defects.length ? `<div class="doc-section-heading">Defects Logged (MantisBT):</div><table style="width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:12px;"><thead><tr style="background:#f1f5f9;"><th style="border:1px solid #000; padding:4px;">Bug ID</th><th style="border:1px solid #000; padding:4px;">Severity</th><th style="border:1px solid #000; padding:4px;">Priority</th><th style="border:1px solid #000; padding:4px;">Summary</th><th style="border:1px solid #000; padding:4px;">Status</th></tr></thead><tbody>${defects.map(d => `<tr><td style="border:1px solid #000; padding:4px;">${esc(d.id)}</td><td style="border:1px solid #000; padding:4px;">${esc(d.sev)}</td><td style="border:1px solid #000; padding:4px;">${esc(d.pri)}</td><td style="border:1px solid #000; padding:4px;">${esc(d.desc)}</td><td style="border:1px solid #000; padding:4px;">${esc(d.st)}</td></tr>`).join('')}</tbody></table>` : '';
-      const execImgs = execImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
-      return `<div class="doc-page">
+      const legacyExecImages = execImages.length
+        ? `<div class="doc-section-heading">Older screenshots without a saved path:</div>${execImages.map(img => `<div class="doc-img-item"><img src="${img}" alt="Execution screenshot without a saved path"></div>`).join('')}`
+        : '';
+      const execImgs = buildExecutionEvidenceHtml() + legacyExecImages;
+      return `<div class="doc-page" data-doc-kind="report">
+        <img class="doc-watermark" src="assets/apcfss-watermark.png" alt="" aria-hidden="true">
         <div class="doc-main-title">Test Execution Report</div>
         <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</div>
         <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</div>
         <div class="doc-header-field"><strong>Test URL:</strong> ${esc($('testUrl').value)}</div>
         ${$('loginRef').value ? `<div class="doc-header-field"><strong>Test account reference:</strong> ${esc($('loginRef').value)}</div>` : ''}
-        <div class="doc-section-heading">Detailed Description about Features/Services Tested:</div>
-        <div class="doc-text">${fx($('featureDesc').value)}</div>
+        <div class="doc-text"><strong>Detailed Description about Features/Services Tested:</strong><br>${fx($('featureDesc').value)}</div>
         ${prodHtml}
-        <div class="doc-section-heading">Actual Result:</div>
-        <div class="doc-text">${fx($('actualResult').value)}</div>
+        <div class="doc-text"><strong>Actual Result: -</strong><br>${fx($('actualResult').value)}</div>
         ${corrHtml}
-        <div class="doc-section-heading">Execution Steps:</div>
-        <div class="doc-text">${fx($('execSteps').value)}</div>
+        <div class="doc-text doc-execution-steps"><strong>Execution Steps: -</strong><br>${fx($('execSteps').value)}</div>
         ${execImgs}${defHtml}
       </div>`;
     }
@@ -1602,32 +1841,70 @@
 
     function openPreviewModal() { $('previewModalContent').innerHTML = getActiveDocHtml(); $('previewModal').classList.add('active'); }
     function closePreviewModal() { $('previewModal').classList.remove('active'); }
-    function triggerCleanPdfPrint() {
+    async function triggerCleanPdfPrint() {
       if (!validateForExport()) return;
       const p = $('printableDocArea');
+      const printPageRule = document.createElement('style');
+      printPageRule.textContent = currentMode === 'report'
+        ? '@page { size: 8.5in 11in; margin: 0.197in 0.231in 1in 0.394in; }'
+        : '@page { size: A4 portrait; margin: 12mm; }';
+      document.head.appendChild(printPageRule);
       p.innerHTML = getActiveDocHtml(); p.style.display = 'block';
-      setTimeout(() => { window.print(); p.style.display = 'none'; p.innerHTML = ''; }, 100);
+      try {
+        await Promise.all([...p.querySelectorAll('img')].map(image => image.decode()));
+        window.print();
+        recordUserHistory('Printed document or saved as PDF');
+      } catch (error) {
+        console.error('Print/PDF export failed:', error);
+        showToast(error.message || 'Could not prepare screenshots for printing.', 'error');
+      } finally {
+        p.style.display = 'none';
+        p.innerHTML = '';
+        printPageRule.remove();
+      }
     }
 
     async function exportActiveToWord() {
       if (!validateForExport()) return;
-      const imgTable = im => `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`;
-      const head = `<p><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</p>
-        <p><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</p>`;
-      const tail = `<p><strong>Test URL:</strong> ${esc($('testUrl').value)}</p>${$('loginRef').value ? `<p><strong>Test account reference:</strong> ${esc($('loginRef').value)}</p>` : ''}`;
+      let watermark = '';
+      if (currentMode === 'report') {
+        try { watermark = await reportWatermarkDataUrl(); }
+        catch (error) {
+          console.error('Word export watermark could not be loaded:', error);
+          showToast(error.message || 'Could not load the report watermark.', 'error');
+          return;
+        }
+      }
+      const imgTable = im => currentMode === 'report'
+        ? `<table class="doc-image-table" width="${im.width}" style="display:table; border-collapse:collapse; margin:4pt 0 8pt; page-break-inside:avoid;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block; max-width:100%;"></td></tr></table>`
+        : `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`;
+      const head = `<p class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</p>
+        <p class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</p>`;
+      const tail = `<p class="doc-header-field"><strong>Test URL:</strong> ${esc($('testUrl').value)}</p>${$('loginRef').value ? `<p class="doc-header-field"><strong>Test account reference:</strong> ${esc($('loginRef').value)}</p>` : ''}`;
       const br = s => fx(s).replace(/\n/g, '<br>');
       let body = '';
 
       if (currentMode === 'report') {
         const correction = $('correctionNotes').value.trim();
-        const sp = await Promise.all(prodImages.map(s => resizeImageForWord(s)));
-        const se = await Promise.all(execImages.map(s => resizeImageForWord(s)));
+        const sp = await Promise.all(prodImages.map(s => resizeImageForWord(s, 750, 336)));
+        const evidence = await Promise.all(execEvidenceRows.map(async (row, index) => {
+          const images = execEvidenceImages[row.id] || [];
+          if (!row.path.trim() && !images.length) return '';
+          const path = row.path.trim()
+            ? `<p class="doc-evidence-path">${formatExecutionEvidencePath(row.path)}</p>`
+            : `<p class="heading">Path not entered (row ${index + 1})</p>`;
+          const screenshots = await Promise.all(images.map(async image => imgTable(await resizeImageForWord(image, 750, 336))));
+          return `<div class="doc-evidence-row">${path}${screenshots.join('')}</div>`;
+        }));
+        const se = await Promise.all(execImages.map(s => resizeImageForWord(s, 750, 336)));
         body = `<div class="doc-main-title">Test Execution Report</div>${head}${tail}
-          <p class="heading">Detailed Description about Features/Services Tested:</p><p>${br($('featureDesc').value)}</p>
+          <p class="doc-text"><strong>Detailed Description about Features/Services Tested:</strong><br>${br($('featureDesc').value)}</p>
           ${sp.length ? `<p class="heading">Production Screenshot reference:-</p>${sp.map(imgTable).join('')}` : ''}
-          <p class="heading">Actual Result:</p><p>${br($('actualResult').value)}</p>
-          ${correction ? `<p class="heading">Correction / Rework Notes:</p><p>${br(correction)}</p>` : ''}
-          <p class="heading">Execution Steps:</p><p>${br($('execSteps').value)}</p>
+          <p class="doc-text"><strong>Actual Result: -</strong><br>${br($('actualResult').value)}</p>
+          ${correction ? `<p class="doc-text"><strong>Correction / Rework Notes:</strong><br>${br(correction)}</p>` : ''}
+          <p class="doc-text doc-execution-steps"><strong>Execution Steps: -</strong><br>${br($('execSteps').value)}</p>
+          ${evidence.join('')}
+          ${se.length ? '<p class="heading">Older screenshots without a saved path:</p>' : ''}
           ${se.map(imgTable).join('')}`;
       } else {
         const ss = await Promise.all(studioImages.map(s => resizeImageForWord(s)));
@@ -1639,10 +1916,27 @@
           ${ss.map(imgTable).join('')}`;
       }
 
+      const reportStyles = currentMode === 'report'
+        ? `
+          @page { size: 8.5in 11in; margin: 0.197in 0.231in 1in 0.394in; }
+          body { font: 12pt/1.15 Arial, sans-serif; color: #000; margin: 0; }
+          p { margin: 0 0 8pt; font-size: 12pt; }
+          .doc-page { position: relative; color: #000; font: 12pt/1.15 Arial, sans-serif; }
+          .doc-page > :not(.doc-watermark) { position: relative; z-index: 1; }
+          .doc-main-title { font-size: 14pt; font-weight: bold; color: #538135; text-align: center; margin: 0 0 8pt; }
+          .doc-header-field { margin: 0; line-height: 1.35; }
+          .doc-text { margin: 0 0 8pt; line-height: 1.15; }
+          .doc-execution-steps { line-height: 1; }
+          .heading { font-weight: bold; margin: 8pt 0 2pt; line-height: 1.15; }
+          .doc-evidence-path { font-weight: normal; margin: 4pt 0; line-height: 1.15; page-break-after: avoid; }
+          .doc-image-table { display: table; max-width: 100%; page-break-inside: avoid; }
+          .doc-watermark { position: fixed; top: 50%; left: 50%; width: 58%; max-width: 4.58in; height: auto; z-index: 0; }
+        `
+        : `@page { size: 21cm 29.7cm; margin: 2cm; } body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; } .doc-main-title { font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 10pt; } p { margin: 2pt 0; font-size: 11pt; } .heading { font-weight: bold; margin-top: 10pt; margin-bottom: 2pt; }`;
       const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>QA Report</title>
-        <style> @page { size: 21cm 29.7cm; margin: 2cm; } body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; } .doc-main-title { font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 10pt; } p { margin: 2pt 0; font-size: 11pt; } .heading { font-weight: bold; margin-top: 10pt; margin-bottom: 2pt; } </style>
-        </head><body>${body}</body></html>`;
+        <style>${reportStyles}</style>
+        </head><body>${currentMode === 'report' ? `<div class="doc-page" data-doc-kind="report"><img class="doc-watermark" src="${watermark}" alt="">${body}</div>` : body}</body></html>`;
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
       const prefix = currentMode === 'studio' ? 'Test_Cases' : 'Test_Execution_Report';
