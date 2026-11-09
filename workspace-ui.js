@@ -10,6 +10,35 @@ const formFields = {
 const initialFields = Object.fromEntries(Object.keys(formFields).map(id => [id, $(id).value]));
 const copy = value => JSON.parse(JSON.stringify(value));
 
+function folderAccessAvailability() {
+  if (!window.isSecureContext) {
+    return {
+      available: false,
+      reason: 'insecure-context',
+      message: 'Folder saving needs a secure page. Open this app on localhost or HTTPS. You can still edit, import a backup and download a backup here.'
+    };
+  }
+  if (typeof window.showDirectoryPicker !== 'function') {
+    return {
+      available: false,
+      reason: 'unsupported-api',
+      message: 'This browser does not support choosing a workspace folder. HTTPS alone cannot add this feature. You can still edit, import a backup and download a backup here.'
+    };
+  }
+  return { available: true, reason: 'supported', message: 'Choose a folder for autosave, or use JSON backups.' };
+}
+function updateFolderAccessButton() {
+  const support = folderAccessAvailability();
+  const button = $('connectFolderButton');
+  button.disabled = workspaceBusy || !support.available;
+  button.title = support.available ? 'Choose a folder for workspace autosave' : support.message;
+  if (!support.available) button.textContent = 'Folder saving unavailable';
+  else if (folderNeedsReconnect || rememberedHandle && !folderStore) button.textContent = 'Reconnect folder';
+  else if (folderStore) button.textContent = 'Change folder';
+  else if (rememberedHandle) button.textContent = 'Reconnect folder';
+  else button.textContent = 'Choose folder';
+  return support;
+}
 function setStorageStatus(state, message) {
   $('storageBanner').dataset.state = state;
   $('folderPanel').dataset.state = state;
@@ -23,14 +52,18 @@ function storageFailure(error) {
   console.error('Local workspace operation failed', error);
   setBadgeState('error');
   const message = error.name === 'NotFoundError'
-    ? 'Folder unavailable. Reconnect it or choose a short path, like C:\\QA. Edits are kept.'
+    ? 'The selected folder could not be found. Reconnect it or choose the folder again. Your edits are still in this tab.'
     : error.name === 'InvalidStateError'
-    ? 'Folder changed during saving. Edits kept. Back up, then reconnect.'
+    ? 'The folder changed or its saved handle expired. Reconnect the folder; your edits are still in this tab.'
+    : error.name === 'NotAllowedError'
+    ? 'Folder permission was denied. Allow access in the browser prompt and reconnect, or download a backup.'
+    : error.name === 'SecurityError'
+    ? 'This page cannot open the folder picker. Use localhost or HTTPS in a browser that supports folder access, or download a backup.'
     : error.message || 'Local folder operation failed.';
-  if (['NotFoundError', 'InvalidStateError', 'WorkspaceConflictError'].includes(error.name)) {
+  if (['NotFoundError', 'InvalidStateError', 'WorkspaceConflictError', 'NotAllowedError'].includes(error.name)) {
     folderNeedsReconnect = true;
-    $('connectFolderButton').textContent = 'Reconnect folder';
   }
+  updateFolderAccessButton();
   setStorageStatus('error', `Not saved. ${message}`);
   showToast(message, 'error');
 }
@@ -41,7 +74,7 @@ function setWorkspaceBusy(busy) {
   $('mainAppShell').inert = busy;
   $('dashboardSelectOverlay').inert = busy;
   document.querySelectorAll('#projectModal, #moduleModal').forEach(el => { el.inert = busy; });
-  $('connectFolderButton').disabled = busy || !window.isSecureContext || !window.showDirectoryPicker;
+  updateFolderAccessButton();
   $('disconnectFolderButton').disabled = busy || (!folderStore && !rememberedHandle);
 }
 async function handleCache(mode, value) {
@@ -86,6 +119,7 @@ function loadActiveModule(project, module, cleared = false) {
   const record = !cleared && activeContext ? localState.records[LocalWorkspace.recordKey(project, module)] : null;
   const form = record?.form || {};
   Object.entries(formFields).forEach(([id, field]) => { $(id).value = form[field] ?? initialFields[id]; });
+  studioGenerationSource = typeof form.studioGenerationSource === 'string' ? form.studioGenerationSource : '';
   $('defectTableBody').innerHTML = '';
   (form.defects || []).forEach(defect => addDefectRow(defect, true));
   studioScenarios = copy(form.studioScenarios || []);
@@ -116,9 +150,10 @@ function applyWorkspaceState() {
 async function performSaveNow(manual = false) {
   clearTimeout(autoSaveTimer); autoSaveTimer = null;
   if (!folderStore) {
-    setBadgeState('error');
-    setStorageStatus('error', 'Not saved. Choose a folder or back up.');
-    if (manual) showToast('Connect a local folder before saving.', 'error');
+    isDirty = true;
+    setBadgeState('pending');
+    setStorageStatus('pending', 'Changes are only in memory. Download a JSON backup before leaving.');
+    if (manual) showToast('No folder is connected. Download a JSON backup to keep these edits.', 'error');
     return false;
   }
   let snapshot;
@@ -150,6 +185,21 @@ async function flushBeforeSwitch() {
   if (!isDirty) return true;
   if (!folderStore) { captureModule(); return true; }
   return performSaveNow();
+}
+function saveWorkspaceNow() {
+  if (folderStore) return performSaveNow(true);
+  return backupWorkspace();
+}
+function markUnsaved() {
+  isDirty = true; setBadgeState('pending');
+  editRevision++;
+  clearTimeout(autoSaveTimer);
+  if (folderStore) {
+    setStorageStatus('pending', 'Unsaved changes. Folder autosave starts in 3 seconds.');
+    autoSaveTimer = setTimeout(() => performSaveNow(false), 3000);
+  } else {
+    setStorageStatus('pending', 'Changes are only in memory. Download a JSON backup before leaving.');
+  }
 }
 async function saveProjectMetrics(project, filename, bytes, draft) {
   if (!folderStore || folderNeedsReconnect) throw new Error('Choose or reconnect your workspace folder before saving metrics.');
@@ -200,44 +250,65 @@ async function openFolderHandle(handle) {
     else await candidate.save(draft);
     localState = draft;
   } else {
-    if (draft && !confirm('This folder already has workspace data. Opening it replaces the in-memory view. Cancel and download a backup first if you need your current edits.')) return false;
+    if (draft && !confirm('This folder already has workspace data. Opening it replaces the in-memory view. Cancel and download a backup first if you need your current edits.')) {
+      setStorageStatus('pending', 'Folder connection cancelled. Current edits remain in this tab; download a JSON backup before leaving.');
+      return false;
+    }
     localState = loaded;
   }
   folderStore = candidate; rememberedHandle = handle;
   folderNeedsReconnect = false;
   $('disconnectFolderButton').disabled = false;
   applyWorkspaceState(); isDirty = false; setBadgeState('saved');
-  $('connectFolderButton').textContent = 'Change folder';
   $('connectedFolderName').textContent = `Folder: ${handle.name}`;
-  setStorageStatus('saved', 'Folder connected');
+  updateFolderAccessButton();
+  setStorageStatus('saved', `Folder connected. Workspace saved to ${handle.name}.`);
   return true;
 }
 async function findRememberedFolder() {
-  if (!window.isSecureContext || !window.showDirectoryPicker) {
-    $('connectFolderButton').disabled = true;
-    setStorageStatus('error', 'Folder access unavailable. Use Chrome / Edge on localhost or HTTPS, or use backups.');
+  const support = folderAccessAvailability();
+  if (!support.available) {
+    updateFolderAccessButton();
+    $('connectedFolderName').textContent = 'Folder autosave is unavailable in this browser context.';
+    setStorageStatus('pending', `${support.message} Changes stay in this tab until you download a backup.`);
     return;
   }
   try {
     rememberedHandle = await handleCache('get');
     if (!rememberedHandle) {
-      setStorageStatus('pending', 'Choose a folder to save.');
+      updateFolderAccessButton();
+      setStorageStatus('pending', 'No folder is connected. Choose a folder for autosave, or download a JSON backup.');
       return;
     }
     if (await rememberedHandle.queryPermission({ mode: 'readwrite' }) === 'granted') await openFolderHandle(rememberedHandle);
     else {
-      $('connectFolderButton').textContent = 'Reconnect folder';
+      updateFolderAccessButton();
       $('connectedFolderName').textContent = `Folder: ${rememberedHandle.name}`;
-      setStorageStatus('pending', 'Permission needed. Reconnect folder.');
+      setStorageStatus('pending', 'Folder permission is needed. Reconnect it and allow access, or import a JSON backup.');
     }
   } catch (error) {
-    rememberedHandle = null;
-    $('connectFolderButton').textContent = 'Choose folder';
-    setStorageStatus('error', 'Could not reopen folder. Choose it again.');
+    if (error.name === 'NotAllowedError') {
+      updateFolderAccessButton();
+      setStorageStatus('pending', 'Folder permission was denied. Reconnect it and allow access, or import a JSON backup.');
+      return;
+    }
+    if (['NotFoundError', 'InvalidStateError'].includes(error.name)) {
+      rememberedHandle = null;
+      updateFolderAccessButton();
+      setStorageStatus('pending', 'The saved folder handle is no longer available. Choose the folder again, or import a JSON backup.');
+      return;
+    }
+    storageFailure(error);
   }
 }
 async function connectLocalFolder() {
   if (!currentUser || workspaceBusy) return;
+  const support = folderAccessAvailability();
+  if (!support.available) {
+    updateFolderAccessButton();
+    setStorageStatus('pending', `${support.message} Changes stay in this tab until you download a backup.`);
+    return;
+  }
   setWorkspaceBusy(true);
   try {
     // Permission requests and pickers run directly in the user gesture, before any save awaits.
@@ -245,19 +316,33 @@ async function connectLocalFolder() {
     if (rememberedHandle && !folderStore) {
       handle = rememberedHandle;
       if (await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
-        rememberedHandle = null; $('connectFolderButton').textContent = 'Choose folder';
-        throw new Error('Permission denied. Choose folder again.');
+        updateFolderAccessButton();
+        setStorageStatus('pending', 'Folder permission was denied. Allow access to reconnect, or download a JSON backup.');
+        showToast('Folder permission was denied. Your edits are still in this tab.', 'error');
+        return;
       }
     } else handle = await window.showDirectoryPicker({ id: 'qa-workspace-root', mode: 'readwrite' });
     if (folderStore && isDirty && !folderNeedsReconnect && !await performSaveNow()) return;
     if (folderNeedsReconnect) folderStore = null;
     if (!await openFolderHandle(handle)) return;
     try { await handleCache('put', handle); }
-    catch (error) { console.error('Could not remember folder', error); setStorageStatus('pending', 'Connected. Choose this folder again next time.'); }
+    catch (error) {
+      console.error('Could not remember folder', error);
+      setStorageStatus('pending', `Folder connected and saved. This browser could not remember it; choose the folder again next time. ${error.message}`);
+    }
   } catch (error) {
-    if (error.name === 'AbortError') setStorageStatus('pending', 'Folder selection cancelled.');
+    if (error.name === 'AbortError') {
+      updateFolderAccessButton();
+      setStorageStatus('pending', 'Folder selection was cancelled. Your current workspace was not changed.');
+    }
+    else if (error.name === 'NotAllowedError') {
+      updateFolderAccessButton();
+      const message = 'Folder access was denied. Allow permission in the browser and choose again. Your current edits remain in this tab.';
+      setStorageStatus('error', message);
+      showToast(message, 'error');
+    }
     else {
-      if (!folderStore) { rememberedHandle = null; $('connectFolderButton').textContent = 'Choose folder'; }
+      updateFolderAccessButton();
       storageFailure(error);
     }
   } finally { setWorkspaceBusy(false); }
@@ -271,9 +356,9 @@ async function disconnectLocalFolder() {
     captureModule();
     folderStore = null; rememberedHandle = null;
     isDirty = true; editRevision++; setBadgeState('pending');
-    $('connectFolderButton').textContent = 'Choose folder';
+    updateFolderAccessButton();
     $('connectedFolderName').textContent = 'No folder selected.';
-    setStorageStatus('pending', 'Disconnected. Edits kept in memory. Choose a folder or back up.');
+    setStorageStatus('pending', 'Folder disconnected. Changes are only in memory; download a JSON backup before leaving.');
     try { await handleCache('delete'); }
     catch (error) { console.error('Could not forget folder', error); setStorageStatus('error', 'Edits kept. Folder may reconnect on refresh; back up before closing.'); }
   } finally { setWorkspaceBusy(false); }
@@ -282,11 +367,22 @@ function backupWorkspace() {
   try {
     const data = snapshotWorkspace();
     const blob = new Blob([JSON.stringify({ ...data, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.hidden = true;
     a.download = `qa-workspace-${currentUser.email.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    document.body.append(a);
+    a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    if (!folderStore) {
+      setBadgeState('backup');
+      setStorageStatus('pending', 'A JSON backup was downloaded. Current edits remain in memory; download a new backup after more edits.');
+    } else {
+      setBadgeState(isDirty ? 'pending' : 'saved');
+      setStorageStatus(isDirty ? 'pending' : 'saved', isDirty
+        ? 'Backup downloaded. Current folder edits are still waiting to save.'
+        : 'Backup downloaded. Workspace remains saved in the selected folder.');
+    }
     showToast('Backup download started');
-  } catch (error) { storageFailure(error); }
+    return true;
+  } catch (error) { storageFailure(error); return false; }
 }
 function convertLegacy(data) {
   if (!data || !data.form || !Array.isArray(data.projects)) throw new Error('Not a supported workspace backup.');
@@ -320,9 +416,10 @@ async function mergeImportedWorkspace(imported) {
   next.active = imported.active || next.active;
   LocalWorkspace.validate(next);
   localState = next; applyWorkspaceState();
+  isDirty = true; editRevision++; setBadgeState('pending');
   recordUserHistory(`Imported workspace attributed to ${imported.owner.email}`);
   if (folderStore) await performSaveNow(true);
-  else setStorageStatus('pending', 'Imported. Choose a folder or back up to keep it.');
+  else setStorageStatus('pending', 'Backup imported. Changes are only in memory; download a new JSON backup before leaving.');
 }
 async function importBrowserWorkspace() {
   if (!currentUser || workspaceBusy) return;
@@ -620,7 +717,7 @@ window.onload = async function initializeWorkspace() {
       openRequestedWorkspace();
     }
   } catch (error) { showToast(`Could not restore the browser profile: ${error.message}`, 'error'); }
-  if (!window.isSecureContext || !window.showDirectoryPicker) $('connectFolderButton').disabled = true;
+  updateFolderAccessButton();
   applyAria();
   updateSectionNavigation();
   window.qaUiInitialized=true;

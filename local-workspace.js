@@ -73,7 +73,7 @@
       }
       const form = record.form;
       const strings = ['project', 'module', 'mantisId', 'build', 'url', 'login', 'desc', 'correction', 'steps', 'res',
-        'studioScopeType', 'studioUiElements', 'studioImpactedAreas', 'studioChangeSummary'];
+        'studioScopeType', 'studioUiElements', 'studioImpactedAreas', 'studioChangeSummary', 'studioGenerationSource'];
       if (!strings.every(field => form[field] === undefined || typeof form[field] === 'string') ||
           !['studioScenarios', 'studioTestCases', 'defects'].every(field => (form[field] || []).every(item =>
             object(item) && Object.values(item).every(value => typeof value === 'string'))) ||
@@ -237,9 +237,11 @@
         const testDir = await directory(moduleDir, ['test-cases', revision]);
         await writeJson(testDir, 'test-cases.json', {
           project: record.form.project, module: record.form.module, owner: record.owner,
+          generationSource: record.form.studioGenerationSource || '',
           scenarios: record.form.studioScenarios || [], testCases: record.form.studioTestCases || [], checklists: record.form.guardChecklists || {}
         });
-        await writeFile(testDir, 'test-cases.html', documentHtml(`${title} - Test cases`, `<h2>Scenarios</h2>${htmlTable(record.form.studioScenarios || [])}<h2>Test cases</h2>${htmlTable(record.form.studioTestCases || [])}`));
+        await writeFile(testDir, 'test-cases.html', documentHtml(`${title} - Test cases`,
+          `<p>Generation source: ${htmlText(record.form.studioGenerationSource || 'Not recorded')}</p><h2>Scenarios</h2>${htmlTable(record.form.studioScenarios || [])}<h2>Test cases</h2>${htmlTable(record.form.studioTestCases || [])}`));
         await writeJson(evidenceDir, `${revision}.json`, images);
         await writeJson(moduleDir, `${revision}.json`, { ...formRecord, evidenceFile: `${revision}.json`, organizedFiles });
         files[key] = [...parts, `${revision}.json`];

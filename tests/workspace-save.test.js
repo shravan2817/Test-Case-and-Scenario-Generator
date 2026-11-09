@@ -7,27 +7,40 @@ const LocalWorkspace = require('../local-workspace.js');
 
 function ui() {
   const nodes = new Map();
+  const downloads = [];
+  let downloadedBlob = null;
   const $ = id => {
     if (!nodes.has(id)) nodes.set(id, { value: '', dataset: {}, style: {}, textContent: '', classList: { add() {} }, addEventListener() {} });
     return nodes.get(id);
   };
   const context = vm.createContext({
     $, LocalWorkspace, currentUser: { username: 'QA', email: 'qa@example.com' },
-    document: { addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; } }, window: { addEventListener() {} }, navigator: {},
-    console: { error() {} }, clearTimeout, setTimeout, autoSaveTimer: null,
+    document: {
+      addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, body: { append() {} },
+      createElement() { return { click() { downloads.push('download'); }, remove() {} }; }
+    },
+    window: { isSecureContext: true, showDirectoryPicker() {}, addEventListener() {} }, navigator: {},
+    console: { error() {} }, clearTimeout, setTimeout: () => 1, autoSaveTimer: null, Blob,
+    URL: { createObjectURL(blob) { downloadedBlob = blob; return 'blob:backup'; }, revokeObjectURL() {} },
+    downloads, confirm: () => true, recordUserHistory() {},
     isDirty: true, prodImages: [], execImages: [], studioImages: [], execEvidenceRows: [], execEvidenceImages: {}, activeEvidenceRowId: null,
     renderExecutionEvidenceRows() {},
     collectData: () => ({ project: 'Project', module: 'Login', desc: 'Retain this edit' }),
-    populateProjectDropdown() {}, populateModuleDropdown() {}, markUnsaved() { context.isDirty = true; },
+    populateProjectDropdown() {}, populateModuleDropdown() {},
     setBadgeState(state) { context.badge = state; }, showToast() {}
   });
   vm.runInContext(readFileSync(join(__dirname, '..', 'workspace-ui.js'), 'utf8'), context);
+  context.applyWorkspaceState = () => {};
   vm.runInContext(`
     localState = LocalWorkspace.empty(currentUser);
     localState.projects = ['Project']; localState.modulesMap = { Project: ['Login'] };
     activeContext = { project: 'Project', module: 'Login' };
   `, context);
-  return { context, $, run: code => vm.runInContext(code, context) };
+  return {
+    context, $, downloads,
+    readBackup: async () => JSON.parse(await downloadedBlob.text()),
+    run: code => vm.runInContext(code, context)
+  };
 }
 test('exhausted disk-state failure keeps unsaved edits and offers reconnect with a short message', async () => {
   const { context, $, run } = ui();
@@ -38,7 +51,7 @@ test('exhausted disk-state failure keeps unsaved edits and offers reconnect with
   assert.equal(context.badge, 'error');
   assert.equal(run('folderNeedsReconnect'), true);
   assert.equal($('connectFolderButton').textContent, 'Reconnect folder');
-  assert.equal($('storageMessage').textContent, 'Not saved. Folder changed during saving. Edits kept. Back up, then reconnect.');
+  assert.equal($('storageMessage').textContent, 'Not saved. The folder changed or its saved handle expired. Reconnect the folder; your edits are still in this tab.');
   assert.equal(run('Object.values(localState.records)[0].form.desc'), 'Retain this edit');
 });
 test('a concurrent workspace conflict enables recovery without clearing the memory draft', async () => {
@@ -115,6 +128,74 @@ test('real workspace operations show and clear busy and indeterminate save indic
 test('metrics save requires a connected folder and never silently falls back',async()=>{
   const {run}=ui();
   await assert.rejects(run("saveProjectMetrics('Project','Project_2026-01_qualitymetrics.xlsx',new Uint8Array([80,75]),{})"),/Choose or reconnect/);
+});
+test('unsupported and insecure contexts explain folder limits while keeping backup actions available', async () => {
+  const { context, $, run } = ui();
+  context.window.isSecureContext = true;
+  context.window.showDirectoryPicker = undefined;
+  assert.equal(run('folderAccessAvailability().reason'), 'unsupported-api');
+  await run('findRememberedFolder()');
+  assert.equal($('connectFolderButton').disabled, true);
+  assert.match($('storageMessage').textContent, /HTTPS alone cannot add this feature/);
+  assert.equal(typeof run('backupWorkspace'), 'function');
+  assert.equal(typeof run('mergeImportedWorkspace'), 'function');
+  context.window.isSecureContext = false;
+  context.window.showDirectoryPicker = () => {};
+  assert.equal(run('folderAccessAvailability().reason'), 'insecure-context');
+});
+test('memory-only edits do not schedule fake autosaves and Ctrl+S action downloads a backup', async () => {
+  const { context, $, downloads, readBackup, run } = ui();
+  context.prodImages = ['data:image/png;base64,aGVsbG8='];
+  run('folderStore = null; markUnsaved();');
+  assert.equal(context.isDirty, true);
+  assert.equal(context.autoSaveTimer, null);
+  assert.match($('storageMessage').textContent, /only in memory/);
+  assert.equal(await run('saveWorkspaceNow()'), true);
+  assert.deepEqual(downloads, ['download']);
+  assert.equal(context.isDirty, true);
+  assert.match($('storageMessage').textContent, /backup was downloaded.*remain in memory/i);
+  const backup = await readBackup();
+  const record = backup.records[LocalWorkspace.recordKey('Project', 'Login')];
+  assert.equal(backup.owner.email, 'qa@example.com');
+  assert.equal(record.owner.email, 'qa@example.com');
+  assert.deepEqual(Array.from(record.images.prod), ['data:image/png;base64,aGVsbG8=']);
+  context.backupForImport = backup;
+  await run('mergeImportedWorkspace(backupForImport)');
+  assert.equal(run("localState.records[LocalWorkspace.recordKey('Project','Login')].owner.email"), 'qa@example.com');
+  assert.equal(run("localState.records[LocalWorkspace.recordKey('Project','Login')].images.prod[0]"), 'data:image/png;base64,aGVsbG8=');
+});
+test('folder picker cancellation and permission denial are distinct and retain the draft', async () => {
+  const { context, $, run } = ui();
+  context.window.showDirectoryPicker = async () => { throw new DOMException('Cancelled', 'AbortError'); };
+  await run('connectLocalFolder()');
+  assert.match($('storageMessage').textContent, /selection was cancelled/);
+  assert.equal(context.isDirty, true);
+  context.window.showDirectoryPicker = async () => { throw new DOMException('Denied', 'NotAllowedError'); };
+  await run('connectLocalFolder()');
+  assert.match($('storageMessage').textContent, /access was denied/);
+  assert.equal(context.isDirty, true);
+});
+test('a folderless save attempt retains state as dirty instead of silently clearing it', async () => {
+  const { context, $, run } = ui();
+  context.isDirty = false;
+  assert.equal(await run('performSaveNow()'), false);
+  assert.equal(context.isDirty, true);
+  assert.match($('storageMessage').textContent, /only in memory/);
+});
+test('importing a workspace in memory marks it unsaved and retains screenshots and attribution', async () => {
+  const { context, run } = ui();
+  context.imported = LocalWorkspace.empty({ username: 'Original', email: 'original@example.com' });
+  context.imported.projects = ['Imported']; context.imported.modulesMap = { Imported: ['Checkout'] };
+  context.imported.active = { project: 'Imported', module: 'Checkout' };
+  context.imported.records[LocalWorkspace.recordKey('Imported', 'Checkout')] = {
+    form: { project: 'Imported', module: 'Checkout', studioTestCases: [{ id: 'TC_1', type: 'Functional', status: 'Not Run' }] },
+    images: { prod: ['data:image/png;base64,aGVsbG8='], exec: [], studio: [] },
+    owner: { username: 'Original', email: 'original@example.com' }, updatedAt: '2026-01-01T00:00:00.000Z'
+  };
+  await run('mergeImportedWorkspace(imported)');
+  assert.equal(context.isDirty, true);
+  assert.equal(run("localState.records[LocalWorkspace.recordKey('Imported','Checkout')].owner.email"), 'original@example.com');
+  assert.equal(run("localState.records[LocalWorkspace.recordKey('Imported','Checkout')].images.prod[0]"), 'data:image/png;base64,aGVsbG8=');
 });
 test('metrics saves are queued after workspace save and create a new project without clearing module edits',async()=>{
   const {context,run}=ui();context.calls=[];

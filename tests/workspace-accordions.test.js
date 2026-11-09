@@ -104,23 +104,28 @@ test('section navigation remains horizontal and responsive without a sidebar men
   assert.match(workspaceUi, /document\.querySelector\('\.section-jump-nav'\)/);
 });
 
-test('autosave indicator reports pending, confirmed success and failure with animated dots', () => {
-  const match = indexHtml.match(/function setBadgeState\(state\) \{[\s\S]*?\n    \}\n    function markUnsaved/);
+test('save indicator distinguishes pending folder writes, in-memory drafts, backups and failures', () => {
+  const match = indexHtml.match(/function setBadgeState\(state\) \{[\s\S]*?\n    \}/);
   assert.ok(match, 'Save state renderer should be present');
-  const source = match[0].replace(/\n    function markUnsaved$/, '');
+  const source = match[0];
   const node = { setAttribute(name, value) { this[name] = value; } };
-  const context = vm.createContext({ $: () => node });
+  const context = vm.createContext({ $: () => node, folderStore: {} });
   vm.runInContext(source, context);
 
   context.setBadgeState('pending');
   assert.match(node.innerHTML, /Auto save pending/);
   assert.match(node.innerHTML, /save-status-dots/);
   context.setBadgeState('saving');
-  assert.match(node.innerHTML, /Auto save pending/);
+  assert.match(node.innerHTML, /Saving to folder/);
   context.setBadgeState('saved');
-  assert.match(node.innerHTML, /Auto saved/);
+  assert.match(node.innerHTML, /Saved to folder/);
+  context.setBadgeState('backup');
+  assert.match(node.innerHTML, /edits remain in memory/);
   context.setBadgeState('error');
-  assert.match(node.innerHTML, /Auto save failed/);
+  assert.match(node.innerHTML, /Save failed/);
+  context.folderStore = null;
+  context.setBadgeState('pending');
+  assert.match(node.innerHTML, /In memory only/);
   assert.match(indexHtml, /@keyframes saveDotPulse/);
   assert.match(indexHtml, /prefers-reduced-motion: reduce/);
 });

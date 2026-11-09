@@ -77,6 +77,19 @@ test('round trip preserves every project, module, test result and screenshot', a
   assert.notEqual(await segment('Project / One'), await segment('Project : One'));
   assert.match(await segment('../CON<>'), /^[a-zA-Z0-9-]+$/);
 });
+test('round trip preserves generated source and validated requirement evidence as editable test data', async () => {
+  const root = new Directory(), store = new FolderStore(root, owner), data = sample();
+  const form = data.records[recordKey('Project / One', 'Login')].form;
+  form.studioGenerationSource = 'AI with Ollama (llama3.2:latest)';
+  form.studioTestCases[0].evidence = 'A user can submit a request';
+  form.studioScenarios = [{ id: 'TS_01', cat: 'Functional', pri: 'High', desc: 'Submit a request', evidence: 'submit a request' }];
+  validate(data);
+  await store.load(); await store.save(data);
+  const restored = await new FolderStore(root, owner).load();
+  assert.equal(restored.records[recordKey('Project / One', 'Login')].form.studioGenerationSource, form.studioGenerationSource);
+  assert.equal(restored.records[recordKey('Project / One', 'Login')].form.studioTestCases[0].evidence, form.studioTestCases[0].evidence);
+  assert.equal(restored.records[recordKey('Project / One', 'Login')].form.studioScenarios[0].evidence, 'submit a request');
+});
 test('module folders expose real screenshots and readable reports/test cases without changing restore data', async () => {
   const root=new Directory(),store=new FolderStore(root,owner),data=sample();
   const key=recordKey(data.projects[0],'Login');

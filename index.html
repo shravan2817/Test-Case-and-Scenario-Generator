@@ -255,6 +255,13 @@
     .image-preview button .material-symbols-rounded { font-size: 14px; }
 
     .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+    .studio-generation-controls { display: grid; grid-template-columns: minmax(220px, .65fr) minmax(0, 1fr); gap: 12px; align-items: end; margin-bottom: 14px; }
+    .studio-generation-note { padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--muted); font-size: .72rem; line-height: 1.5; }
+    .studio-generation-note[data-state="error"] { border-color: var(--bad); color: var(--bad); }
+    .studio-evidence { display: block; margin-top: 5px; color: var(--info); font-size: .68rem; line-height: 1.4; white-space: normal; }
+    #studioGenerationAttribution { margin: -4px 0 14px; }
+    #ollamaStatusMessage[data-state="error"] { color: var(--bad); }
+    #ollamaStatusMessage[data-state="ok"] { color: var(--ok); }
     .agent-node { border: 1px solid var(--border); background: var(--inset); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; opacity: .7; }
     .agent-node.done { border-color: rgba(52,211,153,.4); background: rgba(6,78,59,.3); opacity: 1; }
     .agent-avatar { width: 36px; height: 36px; border-radius: 10px; background: #374151; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -383,6 +390,7 @@
     [data-theme="light"] .mode-btn.active-report, [data-theme="light"] .mode-btn.active-studio { color: #fff; }
 
     @media (max-width: 860px) {
+      .studio-generation-controls { grid-template-columns: 1fr; }
       .header-top { flex-wrap: wrap; padding: 10px 14px; }
       .mode-switch-pill { order: 3; width: 100%; }
       .mode-btn { flex: 1; justify-content: center; }
@@ -419,6 +427,7 @@
   <link rel="stylesheet" href="workspace.css">
   <script src="local-workspace.js"></script>
   <script src="email-validation.js"></script>
+  <script src="ollama-client.js"></script>
 </head>
 <body data-mode="report" aria-busy="true">
   <div id="appBootstrap" class="app-bootstrap" role="status" aria-live="polite"><span class="m3-loader" aria-hidden="true"></span><span>Opening workspace...</span></div>
@@ -463,24 +472,54 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="ollamaSettingsModal">
+    <div class="modal-card" style="max-width:540px;">
+      <h3><span class="material-symbols-rounded" style="color:var(--info);">memory</span> Local Ollama settings</h3>
+      <p class="hint" style="margin-bottom:12px; line-height:1.55;">
+        Requirement text and the selected testing details are sent only to the Ollama process on this device. Screenshots, profile data, test URLs and login references are not sent. AI output is a draft; review it before use.
+      </p>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label for="ollamaBaseUrl">Local server URL</label>
+        <input type="url" id="ollamaBaseUrl" value="http://localhost:11434" autocomplete="url" spellcheck="false">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label for="ollamaModelSelect">Installed local model</label>
+        <select id="ollamaModelSelect" disabled onchange="selectOllamaModel()">
+          <option value="">Test connection to list local models</option>
+        </select>
+      </div>
+      <p id="ollamaStatusMessage" class="hint" data-state="idle" role="status" aria-live="polite" style="line-height:1.5; margin-bottom:12px;">
+        Connection not tested in this tab.
+      </p>
+      <p class="hint" style="line-height:1.5; margin-bottom:14px;">
+        If the browser reports a connection/CORS error, set Ollama’s <code>OLLAMA_ORIGINS</code> to this app’s exact origin and restart Ollama. On GitHub Pages use its exact HTTPS origin; if the browser blocks local calls, open the app from localhost instead. Keep Ollama bound to localhost. Do not disable browser security or expose Ollama to your network.
+      </p>
+      <div class="modal-actions">
+        <button type="button" onclick="document.getElementById('ollamaSettingsModal').classList.remove('active')" class="btn-text btn-sm">Close</button>
+        <button type="button" id="testOllamaConnectionButton" onclick="testOllamaConnection()" class="btn-text btn-teal btn-sm">Test connection</button>
+      </div>
+    </div>
+  </div>
+
   <!-- DASHBOARD SELECT -->
   <div class="dashboard-select-overlay" id="dashboardSelectOverlay">
     <div class="dashboard-container">
       <h2 id="welcomeUserTitle">Welcome to QA Suite</h2>
       <p>Choose a workspace.</p>
       <section class="storage-panel" id="folderPanel" aria-labelledby="folderTitle">
-        <h3 id="folderTitle"><span class="material-symbols-rounded">folder_open</span> Local workspace</h3>
-        <p id="folderDescription" role="status" aria-live="polite">Choose a folder for your projects.</p>
+        <h3 id="folderTitle"><span class="material-symbols-rounded">folder_open</span> Save or restore workspace</h3>
+        <p id="folderDescription" role="status" aria-live="polite">Choose a folder for autosave, or use a JSON backup.</p>
         <div class="storage-actions">
           <button type="button" class="btn-text btn-teal" id="connectFolderButton" onclick="connectLocalFolder()">Choose folder</button>
           <button type="button" class="btn-text" id="disconnectFolderButton" onclick="disconnectLocalFolder()" disabled>Disconnect</button>
           <button type="button" class="btn-text" onclick="importBrowserWorkspace()">Import browser data</button>
-          <button type="button" class="btn-text" onclick="document.getElementById('restoreInput').click()">Import backup</button>
-          <button type="button" class="btn-text" onclick="backupWorkspace()">Backup</button>
+          <button type="button" class="btn-text" onclick="document.getElementById('restoreInput').click()">Import JSON backup</button>
+          <button type="button" class="btn-text" onclick="backupWorkspace()">Download JSON backup</button>
         </div>
         <details class="folder-help">
-          <summary>Folder help</summary>
-          <p>Use Chrome or Edge on localhost / HTTPS. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync. Disconnect keeps your edits in memory; back up before closing.</p>
+          <summary>Folder access and browser backup help</summary>
+          <p>Folder autosave needs a supported browser (currently Chrome or Edge) and localhost or HTTPS. If this app runs in a browser without folder picking, you can still edit, import and download JSON backups. Without a connected folder, edits stay in this tab only; download a new backup after making more changes. Leaving with edits prompts a warning. HTTPS alone cannot add a folder picker API that a browser does not support. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync.</p>
+          <p>Backups include workspace projects, modules, reports, scenarios, test cases, screenshots and attribution. They are recovery copies, not folder autosaves.</p>
           <p id="connectedFolderName">No folder selected.</p>
           <p>Project files: projects / project folder / modules. Each module has screenshots, mantisreport and test-cases. QA metrics is inside the project folder. Full names are in project.json / module.json.</p>
         </details>
@@ -567,7 +606,7 @@
             <input id="workspaceSearchInput" type="search" maxlength="200" placeholder="Search workspace" aria-label="Search projects, modules, test cases and scenarios" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="workspaceSearchResults" autocomplete="off" disabled>
             <button type="button" class="search-close" id="workspaceSearchClose" aria-label="Close search" hidden>&times;</button>
           </div>
-          <button type="button" id="saveStatus" class="status-badge status-pending" onclick="performSaveNow(true)" aria-label="Auto save pending" title="Save now">
+          <button type="button" id="saveStatus" class="status-badge status-pending" onclick="saveWorkspaceNow()" aria-label="Save or download backup" title="Save to folder or download a JSON backup">
             <span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="save-status-text" role="status" aria-live="polite" aria-atomic="true">Auto save pending</span>
           </button>
@@ -597,6 +636,7 @@
             <button type="button" class="btn-icon" onclick="toggleMenu('moreMenu', event)" aria-haspopup="true" aria-label="More actions"><span class="material-symbols-rounded">more_vert</span></button>
             <div class="menu" id="moreMenu" role="menu">
               <button type="button" class="menu-item studio-only" onclick="pushStudioToExecutionReport()"><span class="material-symbols-rounded">send_and_archive</span> Move steps to Execution Report</button>
+              <button type="button" class="menu-item" onclick="openOllamaSettings()"><span class="material-symbols-rounded">settings</span> Local Ollama settings</button>
               <button type="button" class="menu-item" onclick="openHistoryModal()"><span class="material-symbols-rounded">history</span> Activity history</button>
               <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">folder_open</span> Local folder & migration</button>
               <button type="button" class="menu-item studio-only" onclick="openApiModal()"><span class="material-symbols-rounded">vpn_key</span> Gemini API key</button>
@@ -772,6 +812,20 @@
               <button type="button" onclick="runFunctionalAgents()" class="btn-text btn-indigo btn-sm"><span class="material-symbols-rounded" style="font-size:18px;">magic_button</span> Generate test cases</button>
             </div>
 
+            <div class="studio-generation-controls">
+              <div class="form-group">
+                <label for="studioGenerationMode">Generation mode</label>
+                <select id="studioGenerationMode" onchange="updateStudioGenerationMode()">
+                  <option value="templates" selected>Basic templates (offline)</option>
+                  <option value="ollama" disabled>AI with Ollama (local)</option>
+                </select>
+                <button type="button" class="btn-text btn-sm" onclick="openOllamaSettings()">Local Ollama settings</button>
+              </div>
+              <p id="studioGenerationStatus" class="studio-generation-note" role="status" aria-live="polite">
+                Basic templates are offline and deterministic. AI with Ollama is a separate local option.
+              </p>
+            </div>
+
             <div class="grid-3" style="margin-bottom: 14px;">
               <div class="form-group">
                 <label for="studioScopeType">Testing Scope / Development Type *</label>
@@ -818,6 +872,7 @@
                 <button type="button" onclick="pushStudioToExecutionReport()" class="btn-text btn-amber btn-sm"><span class="material-symbols-rounded" style="font-size:18px;">send_and_archive</span> To report</button>
               </div>
             </div>
+            <p id="studioGenerationAttribution" class="hint" role="status" aria-live="polite">No suite generated. Generated cases are drafts, not proof that tests were run.</p>
 
             <div class="agent-pipeline">
               <div class="agent-node" id="agentN1">
@@ -967,6 +1022,7 @@
     const PROJECTS_KEY = 'qa_projects_list_v7';
     const MODULES_MAP_KEY = 'qa_project_modules_map_v3';
     const GEMINI_KEY_STORAGE = 'qa_gemini_api_key';
+    const OLLAMA_SETTINGS_KEY = 'qa_ollama_local_v1';
     const ACTIVE_USER_KEY = 'qa_active_user_session_v1';
 
     const defaultProjects = [];
@@ -984,7 +1040,9 @@
     let activeDropTarget = 'exec';
     let activeEvidenceRowId = null;
     let studioScenarios = [], studioTestCases = [];
+    let studioGenerationSource = '';
     let guardChecklists = { reqMatch: [], exploratory: [], regression: [] };
+    let ollamaModels = [], ollamaConnectionReady = false, ollamaConnectionBusy = false;
     let isDirty = false;
     let autoSaveTimer = null;
     let toastTimer = null;
@@ -1074,7 +1132,7 @@
         $('zoomOverlay').classList.remove('active');
         document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
       }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && currentUser) { e.preventDefault(); performSaveNow(true); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && currentUser) { e.preventDefault(); saveWorkspaceNow(); }
       if (e.key === 'Enter' && $('authOverlay').style.display !== 'none' && $('authOverlay').contains(e.target)) handleUserLogin();
     });
     document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
@@ -1102,7 +1160,13 @@
       openRequestedWorkspace();
     }
     async function logoutUser() {
-      if (isDirty && !await performSaveNow()) return;
+      if (isDirty) {
+        if (folderStore) {
+          if (!await performSaveNow()) return;
+        } else if (!confirm('Your edits are only in this tab and have not been saved to a folder. Download a JSON backup before changing profile. Leave without a backup?')) {
+          return;
+        }
+      }
       try { localStorage.removeItem(ACTIVE_USER_KEY); location.reload(); }
       catch (error) { showToast('Could not clear the remembered profile: ' + error.message, 'error'); }
     }
@@ -1201,22 +1265,19 @@
     function setBadgeState(state) {
       const b = $('saveStatus');
       const map = {
-        pending: ['status-pending', 'Auto save pending', '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'],
-        saving: ['status-saving', 'Auto save pending', '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'],
-        saved: ['status-saved', 'Auto saved', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">check_circle</span>'],
-        error: ['status-error', 'Auto save failed', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">error</span>']
+        pending: ['status-pending', folderStore ? 'Auto save pending' : 'In memory only', folderStore
+          ? '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'
+          : '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">edit_note</span>'],
+        saving: ['status-saving', 'Saving to folder', '<span class="save-status-dots" aria-hidden="true"><i></i><i></i><i></i></span>'],
+        saved: ['status-saved', 'Saved to folder', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">check_circle</span>'],
+        backup: ['status-pending', 'Backup downloaded; edits remain in memory', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">download_done</span>'],
+        error: ['status-error', 'Save failed', '<span class="material-symbols-rounded save-status-icon" aria-hidden="true">error</span>']
       };
       const [cls, message, indicator] = map[state];
       b.className = `status-badge ${cls}`;
       b.setAttribute('aria-label', message);
+      b.title = message;
       b.innerHTML = `${indicator}<span class="save-status-text" role="status" aria-live="polite" aria-atomic="true">${message}</span>`;
-    }
-    function markUnsaved() {
-      isDirty = true; setBadgeState('pending');
-      editRevision++;
-      setStorageStatus('pending', folderStore ? 'Unsaved changes' : 'Not saved. Choose a folder or back up.');
-      clearTimeout(autoSaveTimer);
-      autoSaveTimer = setTimeout(() => performSaveNow(false), 3000);
     }
     function collectData() {
       syncStudioTableEditsFromDOM();
@@ -1232,7 +1293,7 @@
         execEvidenceRows: execEvidenceRows.map(({ id, path }) => ({ id, path })),
         studioScopeType: $('studioScopeType').value, studioUiElements: $('studioUiElements').value,
         studioImpactedAreas: $('studioImpactedAreas').value, studioChangeSummary: $('studioChangeSummary').value,
-        studioScenarios, studioTestCases, guardChecklists
+        studioScenarios, studioTestCases, guardChecklists, studioGenerationSource
       };
     }
     /* ====================== PROJECTS / MODULES ====================== */
@@ -1544,14 +1605,159 @@
     }
 
     /* ====================== STUDIO GENERATION ====================== */
-    function runFunctionalAgents() {
+    function setStudioGenerationStatus(message, error = false) {
+      const status = $('studioGenerationStatus');
+      status.textContent = message;
+      status.dataset.state = error ? 'error' : 'ok';
+    }
+    function updateStudioGenerationMode() {
+      const mode = $('studioGenerationMode');
+      const ollamaOption = mode.querySelector('option[value="ollama"]');
+      const model = $('ollamaModelSelect').value;
+      ollamaOption.disabled = !ollamaConnectionReady || !ollamaModels.includes(model);
+      if (ollamaOption.disabled && mode.value === 'ollama') mode.value = 'templates';
+      if (mode.value === 'ollama') {
+        setStudioGenerationStatus(`AI with Ollama is ready (${model}). Only the testing details you enter are sent to your local model.`);
+      } else if (studioGenerationSource) {
+        setStudioGenerationStatus(`Last suite source: ${studioGenerationSource}. Generated cases are drafts; review and edit before use.`);
+      } else {
+        setStudioGenerationStatus('Basic templates are offline and deterministic. AI with Ollama is a separate local option.');
+      }
+    }
+    function renderStudioGenerationAttribution() {
+      $('studioGenerationAttribution').textContent = studioGenerationSource
+        ? `Draft source: ${studioGenerationSource}. Review and edit; generated cases are not proof that tests were run.`
+        : 'No suite generated. Generated cases are drafts, not proof that tests were run.';
+    }
+    function setOllamaStatus(message, state = 'idle') {
+      const status = $('ollamaStatusMessage');
+      status.textContent = message;
+      status.dataset.state = state;
+    }
+    function readOllamaSettings() {
+      const raw = localStorage.getItem(OLLAMA_SETTINGS_KEY);
+      if (!raw) return { baseUrl: OllamaLocal.DEFAULT_URL, model: '' };
+      let settings;
+      try { settings = JSON.parse(raw); }
+      catch { throw new Error('Saved Ollama settings are unreadable. Clear this browser’s local Ollama settings and configure them again.'); }
+      return {
+        baseUrl: typeof settings?.baseUrl === 'string' ? settings.baseUrl : OllamaLocal.DEFAULT_URL,
+        model: typeof settings?.model === 'string' ? settings.model : ''
+      };
+    }
+    function persistOllamaSettings(baseUrl, model) {
+      try { localStorage.setItem(OLLAMA_SETTINGS_KEY, JSON.stringify({ baseUrl, model })); }
+      catch (error) { setOllamaStatus(`Connected for this tab, but settings could not be saved in this browser: ${error.message}`, 'error'); }
+    }
+    function openOllamaSettings() {
+      const modal = $('ollamaSettingsModal');
+      try {
+        const settings = readOllamaSettings();
+        $('ollamaBaseUrl').value = settings.baseUrl;
+        if (ollamaConnectionReady && ollamaModels.includes(settings.model)) {
+          $('ollamaModelSelect').value = settings.model;
+        } else {
+          ollamaModels = [];
+          ollamaConnectionReady = false;
+          $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+          $('ollamaModelSelect').disabled = true;
+          setOllamaStatus('Connection not tested in this tab. Test connection to list installed local models.');
+        }
+      } catch (error) { setOllamaStatus(error.message, 'error'); }
+      updateStudioGenerationMode();
+      modal.classList.add('active');
+      document.querySelectorAll('.menu.open').forEach(menu => menu.classList.remove('open'));
+    }
+    async function testOllamaConnection() {
+      if (ollamaConnectionBusy) return;
+      const button = $('testOllamaConnectionButton');
+      ollamaConnectionBusy = true; button.disabled = true;
+      ollamaConnectionReady = false; ollamaModels = [];
+      updateStudioGenerationMode();
+      setOllamaStatus('Checking local Ollama and loading installed models…');
+      try {
+        const baseUrl = OllamaLocal.normalizeBaseUrl($('ollamaBaseUrl').value);
+        const models = await OllamaLocal.listModels(baseUrl);
+        const saved = readOllamaSettings();
+        ollamaModels = models;
+        const select = $('ollamaModelSelect');
+        select.replaceChildren(new Option(models.length ? 'Choose an installed local model' : 'No local models found', ''));
+        models.forEach(name => select.add(new Option(name, name)));
+        const selected = models.includes(saved.model) ? saved.model : '';
+        select.value = selected;
+        select.disabled = !models.length;
+        ollamaConnectionReady = true;
+        persistOllamaSettings(baseUrl, selected);
+        setOllamaStatus(models.length
+          ? `Connected to local Ollama. Choose an installed model${selected ? ` (saved: ${selected})` : ''}. Only local models are listed.`
+          : 'Connected to Ollama, but no local models are installed. Install a model yourself, then test again.', 'ok');
+      } catch (error) {
+        $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+        $('ollamaModelSelect').disabled = true;
+        setOllamaStatus(error.message, 'error');
+        showToast(error.message, 'error');
+      } finally {
+        ollamaConnectionBusy = false; button.disabled = false;
+        updateStudioGenerationMode();
+      }
+    }
+    function selectOllamaModel() {
+      const model = $('ollamaModelSelect').value;
+      if (!ollamaModels.includes(model)) return;
+      persistOllamaSettings(OllamaLocal.normalizeBaseUrl($('ollamaBaseUrl').value), model);
+      setOllamaStatus(`Connected to local Ollama. Selected model: ${model}.`, 'ok');
+      updateStudioGenerationMode();
+    }
+    $('ollamaBaseUrl').addEventListener('input', () => {
+      ollamaConnectionReady = false; ollamaModels = [];
+      $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+      $('ollamaModelSelect').disabled = true;
+      setOllamaStatus('URL changed. Test connection again before choosing AI with Ollama.');
+      updateStudioGenerationMode();
+    });
+    async function runFunctionalAgents() {
       if (!activeContext) { showToast('Add or select a project before generating a test suite.', 'error'); return; }
       syncStudioTableEditsFromDOM();
       if (!validateRequired([['studioScopeType', 'Testing scope'], ['studioChangeSummary', 'Requirement explanation']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
       if (studioTestCases.length && !confirm('This will replace the current test cases, scenarios and checklists (including your edits). Continue?')) return;
-      generateUniversalQaSuite($('projectSelect').value, $('moduleSelect').value, $('studioScopeType').value, $('testUrl').value, $('loginRef').value, $('studioUiElements').value, $('studioImpactedAreas').value, $('studioChangeSummary').value.trim());
+      const mode = $('studioGenerationMode').value;
+      if (mode === 'templates') {
+        generateUniversalQaSuite($('projectSelect').value, $('moduleSelect').value, $('studioScopeType').value,
+          $('testUrl').value, $('loginRef').value, $('studioUiElements').value, $('studioImpactedAreas').value,
+          $('studioChangeSummary').value.trim());
+        studioGenerationSource = 'Basic templates (offline, deterministic)';
+        completeStudioGeneration();
+        return;
+      }
+      const model = $('ollamaModelSelect').value;
+      if (!ollamaConnectionReady || !ollamaModels.includes(model)) {
+        setStudioGenerationStatus('AI with Ollama is unavailable until you test the local connection and choose an installed model.', true);
+        showToast('Configure and test local Ollama in More → Local Ollama settings.', 'error');
+        return;
+      }
+      setWorkspaceBusy(true);
+      try {
+        const settings = readOllamaSettings();
+        const suite = await OllamaLocal.generateSuite(settings.baseUrl, model, {
+          scopeType: $('studioScopeType').value,
+          requirement: $('studioChangeSummary').value.trim(),
+          uiElements: $('studioUiElements').value,
+          impactedAreas: $('studioImpactedAreas').value
+        });
+        studioScenarios = suite.scenarios;
+        studioTestCases = suite.testCases;
+        guardChecklists = suite.checklists;
+        studioGenerationSource = `AI with Ollama (${model})`;
+      } catch (error) {
+        setStudioGenerationStatus(error.message, true);
+        showToast(error.message, 'error');
+        return;
+      } finally { setWorkspaceBusy(false); }
+      completeStudioGeneration();
+    }
+    function completeStudioGeneration() {
       renderStudioOutputs(); markUnsaved(); scrollToCard('secStudioOutput');
-      recordUserHistory('Generated test cases & scenarios');
+      recordUserHistory(`Generated test cases & scenarios · ${studioGenerationSource}`);
       performSaveNow();
       showToast(`Generated ${studioTestCases.length} test cases`);
     }
@@ -1631,6 +1837,7 @@
       const has = studioTestCases.length > 0;
       $('tcCount').textContent = studioTestCases.length;
       $('scenarioCount').textContent = studioScenarios.length;
+      renderStudioGenerationAttribution();
       ['agentN1', 'agentN2', 'agentN3'].forEach(i => {
         const n = $(i), p = n.querySelector('p');
         n.classList.toggle('done', has); p.textContent = has ? p.dataset.done : p.dataset.idle;
@@ -1651,7 +1858,7 @@
           <td style="font-weight:600;" class="st-id">${esc(tc.id)}</td>
           <td><select class="st-type" onchange="markUnsaved()">${opts(cats, tc.type)}</select></td>
           <td><select class="st-pri" onchange="markUnsaved()">${opts(PRIORITIES, tc.pri || 'Medium')}</select></td>
-          <td contenteditable="plaintext-only" class="st-scen" oninput="markUnsaved()">${esc(tc.scenario)}</td>
+          <td><div contenteditable="plaintext-only" class="st-scen" oninput="markUnsaved()">${esc(tc.scenario)}</div>${tc.evidence ? `<small class="studio-evidence">Requirement quote: ${esc(tc.evidence)}</small>` : ''}</td>
           <td contenteditable="plaintext-only" class="st-steps" style="white-space:pre-wrap;" oninput="markUnsaved()">${esc(tc.steps)}</td>
           <td contenteditable="plaintext-only" class="st-exp" oninput="markUnsaved()">${esc(tc.expected)}</td>
           <td><select class="st-status" data-v="${esc(tc.status)}" onchange="this.dataset.v=this.value; markUnsaved(); renderTcStats();">${opts(STATUSES, tc.status)}</select></td>
@@ -1669,7 +1876,7 @@
       studioScenarios.forEach(s => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td style="font-weight:600;">${esc(s.id)}</td><td><span class="badge-type ${getBadgeClassForType(s.cat)}">${esc(s.cat)}</span></td>
-          <td contenteditable="plaintext-only" class="sc-desc" oninput="markUnsaved()">${esc(s.desc)}</td><td style="font-weight:600;">${esc(s.pri)}</td>`;
+          <td><div contenteditable="plaintext-only" class="sc-desc" oninput="markUnsaved()">${esc(s.desc)}</div>${s.evidence ? `<small class="studio-evidence">Requirement quote: ${esc(s.evidence)}</small>` : ''}</td><td style="font-weight:600;">${esc(s.pri)}</td>`;
         sBody.appendChild(tr);
       });
 
@@ -1716,14 +1923,15 @@
     function syncStudioTableEditsFromDOM() {
       const rows = document.querySelectorAll('#studioTestCaseBody tr');
       if (rows.length) {
-        studioTestCases = Array.from(rows).map(r => ({
+        studioTestCases = Array.from(rows).map((r, index) => ({
           id: r.querySelector('.st-id')?.textContent.trim() || 'TC',
           type: r.querySelector('.st-type')?.value || 'Functional',
           pri: r.querySelector('.st-pri')?.value || 'Medium',
           scenario: r.querySelector('.st-scen')?.innerText.trim() || '',
           steps: r.querySelector('.st-steps')?.innerText.trim() || '',
           expected: r.querySelector('.st-exp')?.innerText.trim() || '',
-          status: r.querySelector('.st-status')?.value || 'Not Run'
+          status: r.querySelector('.st-status')?.value || 'Not Run',
+          evidence: studioTestCases[index]?.evidence || ''
         }));
       }
       const srows = document.querySelectorAll('#studioScenarioBody tr');
@@ -1814,17 +2022,18 @@
       const td = 'border:1px solid #000; padding:4px; vertical-align:top;';
       return studioTestCases.map(tc => `<tr>
         <td style="${td}"><strong>${esc(tc.id)}</strong></td><td style="${td}">${esc(tc.type)}</td><td style="${td}">${esc(tc.pri || '')}</td>
-        <td style="${td}">${fx(tc.scenario)}</td>
+        <td style="${td}">${fx(tc.scenario)}${tc.evidence ? `<br><small>Requirement quote: ${fx(tc.evidence)}</small>` : ''}</td>
         <td style="${td}${forWord ? '' : ' white-space:pre-wrap;'}">${forWord ? fx(tc.steps).replace(/\n/g, '<br>') : fx(tc.steps)}</td>
         <td style="${td}">${fx(tc.expected)}</td><td style="${td} font-weight:bold;">${esc(tc.status)}</td></tr>`).join('');
     }
-    const STUDIO_TH = ['TC ID', 'Category', 'Priority', 'Scenario', 'Execution Steps', 'Expected Result', 'Status'].map(h => `<th style="border:1px solid #000; padding:4px;">${h}</th>`).join('');
+    const STUDIO_TH = ['TC ID', 'Category', 'Priority', 'Scenario / Requirement Evidence', 'Execution Steps', 'Expected Result', 'Status'].map(h => `<th style="border:1px solid #000; padding:4px;">${h}</th>`).join('');
 
     function buildStudioDocHtml() {
       syncStudioTableEditsFromDOM();
       const imgs = studioImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
       return `<div class="doc-page">
         <div class="doc-main-title">Test Case & Scenario Specification</div>
+        <div class="doc-header-field"><strong>Generation source:</strong> ${esc(studioGenerationSource || 'Not recorded')}</div>
         <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</div>
         <div class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</div>
         <div class="doc-header-field"><strong>Testing Scope:</strong> ${esc($('studioScopeType').value)}</div>
@@ -1908,7 +2117,7 @@
           ${se.map(imgTable).join('')}`;
       } else {
         const ss = await Promise.all(studioImages.map(s => resizeImageForWord(s)));
-        body = `<div class="doc-main-title">Test Case & Scenario Specification</div>${head}
+        body = `<div class="doc-main-title">Test Case & Scenario Specification</div><p><strong>Generation source:</strong> ${esc(studioGenerationSource || 'Not recorded')}</p>${head}
           <p><strong>Testing Scope:</strong> ${esc($('studioScopeType').value)}</p>${tail}
           <p class="heading">Feature / Requirement Summary:</p><p>${br($('studioChangeSummary').value)}</p>
           <p class="heading">Test Cases (${studioTestCases.length}) - ${esc(statusSummaryText())}</p>
@@ -1950,8 +2159,8 @@
       if (!studioTestCases.length) { showToast('No test cases to export.', 'error'); return; }
       const proj = $('projectSelect').value, mod = $('moduleSelect').value;
       const cell = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
-      let csv = 'Project,Module,Test Case ID,Category,Priority,Scenario,Execution Steps,Expected Result,Status\r\n';
-      studioTestCases.forEach(tc => { csv += [proj, formatTextForExport(mod), tc.id, tc.type, tc.pri, tc.scenario, tc.steps, tc.expected, tc.status].map(cell).join(',') + '\r\n'; });
+      let csv = 'Project,Module,Test Case ID,Category,Priority,Scenario,Execution Steps,Expected Result,Requirement Evidence,Generation Source,Status\r\n';
+      studioTestCases.forEach(tc => { csv += [proj, formatTextForExport(mod), tc.id, tc.type, tc.pri, tc.scenario, tc.steps, tc.expected, tc.evidence || '', studioGenerationSource, tc.status].map(cell).join(',') + '\r\n'; });
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
       a.download = `Test_Cases_${(mod || 'module').replace(/[^a-z0-9]/gi, '_')}.csv`;
