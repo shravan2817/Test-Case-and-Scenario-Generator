@@ -8,6 +8,11 @@ class Directory {
     this.permission = 'granted';
   }
   async queryPermission() { return this.root.permission; }
+  async *entries() {
+    if (this.root.unavailable) throw new DOMException('Selected folder moved', 'NotFoundError');
+    yield* this.directories;
+    yield* this.files;
+  }
   async getDirectoryHandle(name, options = {}) {
     if (!this.directories.has(name)) {
       if (!options.create) throw new DOMException('Missing directory', 'NotFoundError');
@@ -76,6 +81,38 @@ test('round trip preserves every project, module, test result and screenshot', a
   assert.ok(Object.values(manifest.files).every(parts => parts[0] === 'projects' && parts[2] === 'modules'));
   assert.notEqual(await segment('Project / One'), await segment('Project : One'));
   assert.match(await segment('../CON<>'), /^[a-zA-Z0-9-]+$/);
+});
+test('revoked folder permission is reported as a reconnect-required error', async () => {
+  const root = new Directory(), store = new FolderStore(root, owner);
+  await store.load();
+  root.permission = 'denied';
+  await assert.rejects(store.save(sample()), error => error.name === 'NotAllowedError' && /permission/i.test(error.message));
+});
+test('missing referenced folders, records and evidence are distinguished from a missing root', async () => {
+  for (const missing of ['folder', 'record', 'evidence', 'root']) {
+    const root = new Directory(), store = new FolderStore(root, owner);
+    await store.load();
+    await store.save(sample());
+    const userDir = await store.userDirectory();
+    const committed = userDir.files.get('workspace.json');
+    const manifest = JSON.parse(committed);
+    const parts = Object.values(manifest.files)[0];
+    let dir = userDir;
+    for (const part of parts.slice(0, -1)) dir = dir.directories.get(part);
+    if (missing === 'folder' || missing === 'root') userDir.directories.delete('projects');
+    else if (missing === 'record') dir.files.delete(parts[4]);
+    else dir.directories.delete('evidence');
+    if (missing === 'root') root.unavailable = true;
+    await assert.rejects(new FolderStore(root, owner).load(), error =>
+      missing === 'root' ? error.name === 'NotFoundError' :
+        error.name === 'WorkspaceIncompleteError' && error.cause.name === 'NotFoundError' &&
+        /workspace is incomplete.*missing.*complete JSON backup/i.test(error.message));
+    assert.equal(userDir.files.get('workspace.json'), committed);
+  }
+  const root = new Directory();
+  root.getDirectoryHandle = async () => { throw new DOMException('Selected folder moved', 'NotFoundError'); };
+  await assert.rejects(new FolderStore(root, owner).load(), error =>
+    error.name === 'NotFoundError' && /workspace profile folder/.test(error.workspaceStep));
 });
 test('round trip preserves generated source and validated requirement evidence as editable test data', async () => {
   const root = new Directory(), store = new FolderStore(root, owner), data = sample();
@@ -368,7 +405,8 @@ test('invalid backups, malformed rows, missing evidence and unsafe file paths fa
   let moduleDir = userDir;
   for (const part of parts.slice(0, -1)) moduleDir = await moduleDir.getDirectoryHandle(part);
   moduleDir.directories.get('evidence').files.clear();
-  await assert.rejects(new FolderStore(root, owner).load(), /Missing file/);
+  await assert.rejects(new FolderStore(root, owner).load(), error =>
+    error.name === 'WorkspaceIncompleteError' && /saved screenshots or evidence is missing/.test(error.message));
   manifest.files[Object.keys(manifest.files)[0]] = ['..', 'outside.json'];
   userDir.files.set('workspace.json', JSON.stringify(manifest));
   await assert.rejects(new FolderStore(root, owner).load(), /Invalid module file path/);

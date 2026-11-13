@@ -1,6 +1,7 @@
 'use strict';
 let localState = null, folderStore = null, rememberedHandle = null, activeContext = null;
 let workspaceBusy = false, editRevision = 0, saveQueue = Promise.resolve(), folderNeedsReconnect = false;
+let folderRecoveryNeeded = false, forgetFolderBusy = false;
 const formFields = {
   mantisId: 'mantisId', buildVersion: 'build', testUrl: 'url', loginRef: 'login',
   featureDesc: 'desc', correctionNotes: 'correction', execSteps: 'steps', actualResult: 'res',
@@ -9,6 +10,54 @@ const formFields = {
 };
 const initialFields = Object.fromEntries(Object.keys(formFields).map(id => [id, $(id).value]));
 const copy = value => JSON.parse(JSON.stringify(value));
+
+let imageHoverTimer = null;
+// Wait for a deliberate hover, then show the whole image without covering pointer events.
+function showImageHoverPreview(image) {
+  hideImageHoverPreview();
+  imageHoverTimer = setTimeout(() => {
+    if (!image.isConnected) return;
+    const preview = $('imageHoverPreview');
+    $('imageHoverPreviewImage').src = image.currentSrc || image.src;
+    const rect = image.getBoundingClientRect();
+    const width = Math.min(420, innerWidth - 24), height = Math.min(320, innerHeight - 24);
+    const left = rect.right + width + 12 <= innerWidth ? rect.right + 12 : rect.left - width - 12;
+    preview.style.left = `${Math.max(12, Math.min(innerWidth - width - 12, left))}px`;
+    preview.style.top = `${Math.max(12, Math.min(innerHeight - height - 12, rect.top))}px`;
+    preview.classList.add('active');
+    imageHoverTimer = null;
+  }, 2000);
+}
+function hideImageHoverPreview() {
+  clearTimeout(imageHoverTimer);
+  imageHoverTimer = null;
+  $('imageHoverPreview').classList.remove('active');
+}
+function makeImageZoomAccessible(image) {
+  image.tabIndex = 0;
+  image.setAttribute('role', 'button');
+  image.setAttribute('aria-label', `Open ${image.alt || 'screenshot'}`);
+  image.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); image.click(); }
+  });
+}
+function isHoverPreviewImage(element) {
+  return element?.matches?.('img:not(.doc-watermark):not(#zoomOverlayImg):not(#imageHoverPreviewImage)');
+}
+document.addEventListener('pointerover', event => {
+  if (event.pointerType !== 'touch' && isHoverPreviewImage(event.target)) showImageHoverPreview(event.target);
+});
+document.addEventListener('pointerout', event => {
+  if (isHoverPreviewImage(event.target)) hideImageHoverPreview();
+});
+document.addEventListener('focusin', event => {
+  if (isHoverPreviewImage(event.target)) showImageHoverPreview(event.target);
+});
+document.addEventListener('focusout', event => {
+  if (isHoverPreviewImage(event.target)) hideImageHoverPreview();
+});
+document.addEventListener('scroll', hideImageHoverPreview, true);
+window.addEventListener('resize', hideImageHoverPreview);
 
 function folderAccessAvailability() {
   if (!window.isSecureContext) {
@@ -30,7 +79,9 @@ function folderAccessAvailability() {
 function updateFolderAccessButton() {
   const support = folderAccessAvailability();
   const button = $('connectFolderButton');
-  button.disabled = workspaceBusy || !support.available;
+  button.disabled = workspaceBusy || forgetFolderBusy || !support.available;
+  $('forgetFolderButton').hidden = !folderRecoveryNeeded && !folderNeedsReconnect;
+  $('forgetFolderButton').disabled = workspaceBusy || forgetFolderBusy;
   button.title = support.available ? 'Choose a folder for workspace autosave' : support.message;
   if (!support.available) button.textContent = 'Folder saving unavailable';
   else if (folderNeedsReconnect || rememberedHandle && !folderStore) button.textContent = 'Reconnect folder';
@@ -44,13 +95,30 @@ function setStorageStatus(state, message) {
   $('folderPanel').dataset.state = state;
   $('storageMessage').textContent = message;
   $('folderDescription').textContent = message;
+  $('storageSettingsButton').textContent = folderNeedsReconnect ? 'Reconnect folder' : 'Folder settings';
   $('storageIcon').textContent = { saving: 'sync', saved: 'task_alt', error: 'error', pending: 'edit_note' }[state] || 'folder_open';
   $('storageIcon').dataset.loading = String(state === 'saving');
   $('saveProgress').hidden = state !== 'saving';
 }
-function storageFailure(error) {
+function folderTimeoutError(action) {
+  const error = new Error(`${action} is taking too long. Your edits are still in this tab. Download a JSON backup before reloading, then choose the folder again.`);
+  error.name = 'FolderAccessTimeoutError';
+  return error;
+}
+async function waitForFolderOperation(operation, timeoutMs, action, onTimeout = () => {}) {
+  let timer;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise((resolve, reject) => {
+        timer = setTimeout(() => { reject(folderTimeoutError(action)); onTimeout(); }, timeoutMs);
+      })
+    ]);
+  } finally { clearTimeout(timer); }
+}
+function storageFailure(error, affectsConnectedFolder = true) {
   console.error('Local workspace operation failed', error);
-  setBadgeState('error');
+  setBadgeState(affectsConnectedFolder ? 'error' : isDirty ? 'pending' : 'saved');
   const message = error.name === 'NotFoundError'
     ? 'The selected folder could not be found. Reconnect it or choose the folder again. Your edits are still in this tab.'
     : error.name === 'InvalidStateError'
@@ -60,24 +128,27 @@ function storageFailure(error) {
     : error.name === 'SecurityError'
     ? 'This page cannot open the folder picker. Use localhost or HTTPS in a browser that supports folder access, or download a backup.'
     : error.message || 'Local folder operation failed.';
-  if (['NotFoundError', 'InvalidStateError', 'WorkspaceConflictError', 'NotAllowedError'].includes(error.name)) {
+  if (affectsConnectedFolder && ['NotFoundError', 'InvalidStateError', 'WorkspaceConflictError', 'NotAllowedError', 'FolderAccessTimeoutError'].includes(error.name)) {
     folderNeedsReconnect = true;
+    folderRecoveryNeeded = true;
   }
   updateFolderAccessButton();
-  setStorageStatus('error', `Not saved. ${message}`);
+  const detail = error.workspaceStep ? ` Failed while: ${error.workspaceStep}.` : '';
+  setStorageStatus('error', `${affectsConnectedFolder ? 'Not saved. ' : 'Folder not opened. Current folder unchanged. '}${message}${detail}`);
   showToast(message, 'error');
 }
+// Block editing and show progress only while a guarded operation is running.
 function setWorkspaceBusy(busy) {
   workspaceBusy = busy;
   $('workspaceBusyIndicator').hidden = !busy;
   $('mainAppShell').setAttribute?.('aria-busy', String(busy));
   $('mainAppShell').inert = busy;
   $('dashboardSelectOverlay').inert = busy;
-  document.querySelectorAll('#projectModal, #moduleModal').forEach(el => { el.inert = busy; });
+  document.querySelectorAll('#projectModal, #moduleModal, #ollamaSettingsModal, #historyModal').forEach(el => { el.inert = busy; });
   updateFolderAccessButton();
   $('disconnectFolderButton').disabled = busy || (!folderStore && !rememberedHandle);
 }
-async function handleCache(mode, value) {
+async function handleCache(mode, value, signal) {
   const db = await new Promise((resolve, reject) => {
     const request = indexedDB.open('qa_local_folder_handles', 1);
     request.onupgradeneeded = () => request.result.createObjectStore('handles');
@@ -85,13 +156,16 @@ async function handleCache(mode, value) {
     request.onerror = () => reject(request.error);
   });
   try {
+    if (signal?.aborted) throw new DOMException('Folder recovery timed out.', 'AbortError');
     return await new Promise((resolve, reject) => {
       const tx = db.transaction('handles', mode === 'get' ? 'readonly' : 'readwrite');
+      const abort = () => { try { tx.abort(); } catch (error) { if (error.name !== 'InvalidStateError') throw error; } };
+      signal?.addEventListener('abort', abort, { once: true });
       const request = mode === 'get' ? tx.objectStore('handles').get(currentUser.email) :
         mode === 'delete' ? tx.objectStore('handles').delete(currentUser.email) : tx.objectStore('handles').put(value, currentUser.email);
-      tx.oncomplete = () => resolve(request.result);
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error || new Error('Folder-handle transaction aborted.'));
+      tx.oncomplete = () => { signal?.removeEventListener('abort', abort); resolve(request.result); };
+      tx.onerror = () => { signal?.removeEventListener('abort', abort); reject(tx.error); };
+      tx.onabort = () => { signal?.removeEventListener('abort', abort); reject(tx.error || new Error('Folder-handle transaction aborted.')); };
     });
   } finally { db.close(); }
 }
@@ -114,6 +188,7 @@ function snapshotWorkspace() {
   return copy(localState);
 }
 function loadActiveModule(project, module, cleared = false) {
+  clearStudioDocument();
   activeContext = project ? { project, module } : null;
   localState.active = activeContext;
   const record = !cleared && activeContext ? localState.records[LocalWorkspace.recordKey(project, module)] : null;
@@ -146,9 +221,161 @@ function applyWorkspaceState() {
   populateModuleDropdown(context?.module);
   loadActiveModule($('projectSelect').value, $('moduleSelect').value);
   $('profileChip').textContent = currentUser.username;
+  renderDashboardProjects();
 }
-async function performSaveNow(manual = false) {
+
+function dashboardProjectData(data) {
+  if (!data) return [];
+  return data.projects.map(project => {
+    const names = data.modulesMap[project] || [];
+    const overview = data.records[LocalWorkspace.recordKey(project, '')];
+    const modules = [...(overview ? [''] : []), ...names].map(module => {
+      const record = data.records[LocalWorkspace.recordKey(project, module)];
+      const form = record?.form || {}, images = record?.images || {};
+      const report = ['desc', 'correction', 'steps', 'res'].some(key => String(form[key] || '').trim()) ||
+        (form.defects || []).some(defect => String(defect.id || '').trim() || String(defect.desc || '').trim()) ||
+        (form.execEvidenceRows || []).some(row => String(row.path || '').trim()) ||
+        ['prod', 'exec'].some(key => (images[key] || []).length) ||
+        Object.values(images.execEvidence || {}).some(items => items.length);
+      return {
+        project, module, report: !!report,
+        reportDescription: String(form.desc || '').trim(),
+        studioDescription: String(form.studioChangeSummary || '').trim(),
+        scenarios: (form.studioScenarios || []).length,
+        cases: (form.studioTestCases || []).length
+      };
+    });
+    return {
+      project, modules,
+      reports: modules.filter(item => item.report).length,
+      scenarios: modules.reduce((count, item) => count + item.scenarios, 0),
+      cases: modules.reduce((count, item) => count + item.cases, 0)
+    };
+  });
+}
+
+function dashboardElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+function dashboardCounts(project) {
+  return `${project.reports} ${project.reports === 1 ? 'report' : 'reports'} · ${project.scenarios} ${project.scenarios === 1 ? 'scenario' : 'scenarios'} · ${project.cases} ${project.cases === 1 ? 'test case' : 'test cases'}`;
+}
+function renderHistoryTimeline() {
+  const container = $('historyLogsContainer');
+  container.replaceChildren();
+  const entries = [...(localState?.history || [])];
+  // Imported activity can arrive out of order; keep the saved history unchanged.
+  entries.sort((a, b) => (Date.parse(b.time) || 0) - (Date.parse(a.time) || 0));
+  if (!entries.length) {
+    container.append(dashboardElement('p', 'dashboard-empty', 'No activity recorded yet.'));
+    return;
+  }
+  for (const item of entries) {
+    const row = dashboardElement('article', 'history-event');
+    const time = dashboardElement('time', 'history-time');
+    const date = new Date(item.time);
+    if (!Number.isNaN(date.getTime())) {
+      time.dateTime = item.time;
+      time.textContent = date.toLocaleString();
+    } else time.textContent = item.time;
+    row.append(time, dashboardElement('strong', 'history-action', item.action));
+    const location = [item.project, item.module].filter(Boolean).join(' — ');
+    if (location) row.append(dashboardElement('span', 'history-location', location));
+    container.append(row);
+  }
+}
+function dashboardModule(item, folder) {
+  const row = dashboardElement('article', 'dashboard-module');
+  row.append(dashboardElement('h4', 'dashboard-module-title', `${item.project} — ${item.module || 'Project overview'}`));
+  const line = dashboardElement('div', 'dashboard-entry');
+  const content = dashboardElement('div', 'dashboard-entry-content');
+  const count = folder.key === 'report' ? '1 report' :
+    `${item[folder.key]} ${folder.key === 'scenarios' ? (item.scenarios === 1 ? 'scenario' : 'scenarios') : (item.cases === 1 ? 'test case' : 'test cases')}`;
+  content.append(dashboardElement('span', 'dashboard-entry-count', count));
+  content.append(dashboardElement('p', '', (folder.key === 'report' ? item.reportDescription : item.studioDescription) || 'No description yet.'));
+  const button = dashboardElement('button', 'dashboard-open', `Open ${folder.action}`);
+  button.type = 'button';
+  button.setAttribute('aria-label', `${button.textContent}: ${item.project} — ${item.module || 'Project overview'}`);
+  button.addEventListener('click', event => openDashboardProjectItem(item.project, item.module, folder.key === 'report' ? 'report' : 'studio', portalOrigin(event), folder.key));
+  line.append(content, button);
+  row.append(line);
+  return row;
+}
+function renderDashboardProjects() {
+  const container = $('dashboardProjects');
+  const projects = dashboardProjectData(localState);
+  container.replaceChildren();
+  if (!projects.length) {
+    container.append(dashboardElement('p', 'dashboard-empty', 'No projects yet. Open a workspace to add a project.'));
+    return;
+  }
+  for (const project of projects) {
+    const card = dashboardElement('details', 'dashboard-project-card');
+    const summary = dashboardElement('summary', 'dashboard-project-summary');
+    summary.append(dashboardElement('strong', '', project.project), dashboardElement('span', 'dashboard-project-count', dashboardCounts(project)));
+    card.append(summary);
+    const body = dashboardElement('div', 'dashboard-project-body');
+    // Each folder lists only modules that contain that kind of saved content.
+    const folders = [
+      { key: 'report', title: 'Reports', action: 'report', count: project.reports },
+      { key: 'scenarios', title: 'Test Scenarios', action: 'scenarios', count: project.scenarios },
+      { key: 'cases', title: 'Test Cases', action: 'test cases', count: project.cases }
+    ];
+    for (const folder of folders) {
+      const section = dashboardElement('details', 'dashboard-folder');
+      const heading = dashboardElement('summary', 'dashboard-folder-summary');
+      const label = dashboardElement('span', 'dashboard-folder-label');
+      const icon = dashboardElement('span', 'material-symbols-rounded', 'folder');
+      icon.setAttribute('aria-hidden', 'true');
+      label.append(icon, document.createTextNode(folder.title));
+      heading.append(label, dashboardElement('span', 'dashboard-project-count', String(folder.count)));
+      section.append(heading);
+      const content = dashboardElement('div', 'dashboard-folder-content');
+      const items = project.modules.filter(item => item[folder.key]);
+      if (!items.length) content.append(dashboardElement('p', 'dashboard-empty', `No ${folder.title.toLowerCase()} yet.`));
+      items.forEach(item => content.append(dashboardModule(item, folder)));
+      section.append(content);
+      body.append(section);
+    }
+    card.append(body);
+    container.append(card);
+  }
+}
+async function openDashboardProjectItem(project, module, mode, origin, folder) {
+  if (workspaceBusy) return;
+  if (!localState?.projects.includes(project) || (module && !localState.modulesMap[project]?.includes(module))) {
+    showToast('This project or module is no longer available.', 'error');
+    return;
+  }
+  setWorkspaceBusy(true);
+  try {
+    if (!await flushBeforeSwitch()) return;
+    captureModule();
+    populateProjectDropdown(project);
+    populateModuleDropdown(module);
+    loadActiveModule(project, module);
+  } finally { setWorkspaceBusy(false); }
+  closeHistoryModal(false);
+  selectWorkspaceMode(mode, origin);
+  if (mode === 'studio' && (folder === 'scenarios' || folder === 'cases')) {
+    const scenarios = folder === 'scenarios';
+    switchStudioTab(scenarios ? 'tabScenarios' : 'tabFunctionalCases', $(scenarios ? 'studioScenariosTab' : 'studioCasesTab'));
+    navigateWorkspaceSection('secStudioOutput');
+  }
+  $(mode === 'studio' ? 'btnModeStudio' : 'btnModeReport').focus?.({ preventScroll: true });
+}
+async function performSaveNow(manual = false, timeoutMs = 60000) {
   clearTimeout(autoSaveTimer); autoSaveTimer = null;
+  if (folderNeedsReconnect) {
+    isDirty = true;
+    setBadgeState('error');
+    setStorageStatus('error', 'Folder unavailable or changed. Edits are only in memory. Reconnect or download a JSON backup.');
+    if (manual) showToast('Reconnect the folder or download a JSON backup. Your edits are only in memory.', 'error');
+    return false;
+  }
   if (!folderStore) {
     isDirty = true;
     setBadgeState('pending');
@@ -160,16 +387,18 @@ async function performSaveNow(manual = false) {
   try { snapshot = snapshotWorkspace(); }
   catch (error) { storageFailure(error); return false; }
   const version = editRevision, target = folderStore;
+  const controller = new AbortController();
   setBadgeState('saving'); setStorageStatus('saving', 'Saving...');
   const operation = async () => {
+    if (controller.signal.aborted) throw folderTimeoutError('Folder save');
     const write = () => target.save(snapshot);
-    if (navigator.locks) await navigator.locks.request(`qa-local-${currentUser.email}`, write);
+    if (navigator.locks) await navigator.locks.request(`qa-local-${currentUser.email}`, { signal: controller.signal }, write);
     else await write();
   };
   const pending = saveQueue.then(operation);
   saveQueue = pending.catch(() => {});
   try {
-    await pending;
+    await waitForFolderOperation(pending, timeoutMs, 'Folder save', () => controller.abort());
     if (version === editRevision) {
       isDirty = false; setBadgeState('saved');
       setStorageStatus('saved', 'Saved');
@@ -184,7 +413,13 @@ async function performSaveNow(manual = false) {
 async function flushBeforeSwitch() {
   if (!isDirty) return true;
   if (!folderStore) { captureModule(); return true; }
-  return performSaveNow();
+  if (!folderNeedsReconnect && await performSaveNow()) return true;
+  if (!folderNeedsReconnect) return false;
+  captureModule();
+  setBadgeState('error');
+  setStorageStatus('error', 'Folder unavailable or changed. Edits are only in memory. Reconnect or download a JSON backup.');
+  showToast('Folder unavailable. Edits are only in memory; reconnect or download a JSON backup.', 'error');
+  return true;
 }
 function saveWorkspaceNow() {
   if (folderStore) return performSaveNow(true);
@@ -194,9 +429,12 @@ function markUnsaved() {
   isDirty = true; setBadgeState('pending');
   editRevision++;
   clearTimeout(autoSaveTimer);
-  if (folderStore) {
+  if (folderStore && !folderNeedsReconnect) {
     setStorageStatus('pending', 'Unsaved changes. Folder autosave starts in 3 seconds.');
     autoSaveTimer = setTimeout(() => performSaveNow(false), 3000);
+  } else if (folderNeedsReconnect) {
+    setBadgeState('error');
+    setStorageStatus('error', 'Folder unavailable or changed. Edits are only in memory. Reconnect or download a JSON backup.');
   } else {
     setStorageStatus('pending', 'Changes are only in memory. Download a JSON backup before leaving.');
   }
@@ -241,13 +479,15 @@ async function changeModule(projectChanged) {
   } finally { setWorkspaceBusy(false); }
   recordUserHistory('Opened project / module');
 }
-async function openFolderHandle(handle) {
+async function openFolderHandle(handle, isCurrent = () => true) {
   const candidate = new LocalWorkspace.FolderStore(handle, currentUser);
   const loaded = await candidate.load();
+  if (!isCurrent()) return false;
   const draft = isDirty ? snapshotWorkspace() : null;
-  if (draft && !folderStore && !loaded.projects.length) {
+  if (draft && (!folderStore || folderNeedsReconnect) && !loaded.projects.length) {
     if (navigator.locks) await navigator.locks.request(`qa-local-${currentUser.email}`, () => candidate.save(draft));
     else await candidate.save(draft);
+    if (!isCurrent()) return false;
     localState = draft;
   } else {
     if (draft && !confirm('This folder already has workspace data. Opening it replaces the in-memory view. Cancel and download a backup first if you need your current edits.')) {
@@ -257,7 +497,7 @@ async function openFolderHandle(handle) {
     localState = loaded;
   }
   folderStore = candidate; rememberedHandle = handle;
-  folderNeedsReconnect = false;
+  folderNeedsReconnect = false; folderRecoveryNeeded = false;
   $('disconnectFolderButton').disabled = false;
   applyWorkspaceState(); isDirty = false; setBadgeState('saved');
   $('connectedFolderName').textContent = `Folder: ${handle.name}`;
@@ -265,7 +505,7 @@ async function openFolderHandle(handle) {
   setStorageStatus('saved', `Folder connected. Workspace saved to ${handle.name}.`);
   return true;
 }
-async function findRememberedFolder() {
+async function findRememberedFolder(isCurrent = () => true) {
   const support = folderAccessAvailability();
   if (!support.available) {
     updateFolderAccessButton();
@@ -274,35 +514,61 @@ async function findRememberedFolder() {
     return;
   }
   try {
-    rememberedHandle = await handleCache('get');
+    const handle = await handleCache('get');
+    if (!isCurrent()) return;
+    rememberedHandle = handle;
     if (!rememberedHandle) {
       updateFolderAccessButton();
       setStorageStatus('pending', 'No folder is connected. Choose a folder for autosave, or download a JSON backup.');
       return;
     }
-    if (await rememberedHandle.queryPermission({ mode: 'readwrite' }) === 'granted') await openFolderHandle(rememberedHandle);
+    const permission = await rememberedHandle.queryPermission({ mode: 'readwrite' });
+    if (!isCurrent()) return;
+    if (permission === 'granted') await openFolderHandle(rememberedHandle, isCurrent);
     else {
+      folderRecoveryNeeded = true;
       updateFolderAccessButton();
       $('connectedFolderName').textContent = `Folder: ${rememberedHandle.name}`;
       setStorageStatus('pending', 'Folder permission is needed. Reconnect it and allow access, or import a JSON backup.');
     }
   } catch (error) {
+    if (!isCurrent()) return;
     if (error.name === 'NotAllowedError') {
+      folderRecoveryNeeded = true;
       updateFolderAccessButton();
       setStorageStatus('pending', 'Folder permission was denied. Reconnect it and allow access, or import a JSON backup.');
       return;
     }
-    if (['NotFoundError', 'InvalidStateError'].includes(error.name)) {
+    if (['NotFoundError', 'InvalidStateError', 'WorkspaceIncompleteError'].includes(error.name)) {
       rememberedHandle = null;
+      folderRecoveryNeeded = true;
       updateFolderAccessButton();
-      setStorageStatus('pending', 'The saved folder handle is no longer available. Choose the folder again, or import a JSON backup.');
+      if (error.name === 'WorkspaceIncompleteError') {
+        storageFailure(error);
+        return;
+      }
+      setStorageStatus('error', 'The saved folder is unavailable. Use Forget saved folder, then choose a folder again.');
       return;
     }
     storageFailure(error);
   }
 }
-async function connectLocalFolder() {
-  if (!currentUser || workspaceBusy) return;
+async function restoreRememberedFolder(timeoutMs = 4000) {
+  let current = true, timer;
+  const completed = await Promise.race([
+    findRememberedFolder(() => current).then(() => true),
+    new Promise(resolve => { timer = setTimeout(() => resolve(false), timeoutMs); })
+  ]);
+  current = false; clearTimeout(timer);
+  if (!completed) {
+    rememberedHandle = null; folderRecoveryNeeded = true;
+    updateFolderAccessButton();
+    setStorageStatus('error', 'Folder restore is taking too long. Use Forget saved folder, then choose a folder again. Edits stay in this tab.');
+    showToast('Folder restore timed out. Use Forget saved folder to recover.', 'error');
+  }
+}
+async function connectLocalFolder(timeoutMs = 30000) {
+  if (!currentUser || workspaceBusy || forgetFolderBusy) return;
   const support = folderAccessAvailability();
   if (!support.available) {
     updateFolderAccessButton();
@@ -310,9 +576,9 @@ async function connectLocalFolder() {
     return;
   }
   setWorkspaceBusy(true);
+  let handle;
   try {
     // Permission requests and pickers run directly in the user gesture, before any save awaits.
-    let handle;
     if (rememberedHandle && !folderStore) {
       handle = rememberedHandle;
       if (await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
@@ -323,9 +589,15 @@ async function connectLocalFolder() {
       }
     } else handle = await window.showDirectoryPicker({ id: 'qa-workspace-root', mode: 'readwrite' });
     if (folderStore && isDirty && !folderNeedsReconnect && !await performSaveNow()) return;
-    if (folderNeedsReconnect) folderStore = null;
-    if (!await openFolderHandle(handle)) return;
-    try { await handleCache('put', handle); }
+    let current = true, opened;
+    try {
+      opened = await waitForFolderOperation(openFolderHandle(handle, () => current), timeoutMs, 'Opening the folder');
+    } finally { current = false; }
+    if (!opened) return;
+    const controller = new AbortController();
+    try {
+      await waitForFolderOperation(handleCache('put', handle, controller.signal), timeoutMs, 'Remembering the folder', () => controller.abort());
+    }
     catch (error) {
       console.error('Could not remember folder', error);
       setStorageStatus('pending', `Folder connected and saved. This browser could not remember it; choose the folder again next time. ${error.message}`);
@@ -342,26 +614,66 @@ async function connectLocalFolder() {
       showToast(message, 'error');
     }
     else {
+      const affectsConnectedFolder = !folderStore || handle === folderStore.handle;
+      if (['NotFoundError', 'InvalidStateError', 'WorkspaceIncompleteError', 'FolderAccessTimeoutError'].includes(error.name) && handle === rememberedHandle && !folderStore) rememberedHandle = null;
+      if (affectsConnectedFolder && ['NotFoundError', 'InvalidStateError'].includes(error.name)) folderRecoveryNeeded = true;
       updateFolderAccessButton();
-      storageFailure(error);
+      storageFailure(error, affectsConnectedFolder);
     }
   } finally { setWorkspaceBusy(false); }
 }
-async function disconnectLocalFolder() {
-  if (workspaceBusy || (!folderStore && !rememberedHandle)) return;
+async function disconnectLocalFolder(timeoutMs = 4000) {
+  if (workspaceBusy || forgetFolderBusy || (!folderStore && !rememberedHandle)) return;
   setWorkspaceBusy(true);
   try {
     clearTimeout(autoSaveTimer); autoSaveTimer = null;
-    await saveQueue;
+    await waitForFolderOperation(saveQueue, timeoutMs, 'Waiting for the previous folder save');
     captureModule();
-    folderStore = null; rememberedHandle = null;
+    folderStore = null; rememberedHandle = null; folderNeedsReconnect = false; folderRecoveryNeeded = false;
     isDirty = true; editRevision++; setBadgeState('pending');
     updateFolderAccessButton();
     $('connectedFolderName').textContent = 'No folder selected.';
     setStorageStatus('pending', 'Folder disconnected. Changes are only in memory; download a JSON backup before leaving.');
-    try { await handleCache('delete'); }
-    catch (error) { console.error('Could not forget folder', error); setStorageStatus('error', 'Edits kept. Folder may reconnect on refresh; back up before closing.'); }
-  } finally { setWorkspaceBusy(false); }
+    const controller = new AbortController();
+    try { await waitForFolderOperation(handleCache('delete', undefined, controller.signal), timeoutMs, 'Forgetting the saved folder', () => controller.abort()); }
+    catch (error) { console.error('Could not forget folder', error); folderRecoveryNeeded = true; updateFolderAccessButton(); setStorageStatus('error', 'Edits kept. Folder may reconnect on refresh; back up before closing.'); }
+  } catch (error) { storageFailure(error); }
+  finally { setWorkspaceBusy(false); }
+}
+async function forgetSavedFolder(timeoutMs = 4000) {
+  if (!currentUser || workspaceBusy || forgetFolderBusy) return;
+  forgetFolderBusy = true; updateFolderAccessButton();
+  setStorageStatus('pending', 'Forgetting the saved folder. Your edits stay in this tab.');
+  try {
+    let waitTimer;
+    try {
+      await Promise.race([
+        saveQueue,
+        new Promise((resolve, reject) => { waitTimer = setTimeout(() => reject(new Error('Previous save is still running.')), timeoutMs); })
+      ]);
+    } finally { clearTimeout(waitTimer); }
+    captureModule();
+    if (folderStore || isDirty) { isDirty = true; editRevision++; }
+    folderStore = null; rememberedHandle = null; folderNeedsReconnect = false;
+    const controller = new AbortController();
+    let timer;
+    try {
+      await Promise.race([
+        handleCache('delete', undefined, controller.signal),
+        new Promise((resolve, reject) => { timer = setTimeout(() => { controller.abort(); reject(new Error('Folder recovery timed out.')); }, timeoutMs); })
+      ]);
+    } finally { clearTimeout(timer); }
+    folderRecoveryNeeded = false;
+    $('connectedFolderName').textContent = 'No folder selected.';
+    setBadgeState('pending');
+    setStorageStatus('pending', 'Saved folder forgotten. Choose a folder again; download a JSON backup before leaving if you have edits.');
+    showToast('Saved folder forgotten. Choose a folder again.');
+  } catch (error) {
+    console.error('Could not forget folder', error);
+    folderRecoveryNeeded = true;
+    setStorageStatus('error', 'Could not forget the saved folder. Retry; your edits stay in this tab. The folder may reconnect on refresh.');
+    showToast('Could not forget the saved folder. Try again.', 'error');
+  } finally { forgetFolderBusy = false; updateFolderAccessButton(); }
 }
 function backupWorkspace() {
   try {
@@ -371,7 +683,10 @@ function backupWorkspace() {
     a.download = `qa-workspace-${currentUser.email.replace(/[^a-z0-9]/gi, '-')}-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.append(a);
     a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    if (!folderStore) {
+    if (folderNeedsReconnect) {
+      setBadgeState('error');
+      setStorageStatus('error', 'Backup downloaded. Folder unavailable or changed; reconnect to save future edits.');
+    } else if (!folderStore) {
       setBadgeState('backup');
       setStorageStatus('pending', 'A JSON backup was downloaded. Current edits remain in memory; download a new backup after more edits.');
     } else {
@@ -713,7 +1028,7 @@ window.onload = async function initializeWorkspace() {
       $('welcomeUserTitle').textContent = `Welcome back, ${currentUser.username}!`;
       $('dashboardSelectOverlay').classList.add('active');
       setWorkspaceBusy(true);
-      try { await findRememberedFolder(); } finally { setWorkspaceBusy(false); }
+      try { await restoreRememberedFolder(); } finally { setWorkspaceBusy(false); }
       openRequestedWorkspace();
     }
   } catch (error) { showToast(`Could not restore the browser profile: ${error.message}`, 'error'); }
@@ -724,21 +1039,6 @@ window.onload = async function initializeWorkspace() {
   window.dispatchEvent(new Event('qa-ui-initialized'));
 };
 document.addEventListener('DOMContentLoaded',window.onload,{once:true});
-
-document.querySelectorAll('.header-top > .btn-group > button, .header-top > .btn-group > .menu-wrap > button').forEach(button => {
-  const icon = button.querySelector('.material-symbols-rounded');
-  if (!icon) return;
-  const existing = button.querySelector('.btn-label');
-  const label = existing?.textContent || (button.id === 'themeToggle' ? 'Theme' : 'More');
-  button.classList.add('action-pill');
-  button.setAttribute('aria-label', label);
-  button.dataset.label = label;
-  // Theme changes replace innerHTML, so the expandable label is CSS-generated.
-  existing?.remove();
-  if (icon.textContent === 'pageview') icon.textContent = 'visibility';
-});
-$('saveStatus').classList.add('action-pill');
-$('saveStatus').dataset.label = 'Save';
 
 function workspaceSearchResults(data, query, activeForm = null) {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);

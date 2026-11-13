@@ -115,28 +115,42 @@
     return error;
   }
 
-  async function withTimeout(fetchImpl, url, options, timeoutMs) {
+  async function withTimeout(fetchImpl, url, options, timeoutMs, signal, model) {
+    if (signal?.aborted) throw new Error('Ollama generation cancelled. Your existing cases were not changed.');
     const controller = new AbortController();
+    const cancel = () => controller.abort();
+    signal?.addEventListener('abort', cancel, { once: true });
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetchImpl(url, {
-        ...options,
-        mode: 'cors',
-        credentials: 'omit',
-        cache: 'no-store',
-        redirect: 'error',
-        referrerPolicy: 'no-referrer',
-        signal: controller.signal
+      const aborted = new Promise((resolve, reject) => {
+        if (controller.signal.aborted) reject(new DOMException('Aborted', 'AbortError'));
+        else controller.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
       });
+      const request = (async () => {
+        const response = await fetchImpl(url, {
+          ...options,
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          redirect: 'error',
+          referrerPolicy: 'no-referrer',
+          signal: controller.signal
+        });
+        return readJsonResponse(response, model);
+      })();
+      return await Promise.race([request, aborted]);
     } catch (error) {
+      if (signal?.aborted) throw new Error('Ollama generation cancelled. Your existing cases were not changed.');
       throw networkError(error, controller.signal.aborted);
-    } finally { clearTimeout(timer); }
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', cancel);
+    }
   }
 
   async function listModels(baseUrl, fetchImpl = root.fetch, timeoutMs = 10000) {
     const base = normalizeBaseUrl(baseUrl);
-    const response = await withTimeout(fetchImpl, `${base}/api/tags`, { method: 'GET' }, timeoutMs);
-    const payload = await readJsonResponse(response);
+    const payload = await withTimeout(fetchImpl, `${base}/api/tags`, { method: 'GET' }, timeoutMs);
     return localModelNames(payload);
   }
 
@@ -163,18 +177,30 @@
     const safeInput = requestInput(input);
     const instructions = [
       'Create draft QA scenarios, test cases, and checklists from only the supplied testing details.',
+      'Focus only on main business-functional workflows and end-to-end cases from initial state to final business outcome, including required state transitions and data handoffs.',
+      'Do not generate standalone basic checks such as opening a page, button visibility, routine login or generic empty-field checks; include those only as prerequisites within a business workflow when required.',
+      'Use Functional as the category/type. Include an explicitly named End-to-end scenario and test case. Preserve explicit business validation rules within the functional workflow.',
       'Do not claim tests were executed or invent application behavior as a fact.',
       'Use evidence only for an exact, short quotation copied from the supplied requirement; otherwise use an empty string.',
+      'Cover every supplied business rule; do not omit a rule to shorten output.',
+      'Use short objectives, concise numbered action steps and concrete expected outcomes. Avoid repeating descriptions in steps, expected results or checklists.',
       'Return every required schema field. Keep the result concise and return valid JSON.'
     ].join(' ');
     return {
       model: modelName,
       messages: [
-        { role: 'system', content: `${instructions} Aim for 4-6 scenarios, 6-8 test cases, and 2-4 concise checklist items per group.` },
+        { role: 'system', content: `${instructions} Keep scenarios and cases focused on distinct business outcomes, not a fixed count. For a document segment, do not claim end-to-end coverage of requirements outside that segment. Confirm any unspecified workflow order before execution.` },
         { role: 'user', content: JSON.stringify(safeInput) }
       ],
       stream: false,
-      format: suiteSchema,
+      format: {
+        ...suiteSchema,
+        properties: {
+          ...suiteSchema.properties,
+          scenarios: { type: 'array', items: { ...scenarioSchema, properties: { ...scenarioSchema.properties, cat: { type: 'string', enum: ['Functional'] } } } },
+          testCases: { type: 'array', items: { ...testCaseSchema, properties: { ...testCaseSchema.properties, type: { type: 'string', enum: ['Functional'] } } } }
+        }
+      },
       options: { temperature: 0, num_predict: 1800 }
     };
   }
@@ -243,15 +269,13 @@
     return { scenarios, testCases, checklists };
   }
 
-  async function generateSuite(baseUrl, model, input, fetchImpl = root.fetch, timeoutMs = 300000) {
-    const base = normalizeBaseUrl(baseUrl);
-    const body = buildChatRequest(model, input);
-    const response = await withTimeout(fetchImpl, `${base}/api/chat`, {
+  async function generateBatch(base, model, input, fetchImpl, timeoutMs, signal, thinkingOptions) {
+    const body = { ...buildChatRequest(model, input), ...thinkingOptions };
+    const payload = await withTimeout(fetchImpl, `${base}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    }, timeoutMs);
-    const payload = await readJsonResponse(response, body.model);
+    }, timeoutMs, signal, body.model);
     if (typeof payload?.error === 'string' && payload.error) throw new Error(`Ollama error: ${payload.error.slice(0, 500)}`);
     const content = payload?.message?.content;
     if (typeof content !== 'string' || !content.trim()) {
@@ -261,10 +285,70 @@
     try { parsed = JSON.parse(content); }
     catch { throw new Error('Ollama returned malformed test-suite JSON. No cases were changed; try again.'); }
     const requirement = requestInput(input).requirement;
-    return validateSuite(parsed, requirement);
+    const suite = validateSuite(parsed, requirement);
+    const endToEnd = value => /\bend[\s-]*to[\s-]*end\b|\be2e\b/i.test(value);
+    if (suite.scenarios.some(item => item.cat !== 'Functional') || suite.testCases.some(item => item.type !== 'Functional') ||
+        !suite.scenarios.some(item => endToEnd(item.desc)) || !suite.testCases.some(item => endToEnd(item.scenario))) {
+      throw new Error('Ollama must return main functional workflows and an explicitly named end-to-end scenario and case. Try again; your existing cases were not changed.');
+    }
+    return suite;
   }
 
-  const api = { DEFAULT_URL, suiteSchema, normalizeBaseUrl, localModelNames, listModels, buildChatRequest, validateSuite, generateSuite };
+  async function generateSuite(baseUrl, model, input, fetchImpl = root.fetch, timeoutMs = 300000, signal, onProgress = () => {}) {
+    const base = normalizeBaseUrl(baseUrl);
+    const requirement = typeof input?.requirement === 'string' ? input.requirement.trim() : '';
+    requestInput({ ...input, requirement: requirement.slice(0, LIMITS.requirement) });
+    const batches = [];
+    let remaining = requirement;
+    while (remaining.length > LIMITS.requirement) {
+      let end = remaining.lastIndexOf('\n', LIMITS.requirement);
+      if (end < LIMITS.requirement / 2) end = remaining.lastIndexOf(' ', LIMITS.requirement);
+      if (end < LIMITS.requirement / 2) end = LIMITS.requirement;
+      if (/[\uD800-\uDBFF]/.test(remaining[end - 1])) end--;
+      batches.push(remaining.slice(0, end));
+      remaining = remaining.slice(end);
+    }
+    batches.push(remaining);
+    const modelName = buildChatRequest(model, { ...input, requirement: batches[0] }).model;
+    const metadata = await withTimeout(fetchImpl, `${base}/api/show`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: modelName })
+    }, Math.min(timeoutMs, 10000), signal, modelName);
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata) ||
+        (!metadata.details && !Array.isArray(metadata.capabilities))) {
+      throw new Error('Ollama returned invalid model details. Check the local server version and try again; no cases were changed.');
+    }
+    const thinkingOptions = {};
+    const thinkingValues = metadata.thinking?.values;
+    if (Array.isArray(thinkingValues)) {
+      if (thinkingValues.includes(false)) thinkingOptions.think = false;
+      else if (thinkingValues.includes('low')) thinkingOptions.think = 'low';
+    }
+    const combined = { scenarios: [], testCases: [], checklists: { reqMatch: [], exploratory: [], regression: [] } };
+    for (let index = 0; index < batches.length; index++) {
+      if (signal?.aborted) throw new Error('Ollama generation cancelled. Your existing cases were not changed.');
+      onProgress(index + 1, batches.length);
+      let suite;
+      try {
+        suite = await generateBatch(base, modelName, { ...input, requirement: batches[index] }, fetchImpl, timeoutMs, signal, thinkingOptions);
+      } catch (error) {
+        if (batches.length === 1) throw error;
+        throw new Error(`Requirement batch ${index + 1} of ${batches.length} failed: ${error.message} Your existing cases were not changed.`);
+      }
+      suite.scenarios.forEach(item => combined.scenarios.push({ ...item, id: `TS_${String(combined.scenarios.length + 1).padStart(2, '0')}` }));
+      suite.testCases.forEach(item => combined.testCases.push({ ...item, id: `TC_${String(combined.testCases.length + 1).padStart(3, '0')}` }));
+      for (const group of Object.keys(combined.checklists)) {
+        const existing = new Set(combined.checklists[group].map(item => item.text));
+        for (const item of suite.checklists[group]) {
+          if (!existing.has(item.text)) { combined.checklists[group].push(item); existing.add(item.text); }
+        }
+      }
+    }
+    return combined;
+  }
+
+  const api = { DEFAULT_URL, suiteSchema, normalizeBaseUrl, localModelNames, listModels, requestInput, buildChatRequest, validateSuite, generateSuite };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.OllamaLocal = api;
 })(globalThis);

@@ -6,6 +6,7 @@ const vm = require('node:vm');
 
 const indexHtml = readFileSync(join(__dirname, '..', 'index.html'), 'utf8').replace(/\r/g, '');
 const workspaceUi = readFileSync(join(__dirname, '..', 'workspace-ui.js'), 'utf8').replace(/\r/g, '');
+const workspaceCss = readFileSync(join(__dirname, '..', 'workspace.css'), 'utf8').replace(/\r/g, '');
 
 class Element {
   constructor(id = '', classes = []) {
@@ -100,8 +101,35 @@ test('all main cards start open and their accessible toggles preserve form nodes
 test('section navigation remains horizontal and responsive without a sidebar menu', () => {
   assert.match(indexHtml, /<nav class="section-jump-nav" aria-label="Workspace sections">/);
   assert.match(indexHtml, /Execution Report<\/button>[\s\S]*Test Studio<\/button>[\s\S]*Quality Metrics<\/button>/);
+  assert.equal((indexHtml.match(/data-quality-metrics-entry/g) || []).length, 3);
+  assert.match(workspaceCss, /\[data-quality-metrics-entry\]\s*\{\s*display:\s*none\s*!important;\s*\}/);
   assert.doesNotMatch(indexHtml, /workspace-sidebar|mobileNavBackdrop|mobileNavToggle/);
   assert.match(workspaceUi, /document\.querySelector\('\.section-jump-nav'\)/);
+});
+
+test('dashboard workspace choices use native buttons for keyboard access', () => {
+  const choices = [...indexHtml.matchAll(/<button type="button" class="workspace-choice(?: studio-dash)?" onclick="selectWorkspaceMode\('(report|studio)', portalOrigin\(event\)\)">([\s\S]*?)<\/button>/g)];
+  assert.deepEqual(choices.map(choice => choice[1]), ['report', 'studio']);
+  assert.match(choices[0][2], /Test Execution Report[\s\S]*Results, evidence and defects\./);
+  assert.match(choices[1][2], /Test Case & Scenario Studio[\s\S]*Scenarios, test cases and checklists\./);
+  for (const [, , content] of choices) {
+    assert.match(content, /aria-hidden="true"/);
+    assert.doesNotMatch(content, /role="button"|tabindex=|onkeydown=/);
+  }
+});
+
+test('portal starts at pointer coordinates or the keyboard-activated button center', () => {
+  const source = indexHtml.match(/function portalOrigin\(event\) \{[\s\S]*?\n    \}/)[0];
+  const portalOrigin = vm.runInNewContext(`(${source})`, { innerWidth: 1000, innerHeight: 800 });
+  const button = { getBoundingClientRect: () => ({ left: 700, top: 200, width: 100, height: 40 }) };
+  const pointer = portalOrigin({ detail: 1, clientX: 780, clientY: 210, currentTarget: button });
+  assert.equal(pointer.x, 780);
+  assert.equal(pointer.y, 210);
+  const keyboard = portalOrigin({ detail: 0, currentTarget: button });
+  assert.equal(keyboard.x, 750);
+  assert.equal(keyboard.y, 220);
+  assert.equal(portalOrigin().x, 500);
+  assert.equal(portalOrigin().y, 400);
 });
 
 test('save indicator distinguishes pending folder writes, in-memory drafts, backups and failures', () => {
