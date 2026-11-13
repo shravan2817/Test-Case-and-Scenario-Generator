@@ -130,7 +130,14 @@
     }
     async load() {
       this.organizedRecords.clear();
-      const dir = await this.userDirectory();
+      let dir;
+      try { dir = await this.userDirectory(); }
+      catch (error) {
+        const failure = new Error(error.message, { cause: error });
+        failure.name = error.name;
+        failure.workspaceStep = 'Opening or creating the workspace profile folder';
+        throw failure;
+      }
       const manifest = await readJson(dir, 'workspace.json', true);
       if (!manifest) return empty(this.owner);
       if (manifest.version !== 3 || manifest.owner?.email !== this.owner.email ||
@@ -141,16 +148,29 @@
         if (!Array.isArray(parts) || parts.length !== 5 ||
             !parts.every(part => typeof part === 'string' && /^[a-zA-Z0-9._-]+$/.test(part) && part !== '.' && part !== '..') ||
             parts[0] !== 'projects' || parts[2] !== 'modules' || !parts[4].endsWith('.json')) throw new Error('Invalid module file path.');
-        let recordDir = dir;
-        for (const part of parts.slice(0, -1)) recordDir = await recordDir.getDirectoryHandle(part);
-        const record = await readJson(recordDir, parts[4]);
-        const evidenceName = record.evidenceFile || parts[4].replace('.json', '-evidence.json');
-        if (!/^[a-zA-Z0-9_-]+\.json$/.test(evidenceName)) throw new Error('Invalid evidence file path.');
-        record.images = await readJson(await recordDir.getDirectoryHandle('evidence'), evidenceName);
-        if (record.organizedFiles) this.organizedRecords.add(key);
-        delete record.evidenceFile;
-        delete record.organizedFiles;
-        data.records[key] = record;
+        let stage = 'a saved module folder';
+        try {
+          let recordDir = dir;
+          for (const part of parts.slice(0, -1)) recordDir = await recordDir.getDirectoryHandle(part);
+          stage = 'a saved module record';
+          const record = await readJson(recordDir, parts[4]);
+          const evidenceName = record.evidenceFile || parts[4].replace('.json', '-evidence.json');
+          if (!/^[a-zA-Z0-9_-]+\.json$/.test(evidenceName)) throw new Error('Invalid evidence file path.');
+          stage = 'saved screenshots or evidence';
+          record.images = await readJson(await recordDir.getDirectoryHandle('evidence'), evidenceName);
+          if (record.organizedFiles) this.organizedRecords.add(key);
+          delete record.evidenceFile;
+          delete record.organizedFiles;
+          data.records[key] = record;
+        } catch (error) {
+          if (error.name !== 'NotFoundError') throw error;
+          const entries = this.handle.entries();
+          try { await entries.next(); }
+          finally { await entries.return?.(); }
+          const failure = new Error(`This workspace is incomplete: ${stage} is missing. Restore a complete JSON backup or select the original workspace folder. Reconnecting cannot recreate missing saved data. Your current edits are unchanged.`, { cause: error });
+          failure.name = 'WorkspaceIncompleteError';
+          throw failure;
+        }
       }
       delete data.files; delete data.revision;
       validate(data);
@@ -181,7 +201,7 @@
     async saveAttempt(data, transaction) {
       validate(data);
       if (data.owner.email !== this.owner.email) throw new Error('Workspace identity does not match the selected profile.');
-      if (await this.handle.queryPermission({ mode: 'readwrite' }) !== 'granted') throw new Error('Folder permission is required. Reconnect the folder to save.');
+      if (await this.handle.queryPermission({ mode: 'readwrite' }) !== 'granted') throw new DOMException('Folder permission is required. Reconnect the folder to save.', 'NotAllowedError');
       const dir = await this.userDirectory();
       const live = await readJson(dir, 'workspace.json', true);
       if (JSON.stringify(live) !== JSON.stringify(this.manifest)) throw workspaceConflict();

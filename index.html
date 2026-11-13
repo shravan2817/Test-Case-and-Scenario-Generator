@@ -7,7 +7,7 @@
   <title>QA Workspace | Local-first Studio</title>
 
   <link id="materialIconStylesheet" rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-  <script defer src="ui-bootstrap.js"></script>
+  <script defer src="ui-bootstrap.js?v=studio-2"></script>
   <script>
     window.qaBootstrapTimer=setTimeout(function(){
       if(document.documentElement.dataset.uiReady)return;
@@ -179,6 +179,7 @@
     .menu { display: none; position: absolute; right: 0; top: calc(100% + 8px); min-width: 230px; background: var(--menu-bg); border: 1px solid var(--border-strong); border-radius: 12px; padding: 6px; box-shadow: 0 20px 40px rgba(0,0,0,.6); z-index: 100; }
     .menu.open { display: block; animation: slideDownFade .15s ease; }
     .menu-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; color: var(--text-2); font-size: .8rem; font-weight: 500; border-radius: 8px; cursor: pointer; text-align: left; text-decoration: none; }
+    .menu-item[hidden] { display: none; }
     .menu-item:hover { background: var(--hover); }
     .menu-item.danger { color: #fca5a5; }
     .menu-item .material-symbols-rounded { font-size: 18px; color: var(--muted); }
@@ -205,12 +206,12 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 26px; box-shadow: 0 10px 30px rgba(0,0,0,.3); scroll-margin-top: 12px; }
     .card { transition: transform .18s ease, box-shadow .18s ease; }
     .card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(0,0,0,.24); }
-    .card-title .card-accordion-toggle { display: inline-flex; align-items: center; gap: 10px; min-width: 0; border: 0; padding: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .card-title .card-accordion-toggle { display: inline-flex; align-items: center; flex: 1 1 260px; gap: 10px; min-width: 0; min-height: 44px; border: 0; padding: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
     .card-accordion-toggle .heading-label { min-width: 0; }
-    .card-accordion-toggle > .material-symbols-rounded { color: var(--muted); font-size: 20px; transition: transform .2s ease; }
+    .card-accordion-toggle > .material-symbols-rounded { flex-shrink: 0; margin-left: auto; color: var(--muted); font-size: 20px; }
     .card-accordion-toggle[aria-expanded="false"] > .material-symbols-rounded { transform: rotate(180deg); }
     .card-accordion-toggle:focus-visible { outline: 2px solid var(--info); outline-offset: 4px; border-radius: 6px; }
-    .card-content { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .24s ease; }
+    .card-content { display: grid; grid-template-rows: 1fr; }
     .card-content[aria-hidden="true"] { grid-template-rows: 0fr; }
     .card-content-inner { min-height: 0; overflow: hidden; }
     .section-jump-nav { position: sticky; top: 0; z-index: 20; padding: 8px 0; background: var(--bg); }
@@ -230,7 +231,7 @@
     label { font-size: .76rem; font-weight: 600; color: var(--label); }
     .hint { font-size: .7rem; color: var(--muted); }
 
-    input[type="text"], input[type="password"], input[type="email"], input[type="search"], select, textarea {
+    input[type="text"], input[type="password"], input[type="email"], input[type="search"], input[type="url"], select, textarea {
       width: 100%; padding: 10px 14px; font-size: .85rem; border: 1.5px solid var(--field-border); border-radius: 10px; outline: none; background: var(--field); color: var(--text); transition: border-color .15s, box-shadow .15s;
     }
     ::placeholder { color: #6b7280; }
@@ -255,9 +256,16 @@
     .image-preview button .material-symbols-rounded { font-size: 14px; }
 
     .agent-pipeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
-    .studio-generation-controls { display: grid; grid-template-columns: minmax(220px, .65fr) minmax(0, 1fr); gap: 12px; align-items: end; margin-bottom: 14px; }
-    .studio-generation-note { padding: 10px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); color: var(--muted); font-size: .72rem; line-height: 1.5; }
-    .studio-generation-note[data-state="error"] { border-color: var(--bad); color: var(--bad); }
+    .studio-generation-controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .studio-ai-choice { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; font-size: .85rem; font-weight: 600; }
+    .studio-ai-choice input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .studio-generation-note { flex: 1 1 240px; color: var(--muted); font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .studio-generation-note[data-state="error"] { color: var(--bad); }
+    #ollamaSettingsShortcut[hidden], #retryOllamaConnection[hidden] { display: none; }
+    .studio-options { margin-top: 16px; }
+    .studio-options > summary, .ollama-advanced > summary { cursor: pointer; color: var(--text-2); font-size: .85rem; padding: 10px 0; }
+    .studio-options > .grid-3 { margin-top: 12px; }
+    .ollama-advanced .form-group { margin: 12px 0; }
     .studio-evidence { display: block; margin-top: 5px; color: var(--info); font-size: .68rem; line-height: 1.4; white-space: normal; }
     #studioGenerationAttribution { margin: -4px 0 14px; }
     #ollamaStatusMessage[data-state="error"] { color: var(--bad); }
@@ -346,8 +354,8 @@
     .doc-page .doc-header-field { margin-bottom: 4px; }
     .doc-page .doc-section-heading { font-weight: 700; margin-top: 20px; margin-bottom: 6px; }
     .doc-page .doc-text { white-space: pre-wrap; margin-bottom: 14px; line-height: 1.5; }
-    .doc-page .doc-img-item { margin: 10px 0 20px; width: 100%; overflow: hidden; border: 1px solid #000; background: #fff; page-break-inside: avoid; }
-    .doc-page .doc-img-item img { width: 100%; height: auto; display: block; }
+    .doc-page .doc-img-item { margin: 10px 0 20px; width: fit-content; max-width: 100%; overflow: hidden; border: 1px solid #000; background: #fff; page-break-inside: avoid; }
+    .doc-page .doc-img-item img { width: auto; max-width: 100%; max-height: 8.5in; height: auto; display: block; object-fit: contain; }
     .doc-page[data-doc-kind="report"] .doc-main-title { font-size: 14pt; color: #538135; margin: 0 0 8px; }
     .doc-page[data-doc-kind="report"] .doc-header-field { margin: 0; line-height: 1.35; }
     .doc-page[data-doc-kind="report"] .doc-section-heading { margin: 8px 0 2px; line-height: 1.15; }
@@ -357,7 +365,7 @@
     .doc-page[data-doc-kind="report"] .doc-evidence-row { margin-bottom: 8px; break-inside: auto; page-break-inside: auto; }
     .doc-page[data-doc-kind="report"] .doc-evidence-images { display: grid; justify-items: start; gap: 8px; }
     .doc-page[data-doc-kind="report"] .doc-img-item { display: block; width: fit-content; max-width: 100%; margin: 0; overflow: hidden; break-inside: avoid; page-break-inside: avoid; }
-    .doc-page[data-doc-kind="report"] .doc-img-item img { display: block; width: auto; max-width: 100%; max-height: 3.5in; height: auto; object-fit: contain; }
+    .doc-page[data-doc-kind="report"] .doc-img-item img { display: block; width: auto; max-width: 100%; max-height: 8.5in; height: auto; object-fit: contain; }
 
     .zoom-overlay { display: none; position: fixed; inset: 0; background: rgba(11,15,25,.95); backdrop-filter: blur(8px); z-index: 100000; justify-content: center; align-items: center; padding: 20px; cursor: zoom-out; }
     .zoom-overlay.active { display: flex; }
@@ -390,7 +398,7 @@
     [data-theme="light"] .mode-btn.active-report, [data-theme="light"] .mode-btn.active-studio { color: #fff; }
 
     @media (max-width: 860px) {
-      .studio-generation-controls { grid-template-columns: 1fr; }
+      .studio-generation-note { flex-basis: 100%; }
       .header-top { flex-wrap: wrap; padding: 10px 14px; }
       .mode-switch-pill { order: 3; width: 100%; }
       .mode-btn { flex: 1; justify-content: center; }
@@ -418,23 +426,27 @@
       #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-row { break-inside: auto; page-break-inside: auto; }
       #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-path { break-after: avoid; page-break-after: avoid; }
       #printableDocArea .doc-page[data-doc-kind="report"] .doc-img-item { width: fit-content !important; max-width: 100% !important; break-inside: avoid; page-break-inside: avoid; }
-      #printableDocArea .doc-page[data-doc-kind="report"] .doc-img-item img { width: auto !important; max-width: 100% !important; max-height: 3.5in !important; }
+      #printableDocArea .doc-page[data-doc-kind="report"] .doc-img-item img { width: auto !important; max-width: 100% !important; max-height: 8.5in !important; }
       #printableDocArea .doc-page[data-doc-kind="report"] .doc-evidence-images { break-inside: auto; page-break-inside: auto; }
       #printableDocArea .doc-page[data-doc-kind="report"] .doc-watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(58%, 4.58in); max-width: 100%; height: auto; }
       #printableDocArea img { max-width: 100% !important; height: auto !important; }
     }
   </style>
-  <link rel="stylesheet" href="workspace.css">
-  <script src="local-workspace.js"></script>
-  <script src="email-validation.js"></script>
-  <script src="ollama-client.js"></script>
+  <link rel="stylesheet" href="workspace.css?v=studio-4">
+  <script src="local-workspace.js?v=studio-4"></script>
+  <script src="email-validation.js?v=studio-2"></script>
+  <script src="ollama-client.js?v=studio-5"></script>
+  <script src="cloud-config.js?v=studio-2"></script>
+  <script src="cloud-client.js?v=studio-2"></script>
+  <script src="requirements.js?v=studio-4"></script>
 </head>
 <body data-mode="report" aria-busy="true">
   <div id="appBootstrap" class="app-bootstrap" role="status" aria-live="polite"><span class="m3-loader" aria-hidden="true"></span><span>Opening workspace...</span></div>
   <div id="bootstrapNotice" class="bootstrap-notice" role="status" hidden><span></span><button type="button" onclick="location.reload()">Reload</button><button type="button" onclick="this.parentElement.hidden=true">Dismiss</button></div>
   <noscript>JavaScript is required to open this local QA workspace.</noscript>
   <div id="workspaceBusyIndicator" class="workspace-busy-indicator" role="status" aria-live="polite" hidden>
-    <span class="m3-loader" aria-hidden="true"></span><span>Working...</span>
+    <span class="m3-loader" aria-hidden="true"></span><span id="workspaceBusyMessage">Working...</span>
+    <button type="button" class="btn-text" id="cancelStudioGeneration" onclick="cancelStudioGeneration()" hidden>Cancel generation</button>
   </div>
 
   <div class="aurora-bg" aria-hidden="true">
@@ -443,6 +455,7 @@
 
   <div id="copyToast" role="status" aria-live="polite">Done</div>
   <div id="workspaceTooltip" class="workspace-tooltip" role="tooltip" popover="manual" hidden></div>
+  <div id="imageHoverPreview" class="image-hover-preview" aria-hidden="true"><img id="imageHoverPreviewImage" alt=""></div>
 
   <!-- LOGIN -->
   <div class="auth-overlay" id="authOverlay">
@@ -474,29 +487,30 @@
 
   <div class="modal-overlay" id="ollamaSettingsModal">
     <div class="modal-card" style="max-width:540px;">
-      <h3><span class="material-symbols-rounded" style="color:var(--info);">memory</span> Local Ollama settings</h3>
+      <h3><span class="material-symbols-rounded" style="color:var(--info);">memory</span> Local AI</h3>
       <p class="hint" style="margin-bottom:12px; line-height:1.55;">
-        Requirement text and the selected testing details are sent only to the Ollama process on this device. Screenshots, profile data, test URLs and login references are not sent. AI output is a draft; review it before use.
+        Uses Ollama on this device. Only your requirement text and testing details are sent; screenshots and profile data stay out. Review AI drafts before use.
       </p>
       <div class="form-group" style="margin-bottom:12px;">
-        <label for="ollamaBaseUrl">Local server URL</label>
-        <input type="url" id="ollamaBaseUrl" value="http://localhost:11434" autocomplete="url" spellcheck="false">
-      </div>
-      <div class="form-group" style="margin-bottom:12px;">
-        <label for="ollamaModelSelect">Installed local model</label>
+        <label for="ollamaModelSelect">Model</label>
         <select id="ollamaModelSelect" disabled onchange="selectOllamaModel()">
-          <option value="">Test connection to list local models</option>
+          <option value="">Connect to find installed models</option>
         </select>
       </div>
       <p id="ollamaStatusMessage" class="hint" data-state="idle" role="status" aria-live="polite" style="line-height:1.5; margin-bottom:12px;">
-        Connection not tested in this tab.
+        No local AI connection yet.
       </p>
-      <p class="hint" style="line-height:1.5; margin-bottom:14px;">
-        If the browser reports a connection/CORS error, set Ollama’s <code>OLLAMA_ORIGINS</code> to this app’s exact origin and restart Ollama. On GitHub Pages use its exact HTTPS origin; if the browser blocks local calls, open the app from localhost instead. Keep Ollama bound to localhost. Do not disable browser security or expose Ollama to your network.
-      </p>
+      <details class="ollama-advanced">
+        <summary>Connection settings &amp; help</summary>
+        <div class="form-group">
+          <label for="ollamaBaseUrl">Local server URL</label>
+          <input type="url" id="ollamaBaseUrl" value="http://localhost:11434" autocomplete="url" spellcheck="false">
+        </div>
+        <p class="hint" style="line-height:1.5; margin-bottom:14px;">Start Ollama before connecting. For a connection/CORS error, set <code>OLLAMA_ORIGINS</code> to this app's exact origin and restart Ollama. If a hosted page blocks local calls, use this app from localhost. Keep Ollama bound to localhost; do not disable browser security.</p>
+      </details>
       <div class="modal-actions">
         <button type="button" onclick="document.getElementById('ollamaSettingsModal').classList.remove('active')" class="btn-text btn-sm">Close</button>
-        <button type="button" id="testOllamaConnectionButton" onclick="testOllamaConnection()" class="btn-text btn-teal btn-sm">Test connection</button>
+        <button type="button" id="testOllamaConnectionButton" onclick="testOllamaConnection()" class="btn-text btn-teal btn-sm">Find models</button>
       </div>
     </div>
   </div>
@@ -505,41 +519,54 @@
   <div class="dashboard-select-overlay" id="dashboardSelectOverlay">
     <div class="dashboard-container">
       <h2 id="welcomeUserTitle">Welcome to QA Suite</h2>
-      <p>Choose a workspace.</p>
+      <p>Choose a folder, then open a project or workspace.</p>
       <section class="storage-panel" id="folderPanel" aria-labelledby="folderTitle">
-        <h3 id="folderTitle"><span class="material-symbols-rounded">folder_open</span> Save or restore workspace</h3>
+        <h3 id="folderTitle"><span class="material-symbols-rounded">folder_open</span> Workspace folder</h3>
         <p id="folderDescription" role="status" aria-live="polite">Choose a folder for autosave, or use a JSON backup.</p>
         <div class="storage-actions">
           <button type="button" class="btn-text btn-teal" id="connectFolderButton" onclick="connectLocalFolder()">Choose folder</button>
-          <button type="button" class="btn-text" id="disconnectFolderButton" onclick="disconnectLocalFolder()" disabled>Disconnect</button>
-          <button type="button" class="btn-text" onclick="importBrowserWorkspace()">Import browser data</button>
-          <button type="button" class="btn-text" onclick="document.getElementById('restoreInput').click()">Import JSON backup</button>
-          <button type="button" class="btn-text" onclick="backupWorkspace()">Download JSON backup</button>
+          <button type="button" class="btn-text" id="forgetFolderButton" onclick="forgetSavedFolder()" hidden>Forget saved folder</button>
         </div>
-        <details class="folder-help">
-          <summary>Folder access and browser backup help</summary>
-          <p>Folder autosave needs a supported browser (currently Chrome or Edge) and localhost or HTTPS. If this app runs in a browser without folder picking, you can still edit, import and download JSON backups. Without a connected folder, edits stay in this tab only; download a new backup after making more changes. Leaving with edits prompts a warning. HTTPS alone cannot add a folder picker API that a browser does not support. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync.</p>
-          <p>Backups include workspace projects, modules, reports, scenarios, test cases, screenshots and attribution. They are recovery copies, not folder autosaves.</p>
-          <p id="connectedFolderName">No folder selected.</p>
-          <p>Project files: projects / project folder / modules. Each module has screenshots, mantisreport and test-cases. QA metrics is inside the project folder. Full names are in project.json / module.json.</p>
+        <details class="storage-options">
+          <summary>Backup &amp; storage options</summary>
+          <div class="storage-secondary-actions">
+            <button type="button" class="btn-text" id="disconnectFolderButton" onclick="disconnectLocalFolder()" disabled>Disconnect folder</button>
+            <button type="button" class="btn-text" onclick="importBrowserWorkspace()">Import browser data</button>
+            <button type="button" class="btn-text" onclick="document.getElementById('restoreInput').click()">Import JSON backup</button>
+            <button type="button" class="btn-text" onclick="backupWorkspace()">Download JSON backup</button>
+          </div>
+          <details class="folder-help">
+            <summary>Folder access and backup help</summary>
+            <p>Folder autosave needs a supported browser (currently Chrome or Edge) and localhost or HTTPS. If this app runs in a browser without folder picking, you can still edit, import and download JSON backups. Without a connected folder, edits stay in this tab only; download a new backup after making more changes. Leaving with edits prompts a warning. HTTPS alone cannot add a folder picker API that a browser does not support. Reconnect if permission expires. Profiles label files, not protect them. Anyone with folder access can read them. No team sync.</p>
+            <p>Backups include workspace projects, modules, reports, scenarios, test cases, screenshots and attribution. They are recovery copies, not folder autosaves.</p>
+            <p id="connectedFolderName">No folder selected.</p>
+            <p>Project files: projects / project folder / modules. Each module has screenshots, mantisreport and test-cases. QA metrics is inside the project folder. Full names are in project.json / module.json.</p>
+          </details>
         </details>
       </section>
+      <h3 class="dashboard-workspace-heading">Open a workspace</h3>
       <div class="dash-cards-grid">
-        <div class="dash-card" role="button" tabindex="0" onclick="openQualityMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openQualityMetrics()}">
+        <div class="dash-card" data-quality-metrics-entry role="button" tabindex="0" onclick="openQualityMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openQualityMetrics()}">
           <div class="dash-icon"><span class="material-symbols-rounded">table_chart</span></div>
           <h3>Quality Metrics</h3>
           <span class="desc">Project metrics. Save & download Excel.</span>
         </div>
-        <div class="dash-card" role="button" tabindex="0" onclick="selectWorkspaceMode('report')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectWorkspaceMode('report')}">
-          <div class="dash-icon"><span class="material-symbols-rounded">fact_check</span></div>
-          <h3>Test Execution Report</h3>
-          <span class="desc">Results, evidence and defects.</span>
-        </div>
-        <div class="dash-card studio-dash" role="button" tabindex="0" onclick="selectWorkspaceMode('studio')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectWorkspaceMode('studio')}">
-          <div class="dash-icon"><span class="material-symbols-rounded">auto_fix_high</span></div>
-          <h3>Test Case & Scenario Studio</h3>
-          <span class="desc">Scenarios, test cases and checklists.</span>
-        </div>
+        <button type="button" class="workspace-choice" onclick="selectWorkspaceMode('report', portalOrigin(event))">
+          <span class="dash-icon" aria-hidden="true"><span class="material-symbols-rounded">fact_check</span></span>
+          <span class="workspace-choice-copy">
+            <span class="workspace-choice-title">Test Execution Report</span>
+            <span class="desc">Results, evidence and defects.</span>
+          </span>
+          <span class="material-symbols-rounded workspace-choice-arrow" aria-hidden="true">arrow_forward</span>
+        </button>
+        <button type="button" class="workspace-choice studio-dash" onclick="selectWorkspaceMode('studio', portalOrigin(event))">
+          <span class="dash-icon" aria-hidden="true"><span class="material-symbols-rounded">auto_fix_high</span></span>
+          <span class="workspace-choice-copy">
+            <span class="workspace-choice-title">Test Case & Scenario Studio</span>
+            <span class="desc">Scenarios, test cases and checklists.</span>
+          </span>
+          <span class="material-symbols-rounded workspace-choice-arrow" aria-hidden="true">arrow_forward</span>
+        </button>
       </div>
       <div class="dash-footer">
         <button type="button" class="btn-text" onclick="openHistoryModal()"><span class="material-symbols-rounded">history</span> Activity history</button>
@@ -550,14 +577,29 @@
   </div>
 
   <!-- HISTORY MODAL -->
-  <div class="modal-overlay" id="historyModal">
-    <div class="modal-card" style="max-width: 540px;">
-      <h3><span class="material-symbols-rounded" style="color:var(--info);">history</span> Activity & Project History</h3>
-      <p class="hint" style="margin-bottom: 12px;">Recent actions in this local profile (last 100):</p>
-      <div id="historyLogsContainer" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+  <div class="modal-overlay" id="historyModal" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+    <div class="modal-card history-card">
+      <h3 id="historyModalTitle" tabindex="-1"><span class="material-symbols-rounded" style="color:var(--info);">history</span> Activity &amp; Project History</h3>
+      <div class="history-switch" role="group" aria-label="History view">
+        <button type="button" id="historyProjectsButton" aria-controls="historyProjectsPanel" aria-pressed="true" onclick="selectHistoryView('projects')">Projects</button>
+        <button type="button" id="historyTimelineButton" aria-controls="historyTimelinePanel" aria-pressed="false" onclick="selectHistoryView('timeline')">Timeline</button>
+      </div>
+      <div class="history-content">
+        <section id="historyProjectsPanel" class="dashboard-projects" aria-labelledby="dashboardProjectsTitle">
+          <div class="dashboard-projects-heading">
+            <div><h4 id="dashboardProjectsTitle">Projects</h4><p>Open a project to see its folders.</p></div>
+          </div>
+          <div id="dashboardProjects"></div>
+        </section>
+        <section id="historyTimelinePanel" aria-labelledby="historyTimelineTitle" hidden>
+          <h4 id="historyTimelineTitle">Activity timeline</h4>
+          <p class="history-hint">Recent actions in this local profile (last 100).</p>
+          <div id="historyLogsContainer"></div>
+        </section>
+      </div>
       <div class="modal-actions">
         <button type="button" onclick="clearHistory()" class="btn-text btn-sm">Clear history</button>
-        <button type="button" onclick="document.getElementById('historyModal').classList.remove('active')" class="btn-text btn-sm">Close</button>
+        <button type="button" onclick="closeHistoryModal()" class="btn-text btn-sm">Close</button>
       </div>
     </div>
   </div>
@@ -592,10 +634,10 @@
           </div>
         </div>
 
-        <div class="mode-switch-pill" role="tablist">
-          <button type="button" id="btnModeReport" class="mode-btn active-report" onclick="switchWorkspaceMode('report')"><span class="material-symbols-rounded">fact_check</span> Execution Report</button>
-          <button type="button" id="btnModeStudio" class="mode-btn" onclick="switchWorkspaceMode('studio')"><span class="material-symbols-rounded">auto_fix_high</span> Test Studio</button>
-          <button type="button" id="btnModeMetrics" class="mode-btn" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
+        <div class="mode-switch-pill" role="tablist" aria-label="Workspace" onkeydown="handleTabKey(event)">
+          <button type="button" id="btnModeReport" class="mode-btn active-report" role="tab" aria-selected="true" aria-controls="viewReport" tabindex="0" onclick="switchWorkspaceMode('report')"><span class="material-symbols-rounded">fact_check</span> Execution Report</button>
+          <button type="button" id="btnModeStudio" class="mode-btn" role="tab" aria-selected="false" aria-controls="viewStudio" tabindex="-1" onclick="switchWorkspaceMode('studio')"><span class="material-symbols-rounded">auto_fix_high</span> Test Studio</button>
+          <button type="button" id="btnModeMetrics" data-quality-metrics-entry class="mode-btn" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
         </div>
 
         <div class="btn-group">
@@ -611,41 +653,27 @@
             <span class="save-status-text" role="status" aria-live="polite" aria-atomic="true">Auto save pending</span>
           </button>
 
-          <button type="button" id="themeToggle" class="btn-icon tooltip-bottom" onclick="toggleTheme()" data-tooltip="Switch to light mode" aria-label="Switch to light mode"><span class="material-symbols-rounded">light_mode</span></button>
-
-          <button type="button" onclick="runFunctionalAgents()" class="btn-text btn-indigo studio-only" data-tooltip="Generate scenarios & test cases" >
-            <span class="material-symbols-rounded">magic_button</span><span class="btn-label">Generate</span>
-          </button>
-
-          <button type="button" onclick="openPreviewModal()" class="btn-text tooltip-bottom" data-tooltip="Preview document">
-            <span class="material-symbols-rounded">pageview</span><span class="btn-label">Preview</span>
-          </button>
-
           <div class="menu-wrap">
-            <button type="button" class="btn-text btn-teal" onclick="toggleMenu('exportMenu', event)" aria-haspopup="true">
-              <span class="material-symbols-rounded">download</span><span class="btn-label">Export</span><span class="material-symbols-rounded" style="font-size:18px;">expand_more</span>
-            </button>
-            <div class="menu" id="exportMenu" role="menu">
+            <button type="button" id="moreMenuButton" class="btn-icon" onclick="toggleMenu('moreMenu', event)" aria-haspopup="true" aria-controls="moreMenu" aria-expanded="false" aria-label="More actions"><span class="material-symbols-rounded">more_vert</span></button>
+            <div class="menu" id="moreMenu">
+              <button type="button" id="themeToggle" class="menu-item" onclick="toggleTheme()"><span class="material-symbols-rounded" aria-hidden="true">light_mode</span><span>Switch to light mode</span></button>
+              <button type="button" class="menu-item studio-only" onclick="runFunctionalAgents()"><span class="material-symbols-rounded">magic_button</span> Generate scenarios & test cases</button>
+              <button type="button" class="menu-item" onclick="openPreviewModal()"><span class="material-symbols-rounded">visibility</span> Preview document</button>
               <button type="button" class="menu-item" onclick="exportActiveToWord()"><span class="material-symbols-rounded">description</span> Word document (.doc)</button>
               <button type="button" class="menu-item" onclick="triggerCleanPdfPrint()"><span class="material-symbols-rounded">print</span> Print / Save as PDF</button>
               <button type="button" class="menu-item studio-only" onclick="exportStudioToExcel()"><span class="material-symbols-rounded">grid_on</span> Excel-friendly CSV</button>
-            </div>
-          </div>
-
-          <div class="menu-wrap">
-            <button type="button" class="btn-icon" onclick="toggleMenu('moreMenu', event)" aria-haspopup="true" aria-label="More actions"><span class="material-symbols-rounded">more_vert</span></button>
-            <div class="menu" id="moreMenu" role="menu">
+              <div class="menu-sep"></div>
               <button type="button" class="menu-item studio-only" onclick="pushStudioToExecutionReport()"><span class="material-symbols-rounded">send_and_archive</span> Move steps to Execution Report</button>
               <button type="button" class="menu-item" onclick="openOllamaSettings()"><span class="material-symbols-rounded">settings</span> Local Ollama settings</button>
               <button type="button" class="menu-item" onclick="openHistoryModal()"><span class="material-symbols-rounded">history</span> Activity history</button>
               <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">folder_open</span> Local folder & migration</button>
-              <button type="button" class="menu-item studio-only" onclick="openApiModal()"><span class="material-symbols-rounded">vpn_key</span> Gemini API key</button>
+              <button type="button" class="menu-item studio-only" onclick="openApiModal()" hidden><span class="material-symbols-rounded">vpn_key</span> Gemini API key</button>
               <div class="menu-sep"></div>
               <button type="button" class="menu-item" onclick="backupWorkspace()"><span class="material-symbols-rounded">cloud_download</span> Backup workspace (JSON)</button>
               <button type="button" class="menu-item" onclick="document.getElementById('restoreInput').click()"><span class="material-symbols-rounded">cloud_upload</span> Restore from backup</button>
               <div class="menu-sep"></div>
               <button type="button" class="menu-item" onclick="openDashboard()"><span class="material-symbols-rounded">dashboard</span> Switch workspace</button>
-              <button type="button" class="menu-item" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
+              <button type="button" data-quality-metrics-entry class="menu-item" onclick="openQualityMetrics()"><span class="material-symbols-rounded">table_chart</span> Quality Metrics</button>
               <button type="button" class="menu-item" onclick="logoutUser()"><span class="material-symbols-rounded">switch_account</span> Change profile</button>
               <button type="button" class="menu-item danger" onclick="resetToDocDefaults()"><span class="material-symbols-rounded">restart_alt</span> Clear current module</button>
             </div>
@@ -656,7 +684,7 @@
       <div class="storage-banner" id="storageBanner" data-state="pending" role="status" aria-live="polite">
         <span class="material-symbols-rounded" id="storageIcon">folder_off</span>
         <span id="storageMessage">Choose a folder to save.</span>
-        <button type="button" class="btn-text" onclick="openDashboard()">Folder settings</button>
+        <button type="button" class="btn-text" id="storageSettingsButton" onclick="openDashboard()">Folder settings</button>
       </div>
       <div id="saveProgress" class="m3-linear-progress" role="progressbar" aria-label="Saving workspace" hidden></div>
     </header>
@@ -712,22 +740,22 @@
             </div>
             <input type="hidden" id="loginRef">
             <div class="form-group">
-              <label for="testUrl">Test URL</label>
-              <input type="text" id="testUrl" placeholder="Application URL">
+              <label for="testUrl">Test URL *</label>
+              <input type="text" id="testUrl" aria-required="true" placeholder="Application URL">
             </div>
             <div class="form-group">
               <label for="mantisId">Ticket</label>
               <input type="text" id="mantisId" placeholder="Ticket ID">
             </div>
             <div class="form-group">
-              <label for="buildVersion">Build Version</label>
-              <input type="text" id="buildVersion" placeholder="Build version">
+              <label for="buildVersion">Build Version *</label>
+              <input type="text" id="buildVersion" aria-required="true" placeholder="Build version">
             </div>
           </div>
         </div>
 
         <!-- REPORT VIEW -->
-        <div id="viewReport" class="view-section active">
+        <div id="viewReport" class="view-section active" role="tabpanel" aria-labelledby="btnModeReport">
           <div class="card" id="secDescProd">
             <div class="card-title">
               <span class="heading-label"><span class="material-symbols-rounded heading-icon">notes</span> 2. Detailed Description & Production Screenshot Reference</span>
@@ -786,7 +814,7 @@
 
           <div class="card" id="secDefects">
             <div class="card-title">
-              <span class="heading-label"><span class="material-symbols-rounded heading-icon">bug_report</span> 4. MantisBT Defects Logged</span>
+              <span class="heading-label"><span class="material-symbols-rounded heading-icon">bug_report</span> 4. Defects Logged</span>
               <button type="button" onclick="addDefectRow()" class="btn-text btn-sm"><span class="material-symbols-rounded" style="font-size:18px;">add</span> Add defect</button>
             </div>
             <div class="table-wrap" style="max-height:none;">
@@ -805,32 +833,53 @@
         </div>
 
         <!-- STUDIO VIEW -->
-        <div id="viewStudio" class="view-section">
+        <div id="viewStudio" class="view-section" role="tabpanel" aria-labelledby="btnModeStudio">
           <div class="card" id="secStudioInput">
             <div class="card-title indigo-accent">
-              <span class="heading-label"><span class="material-symbols-rounded heading-icon">edit_note</span> 2. Feature, Development or Requirement Details</span>
+              <span class="heading-label"><span class="material-symbols-rounded heading-icon">edit_note</span> 2. Requirements</span>
               <button type="button" onclick="runFunctionalAgents()" class="btn-text btn-indigo btn-sm"><span class="material-symbols-rounded" style="font-size:18px;">magic_button</span> Generate test cases</button>
             </div>
 
             <div class="studio-generation-controls">
-              <div class="form-group">
-                <label for="studioGenerationMode">Generation mode</label>
-                <select id="studioGenerationMode" onchange="updateStudioGenerationMode()">
-                  <option value="templates" selected>Basic templates (offline)</option>
-                  <option value="ollama" disabled>AI with Ollama (local)</option>
-                </select>
-                <button type="button" class="btn-text btn-sm" onclick="openOllamaSettings()">Local Ollama settings</button>
-              </div>
+              <label class="studio-ai-choice" for="studioUseOllama">
+                <input type="checkbox" id="studioUseOllama" onchange="toggleStudioLocalAI(this.checked)" aria-describedby="studioGenerationStatus">
+                Use local AI
+              </label>
+              <select id="studioGenerationMode" hidden aria-hidden="true" tabindex="-1" onchange="updateStudioGenerationMode()">
+                <option value="templates" selected>Functional + end-to-end (offline)</option>
+                <option value="ollama">AI with Ollama (local)</option>
+                <option value="cloud" hidden disabled>Cloud AI (Google Gemini)</option>
+              </select>
               <p id="studioGenerationStatus" class="studio-generation-note" role="status" aria-live="polite">
-                Basic templates are offline and deterministic. AI with Ollama is a separate local option.
+                Offline templates. No setup needed.
               </p>
+              <button type="button" id="retryOllamaConnection" class="btn-text btn-sm" onclick="testOllamaConnection()" hidden>Retry connection</button>
+              <button type="button" id="ollamaSettingsShortcut" class="btn-text btn-sm" onclick="openOllamaSettings()" hidden>Change model</button>
             </div>
 
-            <div class="grid-3" style="margin-bottom: 14px;">
+            <div class="form-group">
+              <label for="studioChangeSummary">What should we test?</label>
+              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Describe the feature or workflow, or upload a requirement document below"></textarea>
+            </div>
+
+            <div class="requirement-upload">
+              <label for="studioDocument">Requirement document (optional)</label>
+              <input type="file" id="studioDocument" accept=".pdf,.docx,.txt" onchange="readStudioDocument(this)">
+              <p class="hint">PDF, DOCX or TXT. The original file is not saved. Generated drafts may include its wording.</p>
+              <div class="requirement-file-status">
+                <span id="studioDocumentStatus" role="status" aria-live="polite">No document selected</span>
+                <button type="button" id="removeStudioDocument" class="btn-text btn-sm" onclick="clearStudioDocument()" hidden>Remove document</button>
+              </div>
+            </div>
+
+            <details class="studio-options">
+              <summary>More details &amp; screenshots (optional)</summary>
+              <p class="hint">Add context for better drafts. Documents support up to 10 MB and 200,000 extracted characters, with no requirement-line limit.</p>
+            <div class="grid-3">
               <div class="form-group">
-                <label for="studioScopeType">Testing Scope / Development Type *</label>
+                <label for="studioScopeType">Type of work</label>
                 <select id="studioScopeType" onchange="markUnsaved()">
-                  <option value="" selected>Choose testing scope</option>
+                  <option value="General workflow" selected>General workflow</option>
                   <option value="New Feature / Fresh Development">New Feature / Fresh Development</option>
                   <option value="Change Request (CR) / Enhancement">Change Request / Enhancement</option>
                   <option value="Bug Fix / Defect Retesting">Bug Fix / Defect Retesting</option>
@@ -847,11 +896,6 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="studioChangeSummary">Feature / Requirement / Workflow Explanation *</label>
-              <textarea id="studioChangeSummary" rows="3" spellcheck="true" placeholder="Describe the workflow or change"></textarea>
-            </div>
-
             <div class="upload-box-wrapper">
               <label style="display:block; margin-bottom:6px;">Upload UI / Requirement Screenshots</label>
               <div class="drop-zone" id="studioDropZone" tabindex="0" role="button" aria-label="Upload requirement screenshots">
@@ -861,6 +905,7 @@
               </div>
               <div class="image-grid" id="studioImageGrid"></div>
             </div>
+            </details>
           </div>
 
           <div class="card" id="secStudioOutput">
@@ -881,7 +926,7 @@
               </div>
               <div class="agent-node" id="agentN2">
                 <div class="agent-avatar"><span class="material-symbols-rounded" style="font-size:18px;">fact_check</span></div>
-                <div class="agent-info"><h4>2. Test Case Generator</h4><p data-done="Functional, negative, boundary, security" data-idle="Waiting for generation">Waiting for generation</p></div>
+                <div class="agent-info"><h4>2. Test Case Generator</h4><p data-done="Functional &amp; end-to-end cases ready" data-idle="Waiting for generation">Waiting for generation</p></div>
               </div>
               <div class="agent-node" id="agentN3">
                 <div class="agent-avatar"><span class="material-symbols-rounded" style="font-size:18px;">verified_user</span></div>
@@ -889,13 +934,13 @@
               </div>
             </div>
 
-            <div class="agent-tabs">
-              <button type="button" class="tab-btn active" onclick="switchStudioTab('tabFunctionalCases', this)"><span class="material-symbols-rounded">fact_check</span> Test Cases (<span id="tcCount">0</span>)</button>
-              <button type="button" class="tab-btn" onclick="switchStudioTab('tabScenarios', this)"><span class="material-symbols-rounded">format_list_bulleted</span> Scenarios (<span id="scenarioCount">0</span>)</button>
-              <button type="button" class="tab-btn" onclick="switchStudioTab('tabGuardChecklist', this)"><span class="material-symbols-rounded">rule</span> Checklist</button>
+            <div class="agent-tabs" role="tablist" aria-label="Generated results" onkeydown="handleTabKey(event)">
+              <button type="button" id="studioCasesTab" class="tab-btn active" role="tab" aria-selected="true" aria-controls="tabFunctionalCases" tabindex="0" onclick="switchStudioTab('tabFunctionalCases', this)"><span class="material-symbols-rounded">fact_check</span> Test Cases (<span id="tcCount">0</span>)</button>
+              <button type="button" id="studioScenariosTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabScenarios" tabindex="-1" onclick="switchStudioTab('tabScenarios', this)"><span class="material-symbols-rounded">format_list_bulleted</span> Scenarios (<span id="scenarioCount">0</span>)</button>
+              <button type="button" id="studioChecklistTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="tabGuardChecklist" tabindex="-1" onclick="switchStudioTab('tabGuardChecklist', this)"><span class="material-symbols-rounded">rule</span> Checklist</button>
             </div>
 
-            <div id="tabFunctionalCases" class="tab-panel active">
+            <div id="tabFunctionalCases" class="tab-panel active" role="tabpanel" aria-labelledby="studioCasesTab">
               <div class="tc-toolbar" id="tcToolbar">
                 <input type="search" id="tcSearch" placeholder="Search test cases..." aria-label="Search test cases" oninput="applyTcFilter()">
                 <select id="tcFilterCat" aria-label="Filter by category" onchange="applyTcFilter()">
@@ -926,7 +971,7 @@
               </div>
             </div>
 
-            <div id="tabScenarios" class="tab-panel">
+            <div id="tabScenarios" class="tab-panel" role="tabpanel" aria-labelledby="studioScenariosTab">
               <div id="scEmpty" class="empty-state"><span class="material-symbols-rounded">format_list_bulleted</span><div>No scenarios yet. Click <strong>Generate</strong> first.</div></div>
               <div class="table-wrap" id="scTableWrap">
                 <table>
@@ -936,7 +981,7 @@
               </div>
             </div>
 
-            <div id="tabGuardChecklist" class="tab-panel">
+            <div id="tabGuardChecklist" class="tab-panel" role="tabpanel" aria-labelledby="studioChecklistTab">
               <div class="guard-grid">
                 <div class="guard-box"><h4><span class="material-symbols-rounded" style="color:var(--ok); font-size:18px;">task_alt</span> Requirement Match</h4><div id="reqMatchChecklist"></div></div>
                 <div class="guard-box"><h4><span class="material-symbols-rounded" style="color:var(--warn); font-size:18px;">explore</span> Exploratory & Boundary</h4><div id="exploratoryChecklist"></div></div>
@@ -1040,7 +1085,8 @@
     let activeDropTarget = 'exec';
     let activeEvidenceRowId = null;
     let studioScenarios = [], studioTestCases = [];
-    let studioGenerationSource = '';
+    let studioGenerationSource = '', studioGenerationController = null;
+    let studioDocumentText = '', studioDocumentSequence = 0, studioDocumentReading = false;
     let guardChecklists = { reqMatch: [], exploratory: [], regression: [] };
     let ollamaModels = [], ollamaConnectionReady = false, ollamaConnectionBusy = false;
     let isDirty = false;
@@ -1109,33 +1155,55 @@
       const dark = t === 'dark', b = $('themeToggle');
       if (!b) return;
       const tip = dark ? 'Switch to light mode' : 'Switch to dark mode';
-      b.innerHTML = `<span class="material-symbols-rounded">${dark ? 'light_mode' : 'dark_mode'}</span>`;
-      b.setAttribute('data-tooltip', tip); b.setAttribute('aria-label', tip);
+      b.querySelector('.material-symbols-rounded').textContent = dark ? 'light_mode' : 'dark_mode';
+      b.querySelector('span:last-child').textContent = tip;
     }
     function toggleTheme() {
       const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-      try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
       applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); }
+      catch (error) { showToast('Theme changed, but could not be saved in this browser.', 'error'); }
     }
 
     /* ====================== MENUS / MODALS / SHORTCUTS ====================== */
+    function closeMenus(restoreFocus = false) {
+      document.querySelectorAll('.menu.open').forEach(menu => {
+        menu.classList.remove('open');
+        const trigger = document.querySelector(`[aria-controls="${menu.id}"]`);
+        trigger?.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) trigger?.focus();
+      });
+    }
     function toggleMenu(id, ev) {
       ev.stopPropagation();
-      document.querySelectorAll('.menu.open').forEach(m => { if (m.id !== id) m.classList.remove('open'); });
-      $(id).classList.toggle('open');
+      const menu = $(id), opening = !menu.classList.contains('open');
+      closeMenus();
+      if (opening) {
+        menu.classList.add('open');
+        ev.currentTarget.setAttribute('aria-expanded', 'true');
+        const top = menu.getBoundingClientRect().top;
+        menu.style.maxHeight = `${Math.max(0, innerHeight - top - 12)}px`;
+      }
     }
-    document.addEventListener('click', () => document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open')));
+    document.addEventListener('click', () => closeMenus());
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
+        hideImageHoverPreview();
+        if ($('historyModal').classList.contains('active')) closeHistoryModal();
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
         $('zoomOverlay').classList.remove('active');
-        document.querySelectorAll('.menu.open').forEach(m => m.classList.remove('open'));
+        closeMenus(true);
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && currentUser) { e.preventDefault(); saveWorkspaceNow(); }
       if (e.key === 'Enter' && $('authOverlay').style.display !== 'none' && $('authOverlay').contains(e.target)) handleUserLogin();
     });
-    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => {
+      if (e.target === m) {
+        if (m.id === 'historyModal') closeHistoryModal();
+        else m.classList.remove('active');
+      }
+    }));
     document.addEventListener('input', e => { if (e.target.classList?.contains('invalid')) e.target.classList.remove('invalid'); });
 
     window.addEventListener('beforeunload', e => { if (isDirty || $('qualityMetricsFrame').contentWindow?.qualityMetricsHasPendingChanges?.()) { e.preventDefault(); e.returnValue = ''; } });
@@ -1156,7 +1224,7 @@
       $('welcomeUserTitle').textContent = `Welcome, ${uname}!`;
       $('dashboardSelectOverlay').classList.add('active');
       setWorkspaceBusy(true);
-      try { await findRememberedFolder(); } finally { setWorkspaceBusy(false); }
+      try { await restoreRememberedFolder(); } finally { setWorkspaceBusy(false); }
       openRequestedWorkspace();
     }
     async function logoutUser() {
@@ -1170,12 +1238,31 @@
       try { localStorage.removeItem(ACTIVE_USER_KEY); location.reload(); }
       catch (error) { showToast('Could not clear the remembered profile: ' + error.message, 'error'); }
     }
-    function selectWorkspaceMode(mode) {
+    // Pointer clicks start at the click; keyboard activation starts at the button center.
+    function portalOrigin(event) {
+      if (event?.detail && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+        return { x: event.clientX, y: event.clientY };
+      }
+      const rect = event?.currentTarget?.getBoundingClientRect();
+      return rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: innerWidth / 2, y: innerHeight / 2 };
+    }
+    function selectWorkspaceMode(mode, origin = portalOrigin()) {
       $('dashboardSelectOverlay').classList.remove('active');
-      $('mainAppShell').style.display = '';
+      const shell = $('mainAppShell');
+      shell.style.display = '';
+      shell.style.setProperty('--portal-x', `${origin.x}px`);
+      shell.style.setProperty('--portal-y', `${origin.y}px`);
+      shell.classList.remove('portal-enter');
+      void shell.offsetWidth;
+      shell.classList.add('portal-enter');
       switchWorkspaceMode(mode);
     }
-    function openDashboard() { $('mainAppShell').style.display = 'none'; $('dashboardSelectOverlay').classList.add('active'); }
+    function openDashboard() {
+      if (isDirty) captureModule();
+      renderDashboardProjects();
+      $('mainAppShell').style.display = 'none';
+      $('dashboardSelectOverlay').classList.add('active');
+    }
     function openRequestedWorkspace() {
       const requested = new URLSearchParams(location.search).get('workspace');
       if (currentUser && ['report','studio'].includes(requested)) selectWorkspaceMode(requested);
@@ -1189,7 +1276,7 @@
       $('qualityMetricsModule').hidden = false;
       $('mainAppShell').inert = true;
       $('dashboardSelectOverlay').inert = true;
-      document.querySelectorAll('.menu.open').forEach(menu => menu.classList.remove('open'));
+      closeMenus();
       $('closeMetricsButton').focus();
     }
     function closeQualityMetrics() {
@@ -1219,21 +1306,42 @@
       localState.history.length = Math.min(localState.history.length, 100);
       markUnsaved();
     }
+    let historyReturnFocus = null;
+    let historyView = 'projects';
+    function selectHistoryView(view) {
+      historyView = view === 'timeline' ? 'timeline' : 'projects';
+      $('historyProjectsPanel').hidden = historyView !== 'projects';
+      $('historyTimelinePanel').hidden = historyView !== 'timeline';
+      $('historyProjectsButton').setAttribute('aria-pressed', String(historyView === 'projects'));
+      $('historyTimelineButton').setAttribute('aria-pressed', String(historyView === 'timeline'));
+      $('historyModal').querySelector('.history-content').scrollTop = 0;
+    }
     function openHistoryModal() {
       if (!currentUser) return;
-      const logs = localState?.history || [];
-      const c = $('historyLogsContainer');
-      c.innerHTML = '';
-      if (!logs.length) c.innerHTML = `<p class="hint" style="text-align:center; padding:20px;">No history recorded yet for ${esc(currentUser.username)}.</p>`;
-      logs.forEach(item => {
-        const d = document.createElement('div');
-        d.style.cssText = 'background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:.75rem; display:flex; flex-direction:column; gap:3px;';
-        d.innerHTML = `<div style="display:flex; justify-content:space-between; gap:8px; font-weight:700;"><span>${esc(item.action)}</span><span style="font-size:.68rem; color:var(--muted); font-weight:400; white-space:nowrap;">${esc(item.time)}</span></div>
-          <div style="color:var(--muted);">Project: <strong style="color:var(--info);">${esc(item.project)}</strong> | Module: <strong style="color:#c084fc;">${esc(item.module)}</strong></div>`;
-        c.appendChild(d);
-      });
+      if (!$('historyModal').classList.contains('active')) historyReturnFocus = document.activeElement;
+      if (isDirty) captureModule();
+      renderDashboardProjects();
+      renderHistoryTimeline();
+      selectHistoryView(historyView);
       $('historyModal').classList.add('active');
+      $('historyModalTitle').focus({ preventScroll: true });
     }
+    function closeHistoryModal(restoreFocus = true) {
+      $('historyModal').classList.remove('active');
+      if (restoreFocus && historyReturnFocus?.isConnected) historyReturnFocus.focus({ preventScroll: true });
+      historyReturnFocus = null;
+    }
+    $('historyModal').addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const controls = [...$('historyModal').querySelectorAll('summary, button:not([disabled])')]
+        .filter(control => control.getClientRects().length && !control.closest('[inert]'));
+      if (!controls.length) return;
+      if (event.shiftKey && (document.activeElement === controls[0] || document.activeElement === $('historyModalTitle'))) {
+        event.preventDefault(); controls[controls.length - 1].focus();
+      } else if (!event.shiftKey && document.activeElement === controls[controls.length - 1]) {
+        event.preventDefault(); controls[0].focus();
+      }
+    });
     function clearHistory() {
       if (!currentUser || !confirm('Clear your activity history?')) return;
       localState.history = []; markUnsaved(); openHistoryModal();
@@ -1249,6 +1357,10 @@
       $('viewStudio').classList.toggle('active', studio);
       $('btnModeReport').className = 'mode-btn' + (!studio ? ' active-report' : '');
       $('btnModeStudio').className = 'mode-btn' + (studio ? ' active-studio' : '');
+      $('btnModeReport').setAttribute('aria-selected', String(!studio));
+      $('btnModeStudio').setAttribute('aria-selected', String(studio));
+      $('btnModeReport').tabIndex = studio ? -1 : 0;
+      $('btnModeStudio').tabIndex = studio ? 0 : -1;
       $('brandAvatar').classList.toggle('studio-mode', studio);
       $('brandIcon').textContent = studio ? 'auto_fix_high' : 'assignment_turned_in';
       $('appMainTitle').textContent = studio ? 'Test Case & Scenario Studio' : 'Test Execution Report';
@@ -1354,11 +1466,11 @@
     }
     /* ====================== IMAGES ====================== */
     function readFileAsDataURL(file) { return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.onerror = () => res(null); r.readAsDataURL(file); }); }
-    function resizeImageForWord(dataUrl, maxWidth = 600, maxHeight = Infinity) {
-      return new Promise(resolve => {
+    function resizeImageForWord(dataUrl, maxWidth = 640, maxHeight = 816) {
+      return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => { const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height; const scale = Math.min(1, maxWidth / w, maxHeight / h); resolve({ src: dataUrl, width: Math.round(w * scale), height: Math.round(h * scale) }); };
-        img.onerror = () => resolve({ src: dataUrl, width: 580, height: 320 });
+        img.onerror = () => reject(new Error('Could not read a screenshot. Replace the damaged image and export again.'));
         img.src = dataUrl;
       });
     }
@@ -1481,6 +1593,7 @@
           image.loading = 'lazy';
           image.alt = `Screenshot ${imageIndex + 1} for ${row.path || `execution step ${index + 1}`}`;
           image.addEventListener('click', () => openZoom(src));
+          makeImageZoomAccessible(image);
           const remove = document.createElement('button');
           remove.type = 'button';
           remove.setAttribute('aria-label', `Remove screenshot ${imageIndex + 1} from row ${index + 1}`);
@@ -1564,6 +1677,7 @@
         const badge = document.createElement('span'); badge.className = 'order-badge'; badge.textContent = '#' + (idx + 1);
         const img = document.createElement('img'); img.src = src; img.loading = 'lazy'; img.alt = 'Screenshot ' + (idx + 1);
         img.addEventListener('click', () => openZoom(src));
+        makeImageZoomAccessible(img);
         const btn = document.createElement('button'); btn.type = 'button'; btn.setAttribute('aria-label', 'Remove screenshot'); btn.innerHTML = '<span class="material-symbols-rounded">close</span>';
         btn.addEventListener('click', ev => removeImage(type, idx, ev));
         div.append(badge, img, btn); grid.appendChild(div);
@@ -1574,21 +1688,22 @@
       (type === 'prod' ? prodImages : type === 'studio' ? studioImages : execImages).splice(idx, 1);
       renderImages(type); markUnsaved();
     }
-    function openZoom(src) { $('zoomOverlayImg').src = src; $('zoomOverlay').classList.add('active'); }
+    function openZoom(src) { hideImageHoverPreview(); $('zoomOverlayImg').src = src; $('zoomOverlay').classList.add('active'); }
 
     /* ====================== VALIDATION ====================== */
     function validateRequired(list) {
       const missing = [];
+      let firstInvalid = null;
       list.forEach(([id, label]) => {
         const el = $(id); if (!el) return;
         const bad = !String(el.value || '').trim();
         el.classList.toggle('invalid', bad);
-        if (bad) missing.push(label);
+        if (bad) { missing.push(label); firstInvalid ||= el; }
       });
       if (missing.length) {
         showToast('Please fill: ' + missing.join(', '), 'error');
-        const first = $(list.find(([id]) => $(id)?.classList.contains('invalid'))[0]);
-        first.scrollIntoView({ behavior: 'smooth', block: 'center' }); first.focus();
+        firstInvalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid?.focus();
       }
       return !missing.length;
     }
@@ -1596,33 +1711,106 @@
       const base = [['projectSelect', 'Project'], ['moduleSelect', 'Module']];
       if (currentMode === 'studio') {
         syncStudioTableEditsFromDOM();
-        if (!validateRequired([...base, ['studioChangeSummary', 'Requirement explanation']])) return false;
+        if (!validateRequired(base)) return false;
         if (!studioTestCases.length) { showToast('Generate or add at least one test case first.', 'error'); return false; }
         return true;
       }
-      return validateRequired([...base, ['featureDesc', 'Description'], ['actualResult', 'Actual Result'], ['execSteps', 'Execution Steps']]) &&
+      if (!$('testUrl').value.trim() || !$('buildVersion').value.trim()) navigateWorkspaceSection('secContext');
+      return validateRequired([...base, ['testUrl', 'Test URL'], ['buildVersion', 'Build Version'], ['featureDesc', 'Description'], ['actualResult', 'Actual Result'], ['execSteps', 'Execution Steps']]) &&
         validateExecutionEvidenceRows();
     }
 
     /* ====================== STUDIO GENERATION ====================== */
+    // The source text exists only in this tab; generated cases are saved normally.
+    function clearStudioDocument() {
+      studioDocumentSequence++;
+      studioDocumentText = '';
+      studioDocumentReading = false;
+      $('studioDocument').value = '';
+      $('studioDocumentStatus').textContent = 'No document selected';
+      $('removeStudioDocument').hidden = true;
+    }
+    function studioRequirementsReady() {
+      if (typeof Requirements !== 'undefined' && typeof Requirements.extractDocument === 'function' &&
+          typeof Requirements.splitRequirements === 'function' && typeof Requirements.buildSuite === 'function') return true;
+      const message = 'Test Studio could not load its generation files. Save or download a backup of your edits, then hard reload this page.';
+      console.error(message);
+      setStudioGenerationStatus(message, true);
+      showToast(message, 'error');
+      return false;
+    }
+    async function readStudioDocument(input) {
+      const file = input.files[0];
+      clearStudioDocument();
+      if (!file) return;
+      if (!studioRequirementsReady()) {
+        $('studioDocumentStatus').textContent = 'Generation files are unavailable. Hard reload and try again.';
+        return;
+      }
+      const sequence = studioDocumentSequence;
+      studioDocumentReading = true;
+      $('studioDocumentStatus').textContent = 'Reading document…';
+      $('removeStudioDocument').hidden = false;
+      try {
+        const text = await Requirements.extractDocument(file);
+        if (sequence !== studioDocumentSequence) return;
+        studioDocumentText = text;
+        $('studioDocumentStatus').textContent = `${file.name} ready for generation`;
+        $('removeStudioDocument').hidden = false;
+      } catch (error) {
+        if (sequence !== studioDocumentSequence) return;
+        $('studioDocumentStatus').textContent = error.message;
+        showToast(error.message, 'error');
+      } finally {
+        if (sequence === studioDocumentSequence) studioDocumentReading = false;
+      }
+    }
     function setStudioGenerationStatus(message, error = false) {
       const status = $('studioGenerationStatus');
       status.textContent = message;
       status.dataset.state = error ? 'error' : 'ok';
     }
+    function cancelStudioGeneration() {
+      studioGenerationController?.abort();
+    }
     function updateStudioGenerationMode() {
       const mode = $('studioGenerationMode');
-      const ollamaOption = mode.querySelector('option[value="ollama"]');
       const model = $('ollamaModelSelect').value;
-      ollamaOption.disabled = !ollamaConnectionReady || !ollamaModels.includes(model);
-      if (ollamaOption.disabled && mode.value === 'ollama') mode.value = 'templates';
+      const localAI = mode.value === 'ollama';
+      $('studioUseOllama').checked = localAI;
+      $('studioUseOllama').disabled = ollamaConnectionBusy;
+      $('ollamaSettingsShortcut').hidden = !localAI;
+      $('retryOllamaConnection').hidden = !localAI || ollamaConnectionBusy || (ollamaConnectionReady && ollamaModels.includes(model));
       if (mode.value === 'ollama') {
-        setStudioGenerationStatus(`AI with Ollama is ready (${model}). Only the testing details you enter are sent to your local model.`);
-      } else if (studioGenerationSource) {
-        setStudioGenerationStatus(`Last suite source: ${studioGenerationSource}. Generated cases are drafts; review and edit before use.`);
+        if (ollamaConnectionBusy) {
+          setStudioGenerationStatus('Connecting to local AI...');
+        } else if (ollamaConnectionReady && ollamaModels.includes(model)) {
+          setStudioGenerationStatus(`Local AI: ${model}. Requirement text stays on this device.`);
+        } else {
+          const status = $('ollamaStatusMessage');
+          setStudioGenerationStatus(status.dataset.state === 'error'
+            ? status.textContent
+            : 'Local AI is not ready. Retry, or turn it off to use offline templates.', true);
+        }
+      } else if (mode.value === 'cloud') {
+        const setup = typeof QA_CLOUD_PROXY_URL !== 'undefined' && QA_CLOUD_PROXY_URL.trim() ? '' : 'Cloud service is not set up; ask the workspace owner. ';
+        setStudioGenerationStatus(`${setup}Your requirement and document text, testing scope, UI fields and connected modules will be sent to a third-party cloud service. Review all AI drafts.`);
       } else {
-        setStudioGenerationStatus('Basic templates are offline and deterministic. AI with Ollama is a separate local option.');
+        setStudioGenerationStatus('Offline templates. No setup needed.');
       }
+    }
+    async function toggleStudioLocalAI(enabled) {
+      $('studioGenerationMode').value = enabled ? 'ollama' : 'templates';
+      updateStudioGenerationMode();
+      if (!enabled || (ollamaConnectionReady && ollamaModels.includes($('ollamaModelSelect').value))) return;
+      try { $('ollamaBaseUrl').value = readOllamaSettings().baseUrl; }
+      catch (error) {
+        setOllamaStatus(error.message, 'error');
+        updateStudioGenerationMode();
+        showToast(error.message, 'error');
+        return;
+      }
+      await testOllamaConnection();
     }
     function renderStudioGenerationAttribution() {
       $('studioGenerationAttribution').textContent = studioGenerationSource
@@ -1659,45 +1847,48 @@
         } else {
           ollamaModels = [];
           ollamaConnectionReady = false;
-          $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+          $('ollamaModelSelect').replaceChildren(new Option('Connect to find installed models', ''));
           $('ollamaModelSelect').disabled = true;
-          setOllamaStatus('Connection not tested in this tab. Test connection to list installed local models.');
+          setOllamaStatus('Choose Find models to connect to Ollama on this device.');
         }
       } catch (error) { setOllamaStatus(error.message, 'error'); }
       updateStudioGenerationMode();
       modal.classList.add('active');
-      document.querySelectorAll('.menu.open').forEach(menu => menu.classList.remove('open'));
+      closeMenus();
     }
     async function testOllamaConnection() {
-      if (ollamaConnectionBusy) return;
+      if (ollamaConnectionBusy || workspaceBusy) return;
       const button = $('testOllamaConnectionButton');
       ollamaConnectionBusy = true; button.disabled = true;
-      ollamaConnectionReady = false; ollamaModels = [];
-      updateStudioGenerationMode();
-      setOllamaStatus('Checking local Ollama and loading installed models…');
+      setWorkspaceBusy(true);
       try {
+        ollamaConnectionReady = false; ollamaModels = [];
+        updateStudioGenerationMode();
+        setOllamaStatus('Checking local Ollama and loading installed models…');
         const baseUrl = OllamaLocal.normalizeBaseUrl($('ollamaBaseUrl').value);
         const models = await OllamaLocal.listModels(baseUrl);
         const saved = readOllamaSettings();
         ollamaModels = models;
         const select = $('ollamaModelSelect');
-        select.replaceChildren(new Option(models.length ? 'Choose an installed local model' : 'No local models found', ''));
+        select.replaceChildren();
+        if (!models.length) select.add(new Option('No installed models found', ''));
         models.forEach(name => select.add(new Option(name, name)));
-        const selected = models.includes(saved.model) ? saved.model : '';
+        const selected = models.includes(saved.model) ? saved.model : (models[0] || '');
         select.value = selected;
         select.disabled = !models.length;
         ollamaConnectionReady = true;
         persistOllamaSettings(baseUrl, selected);
         setOllamaStatus(models.length
-          ? `Connected to local Ollama. Choose an installed model${selected ? ` (saved: ${selected})` : ''}. Only local models are listed.`
-          : 'Connected to Ollama, but no local models are installed. Install a model yourself, then test again.', 'ok');
+          ? `Ready with ${selected}. You can change the model here.`
+          : 'Ollama is running, but no local models are installed. Add a model in Ollama, or turn off local AI to use offline templates.', models.length ? 'ok' : 'error');
       } catch (error) {
-        $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+        $('ollamaModelSelect').replaceChildren(new Option('Connect to find installed models', ''));
         $('ollamaModelSelect').disabled = true;
         setOllamaStatus(error.message, 'error');
         showToast(error.message, 'error');
       } finally {
         ollamaConnectionBusy = false; button.disabled = false;
+        setWorkspaceBusy(false);
         updateStudioGenerationMode();
       }
     }
@@ -1710,49 +1901,96 @@
     }
     $('ollamaBaseUrl').addEventListener('input', () => {
       ollamaConnectionReady = false; ollamaModels = [];
-      $('ollamaModelSelect').replaceChildren(new Option('Test connection to list local models', ''));
+      $('ollamaModelSelect').replaceChildren(new Option('Connect to find installed models', ''));
       $('ollamaModelSelect').disabled = true;
-      setOllamaStatus('URL changed. Test connection again before choosing AI with Ollama.');
+      setOllamaStatus('Server address changed. Choose Find models to reconnect.');
       updateStudioGenerationMode();
     });
     async function runFunctionalAgents() {
+      if (workspaceBusy) return;
       if (!activeContext) { showToast('Add or select a project before generating a test suite.', 'error'); return; }
+      if ($('studioGenerationMode').value === 'cloud') {
+        showToast('Cloud generation is disabled. Choose offline templates or local Ollama.', 'error');
+        return;
+      }
+      if (!studioRequirementsReady()) return;
       syncStudioTableEditsFromDOM();
-      if (!validateRequired([['studioScopeType', 'Testing scope'], ['studioChangeSummary', 'Requirement explanation']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
+      if (!$('testUrl').value.trim() || !$('buildVersion').value.trim()) navigateWorkspaceSection('secContext');
+      if (!$('studioScopeType').value) $('studioScopeType').value = 'General workflow';
+      if (!validateRequired([['testUrl', 'Test URL'], ['buildVersion', 'Build Version']])) { if (currentMode !== 'studio') switchWorkspaceMode('studio'); return; }
+      if (studioDocumentReading) { showToast('Wait for the document to finish reading.', 'error'); return; }
+      const requirementText = [$('studioChangeSummary').value.trim(), studioDocumentText].filter(Boolean).join('\n');
+      if (!requirementText) { showToast('Enter an explanation or choose an FRS / BRS document.', 'error'); $('studioChangeSummary').focus(); return; }
+      let requirements;
+      try { requirements = Requirements.splitRequirements(requirementText); }
+      catch (error) { showToast(error.message, 'error'); return; }
+      if (!requirements.length) { showToast('Add readable requirement text before generating.', 'error'); return; }
       if (studioTestCases.length && !confirm('This will replace the current test cases, scenarios and checklists (including your edits). Continue?')) return;
       const mode = $('studioGenerationMode').value;
       if (mode === 'templates') {
-        generateUniversalQaSuite($('projectSelect').value, $('moduleSelect').value, $('studioScopeType').value,
-          $('testUrl').value, $('loginRef').value, $('studioUiElements').value, $('studioImpactedAreas').value,
-          $('studioChangeSummary').value.trim());
-        studioGenerationSource = 'Basic templates (offline, deterministic)';
+        let suite;
+        try {
+          suite = Requirements.buildSuite(requirements, {
+            url: $('testUrl').value.trim(), module: $('moduleSelect').value,
+            uiElements: $('studioUiElements').value.trim(), impactedAreas: $('studioImpactedAreas').value.trim()
+          });
+        } catch (error) {
+          console.error('Test Studio template generation failed:', error);
+          setStudioGenerationStatus('Could not generate test cases. Your current drafts are unchanged.', true);
+          showToast('Could not generate test cases. Your current drafts are unchanged.', 'error');
+          return;
+        }
+        studioScenarios = suite.scenarios;
+        studioTestCases = suite.testCases;
+        guardChecklists = suite.checklists;
+        studioGenerationSource = 'Functional + end-to-end templates (offline, review required)';
         completeStudioGeneration();
         return;
       }
       const model = $('ollamaModelSelect').value;
-      if (!ollamaConnectionReady || !ollamaModels.includes(model)) {
+      let cloudUrl = '';
+      if (mode === 'cloud') {
+        try { cloudUrl = CloudGeneration.normalizeUrl(QA_CLOUD_PROXY_URL); }
+        catch (error) { setStudioGenerationStatus(error.message, true); showToast(error.message, 'error'); return; }
+        if (!confirm(`Send your requirement, document text and testing details to the cloud service at ${new URL(cloudUrl).origin} and Google Gemini? Do not send secrets.`)) return;
+      } else if (!ollamaConnectionReady || !ollamaModels.includes(model)) {
         setStudioGenerationStatus('AI with Ollama is unavailable until you test the local connection and choose an installed model.', true);
-        showToast('Configure and test local Ollama in More → Local Ollama settings.', 'error');
+        showToast('Local AI is not ready. Retry the connection, or turn off Use local AI for offline templates.', 'error');
         return;
       }
+      const previousFocus = document.activeElement;
       setWorkspaceBusy(true);
+      studioGenerationController = new AbortController();
+      $('workspaceBusyMessage').textContent = 'Generating with local Ollama...';
+      $('cancelStudioGeneration').hidden = false;
+      $('cancelStudioGeneration').focus();
       try {
-        const settings = readOllamaSettings();
-        const suite = await OllamaLocal.generateSuite(settings.baseUrl, model, {
+        const input = {
           scopeType: $('studioScopeType').value,
-          requirement: $('studioChangeSummary').value.trim(),
+          requirement: requirementText,
           uiElements: $('studioUiElements').value,
           impactedAreas: $('studioImpactedAreas').value
-        });
+        };
+        const suite = mode === 'cloud'
+          ? await CloudGeneration.generateSuite(cloudUrl, input)
+          : await OllamaLocal.generateSuite(readOllamaSettings().baseUrl, model, input, undefined, undefined, studioGenerationController.signal,
+            (batch, total) => { $('workspaceBusyMessage').textContent = `Generating with local Ollama: batch ${batch} of ${total}...`; });
+        if (studioGenerationController.signal.aborted) throw new Error('Ollama generation cancelled. Your existing cases were not changed.');
         studioScenarios = suite.scenarios;
         studioTestCases = suite.testCases;
         guardChecklists = suite.checklists;
-        studioGenerationSource = `AI with Ollama (${model})`;
+        studioGenerationSource = mode === 'cloud' ? 'Cloud AI (Google Gemini)' : `AI with Ollama (${model})`;
       } catch (error) {
         setStudioGenerationStatus(error.message, true);
         showToast(error.message, 'error');
         return;
-      } finally { setWorkspaceBusy(false); }
+      } finally {
+        studioGenerationController = null;
+        $('cancelStudioGeneration').hidden = true;
+        $('workspaceBusyMessage').textContent = 'Working...';
+        setWorkspaceBusy(false);
+        previousFocus?.focus?.({ preventScroll: true });
+      }
       completeStudioGeneration();
     }
     function completeStudioGeneration() {
@@ -1760,64 +1998,6 @@
       recordUserHistory(`Generated test cases & scenarios · ${studioGenerationSource}`);
       performSaveNow();
       showToast(`Generated ${studioTestCases.length} test cases`);
-    }
-
-    function generateUniversalQaSuite(proj, mod, scopeType, url, creds, uiEls, impacted, summary) {
-      const quoted = [...summary.matchAll(/["“”']([^"“”']+)["“”']/g)].map(m => m[1]);
-      const modName = formatTextForExport(mod) || 'the module';
-      const primary = quoted[0] || modName || 'Target Feature';
-      const action = quoted[1] || 'Confirm / Submit';
-      const comps = uiEls.split(',').map(s => s.trim()).filter(Boolean);
-      const impact = impacted.split(',').map(s => s.trim()).filter(Boolean);
-      const isFresh = scopeType.includes('New Feature');
-      const first = isFresh ? 'Functional' : 'Retesting';
-      let n = 0; const id = () => 'TC_' + String(++n).padStart(3, '0');
-      const m = formatTextForExport(mod);
-      const login = `1. Navigate to ${url || '<test URL>'}\n2. Login with credentials (${creds || '<credentials>'})\n3. Open "${m}"`;
-
-      studioScenarios = [
-        { id: 'TS_01', cat: first, pri: 'High', desc: `Verify ${scopeType}: UI load, layout and availability of "${primary}" in ${modName}.` },
-        { id: 'TS_02', cat: 'Functional', pri: 'High', desc: `Verify end-to-end positive workflow for "${primary}" with valid inputs and clicking "${action}".` },
-        { id: 'TS_03', cat: 'Negative', pri: 'High', desc: `Verify mandatory-field validations when "${action}" is used with blank or unselected fields.` },
-        { id: 'TS_04', cat: 'Negative', pri: 'Medium', desc: 'Verify conditional field rules and invalid data handling.' },
-        { id: 'TS_05', cat: 'Boundary', pri: 'Medium', desc: 'Verify maximum length, minimum length and special-character handling on all text inputs.' },
-        { id: 'TS_06', cat: 'Security', pri: 'High', desc: 'Verify role-based access and input sanitisation (script / SQL characters) for this feature.' },
-        { id: 'TS_07', cat: 'UI', pri: 'Low', desc: 'Verify alignment, labels, spelling, tab order and responsive layout of the screen.' },
-        { id: 'TS_08', cat: 'Exploratory', pri: 'Medium', desc: `Verify refresh (F5) persistence, double-click protection on "${action}", and cancel/back navigation.` },
-        { id: 'TS_09', cat: 'Regression', pri: 'High', desc: `Verify zero regression impact on connected modules (${impact.slice(0, 3).join(', ') || 'existing workflows'}).` }
-      ];
-
-      studioTestCases = [
-        { id: id(), type: first, pri: 'High', scenario: `Verify screen load & presence of "${primary}"`, steps: `${login}\n4. Verify all UI elements${comps.length ? ' (' + comps.join(', ') + ')' : ''}`, expected: `"${primary}" and all UI controls render correctly.`, status: 'Not Run' },
-        { id: id(), type: 'Functional', pri: 'High', scenario: 'Verify positive end-to-end submission', steps: `${login}\n4. Select/enter valid data for "${primary}"\n5. Click "${action}"`, expected: 'Operation succeeds and a confirmation message is shown; data is saved.', status: 'Not Run' },
-        { id: id(), type: 'Negative', pri: 'High', scenario: 'Verify validation on empty mandatory fields', steps: `${login}\n4. Leave mandatory fields blank/unselected\n5. Click "${action}"`, expected: 'Submission is blocked and a clear validation message is shown.', status: 'Not Run' },
-        { id: id(), type: 'Negative', pri: 'Medium', scenario: 'Verify conditional mandatory inputs', steps: `${login}\n4. Select "${primary}"\n5. Trigger the conditional input and leave it blank\n6. Click "${action}"`, expected: 'Validation prompts the user for valid details.', status: 'Not Run' },
-        { id: id(), type: 'Boundary', pri: 'Medium', scenario: 'Verify field length limits & special characters', steps: `${login}\n4. Enter the maximum allowed characters in each text field\n5. Enter max+1 characters and special characters (@#$%&*)\n6. Click "${action}"`, expected: 'Limits are enforced; special characters are handled without errors.', status: 'Not Run' },
-        { id: id(), type: 'Security', pri: 'High', scenario: 'Verify unauthorised role cannot access/perform the action', steps: `1. Navigate to ${url || '<test URL>'}\n2. Login with a role that should NOT have access\n3. Try to open "${m}" (menu and direct URL)`, expected: 'Access is denied / menu is hidden; no data is exposed.', status: 'Not Run' },
-        { id: id(), type: 'Security', pri: 'Medium', scenario: 'Verify input sanitisation', steps: `${login}\n4. Enter <script>alert(1)<\/script> and ' OR 1=1 -- in text inputs\n5. Click "${action}"`, expected: 'Input is rejected or safely encoded; no script runs and no SQL error appears.', status: 'Not Run' },
-        { id: id(), type: 'UI', pri: 'Low', scenario: 'Verify UI/UX consistency', steps: `${login}\n4. Check labels, spelling, alignment and mandatory (*) markers\n5. Check keyboard tab order\n6. Resize the browser window`, expected: 'Layout is consistent, labels are correct and the page stays usable at smaller widths.', status: 'Not Run' },
-        { id: id(), type: 'Exploratory', pri: 'Medium', scenario: 'Verify refresh persistence & rapid clicks', steps: `${login}\n4. Complete a submission\n5. Refresh the browser (F5)\n6. Rapidly double-click "${action}"`, expected: 'Data remains intact and no duplicate submission occurs.', status: 'Not Run' },
-        { id: id(), type: 'Functional', pri: 'Low', scenario: 'Verify cancel / back navigation', steps: `${login}\n4. Enter some data\n5. Use Cancel / Back / browser back`, expected: 'No data is saved unintentionally and the user lands on the expected page.', status: 'Not Run' }
-      ];
-      (impact.length ? impact.slice(0, 4) : ['Existing workflows']).forEach(area => {
-        studioTestCases.push({ id: id(), type: 'Regression', pri: 'High', scenario: `Verify existing workflow: ${area}`, steps: `${login}\n4. Execute the standard flow of "${area}" on existing records\n5. Verify data reflection`, expected: `"${area}" works exactly as before the change.`, status: 'Not Run' });
-      });
-
-      guardChecklists = {
-        reqMatch: [
-          { text: `Scope verified (${scopeType}): "${primary}" matches the requirement.`, done: false },
-          { text: `UI controls verified${comps.length ? ': ' + comps.join(', ') : ''}.`, done: false },
-          { text: `Test credentials (${creds || 'n/a'}): role access checked.`, done: false },
-          { text: 'Data persistence: saved changes reflect in UI / backend.', done: false }
-        ],
-        exploratory: [
-          { text: 'Default state: submit with default select options.', done: false },
-          { text: 'Boundary & special characters: test inputs with special symbols.', done: false },
-          { text: 'Rapid double click: click submit multiple times quickly.', done: false },
-          { text: 'Browser refresh: verify state after F5 reload.', done: false }
-        ],
-        regression: impact.map(item => ({ text: `Regression check: "${item}" verified.`, done: false })).concat([{ text: 'Console & network check: zero 404/500 errors.', done: false }])
-      };
     }
 
     function getBadgeClassForType(t = '') {
@@ -1852,16 +2032,19 @@
       const tcBody = $('studioTestCaseBody');
       tcBody.innerHTML = '';
       studioTestCases.forEach((tc, idx) => {
-        const cats = CATEGORIES.includes(tc.type) ? CATEGORIES : [...CATEGORIES, tc.type];
+        const type = tc.type || 'Functional', priority = tc.pri || 'Medium', status = tc.status || 'Not Run';
+        const cats = CATEGORIES.includes(type) ? CATEGORIES : [...CATEGORIES, type];
+        const priorities = PRIORITIES.includes(priority) ? PRIORITIES : [...PRIORITIES, priority];
+        const statuses = STATUSES.includes(status) ? STATUSES : [...STATUSES, status];
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="font-weight:600;" class="st-id">${esc(tc.id)}</td>
-          <td><select class="st-type" onchange="markUnsaved()">${opts(cats, tc.type)}</select></td>
-          <td><select class="st-pri" onchange="markUnsaved()">${opts(PRIORITIES, tc.pri || 'Medium')}</select></td>
+          <td><select class="st-type" onchange="markUnsaved()">${opts(cats, type)}</select></td>
+          <td><select class="st-pri" onchange="markUnsaved()">${opts(priorities, priority)}</select></td>
           <td><div contenteditable="plaintext-only" class="st-scen" oninput="markUnsaved()">${esc(tc.scenario)}</div>${tc.evidence ? `<small class="studio-evidence">Requirement quote: ${esc(tc.evidence)}</small>` : ''}</td>
           <td contenteditable="plaintext-only" class="st-steps" style="white-space:pre-wrap;" oninput="markUnsaved()">${esc(tc.steps)}</td>
           <td contenteditable="plaintext-only" class="st-exp" oninput="markUnsaved()">${esc(tc.expected)}</td>
-          <td><select class="st-status" data-v="${esc(tc.status)}" onchange="this.dataset.v=this.value; markUnsaved(); renderTcStats();">${opts(STATUSES, tc.status)}</select></td>
+          <td><select class="st-status" data-v="${esc(status)}" onchange="this.dataset.v=this.value; markUnsaved(); renderTcStats();">${opts(statuses, status)}</select></td>
           <td style="text-align:center;"><button type="button" class="delete-btn" aria-label="Delete test case" onclick="deleteTestCase(${idx})"><span class="material-symbols-rounded">delete</span></button></td>`;
         tcBody.appendChild(tr);
       });
@@ -1924,6 +2107,7 @@
       const rows = document.querySelectorAll('#studioTestCaseBody tr');
       if (rows.length) {
         studioTestCases = Array.from(rows).map((r, index) => ({
+          ...studioTestCases[index],
           id: r.querySelector('.st-id')?.textContent.trim() || 'TC',
           type: r.querySelector('.st-type')?.value || 'Functional',
           pri: r.querySelector('.st-pri')?.value || 'Medium',
@@ -1935,21 +2119,36 @@
         }));
       }
       const srows = document.querySelectorAll('#studioScenarioBody tr');
-      srows.forEach((r, i) => { if (studioScenarios[i]) studioScenarios[i].desc = r.querySelector('.sc-desc')?.innerText.trim() || studioScenarios[i].desc; });
+      srows.forEach((r, i) => { if (studioScenarios[i]) studioScenarios[i].desc = r.querySelector('.sc-desc')?.innerText.trim() ?? studioScenarios[i].desc; });
     }
     function deleteTestCase(idx) { syncStudioTableEditsFromDOM(); studioTestCases.splice(idx, 1); renderStudioOutputs(); markUnsaved(); }
     function addCustomStudioTestCase() {
       syncStudioTableEditsFromDOM();
       const nums = studioTestCases.map(t => parseInt(String(t.id).replace(/\D/g, ''), 10) || 0);
-      const next = String((nums.length ? Math.max(...nums) : 0) + 1).padStart(3, '0');
+      const next = String(nums.reduce((highest, number) => Math.max(highest, number), 0) + 1).padStart(3, '0');
       studioTestCases.push({ id: `TC_${next}`, type: 'Functional', pri: 'Medium', scenario: 'Custom functional check', steps: '1. Navigate\n2. Verify', expected: 'Functioning properly.', status: 'Not Run' });
       renderStudioOutputs(); markUnsaved();
       document.querySelector('#studioTestCaseBody tr:last-child .st-scen')?.focus();
     }
     function switchStudioTab(tabId, btn) {
       document.querySelectorAll('#viewStudio .tab-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('#viewStudio .tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#viewStudio .tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', String(b === btn));
+        b.tabIndex = b === btn ? 0 : -1;
+      });
       $(tabId).classList.add('active'); btn.classList.add('active');
+    }
+    function handleTabKey(event) {
+      if (event.altKey || event.ctrlKey || event.metaKey || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')].filter(tab => !tab.disabled && !tab.hidden);
+      const current = tabs.indexOf(event.target.closest('[role="tab"]'));
+      if (current < 0) return;
+      event.preventDefault();
+      const index = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+        : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+      tabs[index].focus();
+      tabs[index].click();
     }
 
     function pushStudioToExecutionReport() {
@@ -1959,7 +2158,7 @@
       const existing = $('featureDesc').value.trim() || $('execSteps').value.trim();
       if (existing && !confirm('This will overwrite the description and execution steps in the Execution Report. Continue?')) return;
       if (summary) $('featureDesc').value = summary;
-      const main = studioTestCases.find(t => t.type === 'Functional' && /positive/i.test(t.scenario)) || studioTestCases[1] || studioTestCases[0];
+      const main = studioTestCases.find(t => t.type === 'Functional' && /positive/i.test(t.scenario)) || studioTestCases.find(t => t.type === 'Functional') || studioTestCases[0];
       $('execSteps').value = main.steps;
       if (studioImages.length) { execImages = [...studioImages]; renderImages('exec'); }
       switchWorkspaceMode('report'); performSaveNow();
@@ -1967,15 +2166,22 @@
     }
 
     /* ====================== DEFECTS ====================== */
+    const defectSeverities = ['feature', 'trivial', 'text', 'tweak', 'minor', 'major', 'critical', 'crash', 'block', 'blocker'];
+    const defectPriorities = ['none', 'lowest', 'low', 'normal', 'medium', 'high', 'highest', 'urgent', 'immediate'];
+    const defectStatuses = ['new', 'open', 'to do', 'feedback', 'acknowledged', 'confirmed', 'assigned', 'in progress', 'resolved', 'done', 'closed', 'reopened'];
+    // Keep an older or custom value available when restoring a saved defect.
+    function defectOptions(values, selected) {
+      return opts(values.includes(selected) ? values : [...values, selected], selected);
+    }
     function addDefectRow(data = {}, skipDirty = false) {
       $('noDefectsNotice').style.display = 'none';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><input type="text" class="d-id" placeholder="Ticket ID" value="${esc(data.id || '')}"></td>
-        <td><select class="d-sev">${opts(['minor', 'major', 'block', 'crash'], data.sev || 'minor')}</select></td>
-        <td><select class="d-pri">${opts(['normal', 'high', 'urgent'], data.pri || 'normal')}</select></td>
+        <td><select class="d-sev">${defectOptions(defectSeverities, data.sev || 'minor')}</select></td>
+        <td><select class="d-pri">${defectOptions(defectPriorities, data.pri || 'normal')}</select></td>
         <td><input type="text" class="d-desc" placeholder="Summary..." value="${esc(data.desc || '')}"></td>
-        <td><select class="d-status">${opts(['resolved', 'closed', 'new'], data.status || 'resolved')}</select></td>
+        <td><select class="d-status">${defectOptions(defectStatuses, data.status || 'resolved')}</select></td>
         <td style="text-align:center;"><button type="button" class="delete-btn" aria-label="Delete defect" onclick="this.closest('tr').remove(); checkDefectCount();"><span class="material-symbols-rounded">delete</span></button></td>`;
       $('defectTableBody').appendChild(tr);
       tr.querySelectorAll('input, select').forEach(el => el.addEventListener('input', markUnsaved));
@@ -2031,7 +2237,14 @@
     function buildStudioDocHtml() {
       syncStudioTableEditsFromDOM();
       const imgs = studioImages.map(img => `<div class="doc-img-item"><img src="${img}"></div>`).join('');
-      return `<div class="doc-page">
+      const cases = studioTestCases.map(tc => `<section class="doc-studio-case">
+        <div class="doc-studio-case-title"><strong>${esc(tc.id)}</strong> &mdash; ${esc(tc.type)} &middot; ${esc(tc.pri || '')} &middot; ${esc(tc.status)}</div>
+        <div class="doc-text"><strong>Scenario:</strong><br>${fx(tc.scenario)}</div>
+        ${tc.evidence ? `<div class="doc-text"><strong>Requirement quote:</strong><br>${fx(tc.evidence)}</div>` : ''}
+        <div class="doc-text"><strong>Execution steps:</strong><br>${fx(tc.steps)}</div>
+        <div class="doc-text"><strong>Expected result:</strong><br>${fx(tc.expected)}</div>
+      </section>`).join('');
+      return `<div class="doc-page" data-doc-kind="studio">
         <div class="doc-main-title">Test Case & Scenario Specification</div>
         <div class="doc-header-field"><strong>Generation source:</strong> ${esc(studioGenerationSource || 'Not recorded')}</div>
         <div class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</div>
@@ -2042,14 +2255,22 @@
         <div class="doc-section-heading">Feature / Requirement Summary:</div>
         <div class="doc-text">${fx($('studioChangeSummary').value)}</div>
         <div class="doc-section-heading">Test Cases (${studioTestCases.length}) &nbsp; <span style="font-weight:normal;">${esc(statusSummaryText())}</span></div>
-        <table style="width:100%; border-collapse:collapse; margin:5px 0 12px; font-size:9.5pt;"><thead><tr style="background:#f1f5f9;">${STUDIO_TH}</tr></thead><tbody>${studioRowsHtml(false)}</tbody></table>
+        ${cases}
         ${imgs}
       </div>`;
     }
     function getActiveDocHtml() { return currentMode === 'studio' ? buildStudioDocHtml() : buildReportDocHtml(); }
 
-    function openPreviewModal() { $('previewModalContent').innerHTML = getActiveDocHtml(); $('previewModal').classList.add('active'); }
-    function closePreviewModal() { $('previewModal').classList.remove('active'); }
+    function openPreviewModal() {
+      $('previewModalContent').innerHTML = getActiveDocHtml();
+      $('previewModalContent').querySelectorAll('.doc-img-item img').forEach(image => {
+        image.alt ||= 'Screenshot';
+        image.addEventListener('click', () => openZoom(image.src));
+        makeImageZoomAccessible(image);
+      });
+      $('previewModal').classList.add('active');
+    }
+    function closePreviewModal() { hideImageHoverPreview(); $('previewModal').classList.remove('active'); }
     async function triggerCleanPdfPrint() {
       if (!validateForExport()) return;
       const p = $('printableDocArea');
@@ -2075,6 +2296,7 @@
 
     async function exportActiveToWord() {
       if (!validateForExport()) return;
+      try {
       let watermark = '';
       if (currentMode === 'report') {
         try { watermark = await reportWatermarkDataUrl(); }
@@ -2086,7 +2308,7 @@
       }
       const imgTable = im => currentMode === 'report'
         ? `<table class="doc-image-table" width="${im.width}" style="display:table; border-collapse:collapse; margin:4pt 0 8pt; page-break-inside:avoid;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block; max-width:100%;"></td></tr></table>`
-        : `<table width="600" style="border-collapse:collapse; margin:5pt 0;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`;
+        : `<table width="${im.width}" style="border-collapse:collapse; margin:5pt 0; page-break-inside:avoid;"><tr><td style="border:1pt solid #000; padding:0;"><img src="${im.src}" width="${im.width}" height="${im.height}" style="display:block;"></td></tr></table>`;
       const head = `<p class="doc-header-field"><strong>Project Name/Application Name:</strong> ${esc($('projectSelect').value)}</p>
         <p class="doc-header-field"><strong>Tested Module/Feature Names:</strong> ${fx($('moduleSelect').value)}</p>`;
       const tail = `<p class="doc-header-field"><strong>Test URL:</strong> ${esc($('testUrl').value)}</p>${$('loginRef').value ? `<p class="doc-header-field"><strong>Test account reference:</strong> ${esc($('loginRef').value)}</p>` : ''}`;
@@ -2095,17 +2317,17 @@
 
       if (currentMode === 'report') {
         const correction = $('correctionNotes').value.trim();
-        const sp = await Promise.all(prodImages.map(s => resizeImageForWord(s, 750, 336)));
+        const sp = await Promise.all(prodImages.map(s => resizeImageForWord(s, 750, 816)));
         const evidence = await Promise.all(execEvidenceRows.map(async (row, index) => {
           const images = execEvidenceImages[row.id] || [];
           if (!row.path.trim() && !images.length) return '';
           const path = row.path.trim()
             ? `<p class="doc-evidence-path">${formatExecutionEvidencePath(row.path)}</p>`
             : `<p class="heading">Path not entered (row ${index + 1})</p>`;
-          const screenshots = await Promise.all(images.map(async image => imgTable(await resizeImageForWord(image, 750, 336))));
+          const screenshots = await Promise.all(images.map(async image => imgTable(await resizeImageForWord(image, 750, 816))));
           return `<div class="doc-evidence-row">${path}${screenshots.join('')}</div>`;
         }));
-        const se = await Promise.all(execImages.map(s => resizeImageForWord(s, 750, 336)));
+        const se = await Promise.all(execImages.map(s => resizeImageForWord(s, 750, 816)));
         body = `<div class="doc-main-title">Test Execution Report</div>${head}${tail}
           <p class="doc-text"><strong>Detailed Description about Features/Services Tested:</strong><br>${br($('featureDesc').value)}</p>
           ${sp.length ? `<p class="heading">Production Screenshot reference:-</p>${sp.map(imgTable).join('')}` : ''}
@@ -2144,6 +2366,7 @@
         : `@page { size: 21cm 29.7cm; margin: 2cm; } body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; } .doc-main-title { font-size: 14pt; font-weight: bold; text-align: center; margin-bottom: 10pt; } p { margin: 2pt 0; font-size: 11pt; } .heading { font-weight: bold; margin-top: 10pt; margin-bottom: 2pt; }`;
       const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head><meta charset='utf-8'><title>QA Report</title>
+        <!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
         <style>${reportStyles}</style>
         </head><body>${currentMode === 'report' ? `<div class="doc-page" data-doc-kind="report"><img class="doc-watermark" src="${watermark}" alt="">${body}</div>` : body}</body></html>`;
       const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
@@ -2152,6 +2375,10 @@
       a.download = `${prefix}_${($('mantisId').value || 'QA').replace(/[^a-z0-9]/gi, '') || 'QA'}.doc`;
       a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       recordUserHistory('Exported document to Word (.doc)'); showToast('Word document downloaded');
+      } catch (error) {
+        console.error('Word export failed:', error);
+        showToast(error.message || 'Could not prepare screenshots for Word.', 'error');
+      }
     }
 
     function exportStudioToExcel() {
@@ -2182,6 +2409,6 @@
       await performSaveNow();
     }
   </script>
-  <script src="workspace-ui.js"></script>
+  <script src="workspace-ui.js?v=studio-6"></script>
 </body>
 </html>

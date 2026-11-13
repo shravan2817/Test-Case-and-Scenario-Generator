@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "4.10.38"
+  }
+}
